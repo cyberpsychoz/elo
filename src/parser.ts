@@ -1,4 +1,4 @@
-import { Expr, literal, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, functionCall } from './ast';
+import { Expr, literal, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess } from './ast';
 
 /**
  * Token types
@@ -19,6 +19,7 @@ type TokenType =
   | 'LPAREN'
   | 'RPAREN'
   | 'COMMA'
+  | 'DOT'
   | 'LT'
   | 'GT'
   | 'LTE'
@@ -91,6 +92,50 @@ class Lexer {
     return str;
   }
 
+  private readDateOrDateTime(): string {
+    // Read ISO8601 date or datetime: 2024-01-15 or 2024-01-15T10:30:00.123Z
+    let dateStr = '';
+    // Read YYYY-MM-DD part
+    while (this.current && /[0-9\-]/.test(this.current)) {
+      dateStr += this.current;
+      this.advance();
+    }
+    // Check if there's a time part (T)
+    if (this.current === 'T') {
+      dateStr += this.current;
+      this.advance();
+      // Read time part: HH:MM:SS
+      while (this.current && /[0-9:]/.test(this.current)) {
+        dateStr += this.current;
+        this.advance();
+      }
+      // Optional fractional seconds (.123)
+      const frac = this.current as string;
+      if (frac === '.') {
+        dateStr += frac;
+        this.advance();
+        while (this.current && /[0-9]/.test(this.current)) {
+          dateStr += this.current;
+          this.advance();
+        }
+      }
+      // Optional timezone (Z or +/-HH:MM)
+      const cur = this.current as string;
+      if (cur === 'Z') {
+        dateStr += cur;
+        this.advance();
+      } else if (cur === '+' || cur === '-') {
+        dateStr += cur;
+        this.advance();
+        while (this.current && /[0-9:]/.test(this.current)) {
+          dateStr += this.current;
+          this.advance();
+        }
+      }
+    }
+    return dateStr;
+  }
+
   private readDuration(): string {
     // Read ISO8601 duration: P1D, PT1H30M, P1Y2M3DT4H5M6S, P2W, etc.
     let duration = '';
@@ -120,27 +165,18 @@ class Lexer {
       return { type: 'NUMBER', value: this.readNumber(), position: pos };
     }
 
-    // Date/DateTime literals: d"..." or dt"..."
-    if (this.current === 'd') {
+    // Date/DateTime literals: D2024-01-15 or D2024-01-15T10:30:00Z
+    if (this.current === 'D') {
       const nextChar = this.peek();
-      if (nextChar === '"') {
-        // Date literal: d"YYYY-MM-DD"
-        this.advance(); // skip 'd'
-        this.advance(); // skip '"'
-        const dateStr = this.readStringContent();
-        this.advance(); // skip closing '"'
-        return { type: 'DATE', value: dateStr, position: pos };
-      } else if (nextChar === 't') {
-        // Check for dt"..."
-        const afterDt = this.position + 2 < this.input.length ? this.input[this.position + 2] : '';
-        if (afterDt === '"') {
-          // DateTime literal: dt"ISO8601"
-          this.advance(); // skip 'd'
-          this.advance(); // skip 't'
-          this.advance(); // skip '"'
-          const datetimeStr = this.readStringContent();
-          this.advance(); // skip closing '"'
-          return { type: 'DATETIME', value: datetimeStr, position: pos };
+      if (/[0-9]/.test(nextChar)) {
+        // Date or DateTime literal starting with D
+        this.advance(); // skip 'D'
+        const dateTimeStr = this.readDateOrDateTime();
+        // Distinguish between DATE and DATETIME based on presence of 'T'
+        if (dateTimeStr.includes('T')) {
+          return { type: 'DATETIME', value: dateTimeStr, position: pos };
+        } else {
+          return { type: 'DATE', value: dateTimeStr, position: pos };
         }
       }
     }
@@ -153,11 +189,14 @@ class Lexer {
       }
     }
 
-    // Identifiers and keywords (true, false)
+    // Identifiers and keywords (true, false, NOW, TODAY, TOMORROW, YESTERDAY)
     if (/[a-zA-Z_]/.test(this.current)) {
       const id = this.readIdentifier();
       if (id === 'true' || id === 'false') {
         return { type: 'BOOLEAN', value: id, position: pos };
+      }
+      if (id === 'NOW' || id === 'TODAY' || id === 'TOMORROW' || id === 'YESTERDAY') {
+        return { type: 'IDENTIFIER', value: id, position: pos };
       }
       return { type: 'IDENTIFIER', value: id, position: pos };
     }
@@ -211,6 +250,7 @@ class Lexer {
       case '(': return { type: 'LPAREN', value: char, position: pos };
       case ')': return { type: 'RPAREN', value: char, position: pos };
       case ',': return { type: 'COMMA', value: char, position: pos };
+      case '.': return { type: 'DOT', value: char, position: pos };
       case '<': return { type: 'LT', value: char, position: pos };
       case '>': return { type: 'GT', value: char, position: pos };
       case '!': return { type: 'NOT', value: char, position: pos };
@@ -290,6 +330,11 @@ export class Parser {
       const name = token.value;
       this.eat('IDENTIFIER');
 
+      // Check if this is a temporal keyword
+      if (name === 'NOW' || name === 'TODAY' || name === 'TOMORROW' || name === 'YESTERDAY') {
+        return temporalKeyword(name);
+      }
+
       // Check if this is a function call
       if (this.currentToken.type === 'LPAREN') {
         this.eat('LPAREN');
@@ -324,6 +369,20 @@ export class Parser {
     throw new Error(`Unexpected token ${token.type} at position ${token.position}`);
   }
 
+  private postfix(): Expr {
+    let expr = this.primary();
+
+    // Handle member access (dot notation)
+    while (this.currentToken.type === 'DOT') {
+      this.eat('DOT');
+      const property = this.currentToken.value;
+      this.eat('IDENTIFIER');
+      expr = memberAccess(expr, property);
+    }
+
+    return expr;
+  }
+
   private unary(): Expr {
     if (this.currentToken.type === 'NOT') {
       this.eat('NOT');
@@ -340,7 +399,7 @@ export class Parser {
       return unary('-', this.unary());
     }
 
-    return this.primary();
+    return this.postfix();
   }
 
   private power(): Expr {

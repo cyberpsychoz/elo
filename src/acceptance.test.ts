@@ -234,26 +234,26 @@ describe('Acceptance Tests - Boolean', () => {
 
 describe('Acceptance Tests - Temporal', () => {
   it('should compare dates', async () => {
-    await testAssertion('assert(d"2024-01-15" > d"2024-01-10")');
-    await testAssertion('assert(!(d"2024-01-15" < d"2024-01-10"))');
-    await testAssertion('assert(d"2024-01-15" >= d"2024-01-15")');
-    await testAssertion('assert(d"2024-01-15" <= d"2024-01-15")');
+    await testAssertion('assert(D2024-01-15 > D2024-01-10)');
+    await testAssertion('assert(!(D2024-01-15 < D2024-01-10))');
+    await testAssertion('assert(D2024-01-15 >= D2024-01-15)');
+    await testAssertion('assert(D2024-01-15 <= D2024-01-15)');
   });
 
   it('should compare datetimes', async () => {
-    await testAssertion('assert(dt"2024-01-15T10:30:00Z" > dt"2024-01-15T09:00:00Z")');
-    await testAssertion('assert(dt"2024-01-15T10:30:00Z" < dt"2024-01-15T11:00:00Z")');
-    await testAssertion('assert(dt"2024-01-15T10:30:00Z" >= dt"2024-01-15T10:30:00Z")');
+    await testAssertion('assert(D2024-01-15T10:30:00Z > D2024-01-15T09:00:00Z)');
+    await testAssertion('assert(D2024-01-15T10:30:00Z < D2024-01-15T11:00:00Z)');
+    await testAssertion('assert(D2024-01-15T10:30:00Z >= D2024-01-15T10:30:00Z)');
   });
 
   it('should add duration to date', async () => {
-    await testAssertion('assert(d"2024-01-15" + P1D > d"2024-01-15")', {}, { skipSQL: true });
-    await testAssertion('assert(d"2024-01-15" + P1D < d"2024-01-17")', {}, { skipSQL: true });
+    await testAssertion('assert(D2024-01-15 + P1D > D2024-01-15)', {}, { skipSQL: true });
+    await testAssertion('assert(D2024-01-15 + P1D < D2024-01-17)', {}, { skipSQL: true });
   });
 
   it('should subtract duration from date', async () => {
-    await testAssertion('assert(d"2024-01-15" - P1D < d"2024-01-15")', {}, { skipSQL: true });
-    await testAssertion('assert(d"2024-01-15" - P1D > d"2024-01-13")', {}, { skipSQL: true });
+    await testAssertion('assert(D2024-01-15 - P1D < D2024-01-15)', {}, { skipSQL: true });
+    await testAssertion('assert(D2024-01-15 - P1D > D2024-01-13)', {}, { skipSQL: true });
   });
 });
 
@@ -268,5 +268,80 @@ describe('Acceptance Tests - Variables', () => {
 
   it('should handle mixed variable types', async () => {
     await testAssertion('assert(age >= 18 && isActive)', { age: 25, isActive: true });
+  });
+});
+
+describe('Acceptance Tests - Temporal Keywords', () => {
+  it('should evaluate NOW keyword', async () => {
+    await testAssertion('assert(NOW > D2020-01-01T00:00:00Z)');
+  });
+
+  it('should evaluate TODAY keyword', async () => {
+    await testAssertion('assert(TODAY >= D2020-01-01)');
+  });
+
+  it('should evaluate TOMORROW keyword', async () => {
+    await testAssertion('assert(TOMORROW > TODAY)');
+  });
+
+  it('should evaluate YESTERDAY keyword', async () => {
+    await testAssertion('assert(YESTERDAY < TODAY)');
+  });
+
+  it('should use temporal keywords in comparisons', async () => {
+    await testAssertion('assert(TOMORROW > YESTERDAY)');
+  });
+
+  it('should compare NOW with past datetime', async () => {
+    await testAssertion('assert(NOW > D2024-01-01T00:00:00Z)');
+  });
+
+  it('should compare TODAY with past date', async () => {
+    await testAssertion('assert(TODAY > D2024-01-01)');
+  });
+});
+
+describe('Acceptance Tests - Member Access', () => {
+  it('should access object property', async () => {
+    await testAssertion('assert(person.age == 25)', {
+      person: { age: 25, name: 'Alice' }
+    }, { skipSQL: true });
+  });
+
+  it('should access nested property', async () => {
+    await testAssertion('assert(user.profile.score == 100)', {
+      user: { profile: { score: 100 } }
+    }, { skipSQL: true });
+  });
+
+  it('should use member access in comparison', async () => {
+    await testAssertion('assert(person.age > 18)', {
+      person: { age: 25 }
+    }, { skipSQL: true });
+  });
+
+  it('should use member access in arithmetic', async () => {
+    await testAssertion('assert(person.age + 5 == 30)', {
+      person: { age: 25 }
+    }, { skipSQL: true });
+  });
+
+  it('should use multiple member accesses', async () => {
+    await testAssertion('assert(person1.age > person2.age)', {
+      person1: { age: 30 },
+      person2: { age: 25 }
+    }, { skipSQL: true });
+  });
+
+  it('should use member access with boolean property', async () => {
+    await testAssertion('assert(user.active)', {
+      user: { active: true }
+    }, { skipSQL: true });
+  });
+
+  it('should use member access in complex expression', async () => {
+    await testAssertion('assert(person.age >= 18 && person.active)', {
+      person: { age: 25, active: true }
+    }, { skipSQL: true });
   });
 });

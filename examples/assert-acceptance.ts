@@ -20,8 +20,8 @@ const tests = [
   'assert(5 >= 5)',
   'assert(true && true)',
   'assert(!false)',
-  'assert(d"2024-01-15" > d"2024-01-10")',
-  'assert(dt"2024-01-15T10:30:00Z" > dt"2024-01-15T09:00:00Z")',
+  'assert(D2024-01-15 > D2024-01-10)',
+  'assert(D2024-01-15T10:30:00Z > D2024-01-15T09:00:00Z)',
 ];
 
 console.log('Generated Test Code:\n');

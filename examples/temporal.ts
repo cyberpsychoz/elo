@@ -4,7 +4,7 @@ console.log('=== Temporal Expression Examples ===\n');
 
 // Example 1: Date literals
 console.log('Example 1: Date literals');
-const expr1 = 'd"2024-01-15"';
+const expr1 = 'D2024-01-15';
 const ast1 = parse(expr1);
 console.log(`Expression: ${expr1}`);
 console.log(`Ruby:       ${compileToRuby(ast1)}`);
@@ -14,7 +14,7 @@ console.log();
 
 // Example 2: DateTime literals
 console.log('Example 2: DateTime literals');
-const expr2 = 'dt"2024-01-15T10:30:00Z"';
+const expr2 = 'D2024-01-15T10:30:00Z';
 const ast2 = parse(expr2);
 console.log(`Expression: ${expr2}`);
 console.log(`Ruby:       ${compileToRuby(ast2)}`);
@@ -44,7 +44,7 @@ console.log();
 
 // Example 5: Date arithmetic - adding duration to date
 console.log('Example 5: Date arithmetic - date + duration');
-const expr5 = 'd"2024-01-15" + P1D';
+const expr5 = 'D2024-01-15 + P1D';
 const ast5 = parse(expr5);
 console.log(`Expression: ${expr5}`);
 console.log(`Ruby:       ${compileToRuby(ast5)}`);
@@ -54,7 +54,7 @@ console.log();
 
 // Example 6: Date comparison
 console.log('Example 6: Date comparison');
-const expr6 = 'd"2024-01-15" < d"2024-12-31"';
+const expr6 = 'D2024-01-15 < D2024-12-31';
 const ast6 = parse(expr6);
 console.log(`Expression: ${expr6}`);
 console.log(`Ruby:       ${compileToRuby(ast6)}`);
@@ -64,7 +64,7 @@ console.log();
 
 // Example 7: Date subtraction
 console.log('Example 7: Date subtraction (days between)');
-const expr7 = 'd"2024-12-31" - d"2024-01-01"';
+const expr7 = 'D2024-12-31 - D2024-01-01';
 const ast7 = parse(expr7);
 console.log(`Expression: ${expr7}`);
 console.log(`Ruby:       ${compileToRuby(ast7)}`);
@@ -74,7 +74,7 @@ console.log();
 
 // Example 8: Complex temporal expression
 console.log('Example 8: Check if event date is within 30 days');
-const expr8 = 'event_date >= d"2024-01-01" && event_date <= d"2024-01-01" + P30D';
+const expr8 = 'event_date >= D2024-01-01 && event_date <= D2024-01-01 + P30D';
 const ast8 = parse(expr8);
 console.log(`Expression: ${expr8}`);
 console.log(`Ruby:       ${compileToRuby(ast8)}`);
@@ -104,7 +104,7 @@ console.log();
 
 // Example 11: Datetime with time arithmetic
 console.log('Example 11: Datetime + duration');
-const expr11 = 'dt"2024-01-15T09:00:00Z" + PT2H30M';
+const expr11 = 'D2024-01-15T09:00:00Z + PT2H30M';
 const ast11 = parse(expr11);
 console.log(`Expression: ${expr11}`);
 console.log(`Ruby:       ${compileToRuby(ast11)}`);

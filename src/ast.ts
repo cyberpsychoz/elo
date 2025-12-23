@@ -2,7 +2,7 @@
  * AST node types for Klang expressions
  */
 
-export type Expr = Literal | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | FunctionCall;
+export type Expr = Literal | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess;
 
 /**
  * Literal value (number or boolean)
@@ -34,6 +34,14 @@ export interface DateTimeLiteral {
 export interface DurationLiteral {
   type: 'duration';
   value: string; // ISO8601 duration like P1D, PT1H30M
+}
+
+/**
+ * Temporal keyword (NOW, TODAY, TOMORROW, YESTERDAY)
+ */
+export interface TemporalKeyword {
+  type: 'temporal_keyword';
+  keyword: 'NOW' | 'TODAY' | 'TOMORROW' | 'YESTERDAY';
 }
 
 /**
@@ -79,6 +87,15 @@ export interface FunctionCall {
 }
 
 /**
+ * Member access (dot notation)
+ */
+export interface MemberAccess {
+  type: 'member_access';
+  object: Expr;
+  property: string;
+}
+
+/**
  * Helper functions to create AST nodes
  */
 export function literal(value: number | boolean): Literal {
@@ -109,6 +126,14 @@ export function unary(operator: UnaryOp['operator'], operand: Expr): UnaryOp {
   return { type: 'unary', operator, operand };
 }
 
+export function temporalKeyword(keyword: TemporalKeyword['keyword']): TemporalKeyword {
+  return { type: 'temporal_keyword', keyword };
+}
+
 export function functionCall(name: string, args: Expr[]): FunctionCall {
   return { type: 'function_call', name, args };
+}
+
+export function memberAccess(object: Expr, property: string): MemberAccess {
+  return { type: 'member_access', object, property };
 }

@@ -22,9 +22,30 @@ export function compileToSQL(expr: Expr): string {
       // Convert ISO8601 duration to PostgreSQL INTERVAL
       return `INTERVAL '${expr.value}'`;
 
+    case 'temporal_keyword':
+      switch (expr.keyword) {
+        case 'NOW':
+          return 'CURRENT_TIMESTAMP';
+        case 'TODAY':
+          return 'CURRENT_DATE';
+        case 'TOMORROW':
+          return 'CURRENT_DATE + INTERVAL \'1 day\'';
+        case 'YESTERDAY':
+          return 'CURRENT_DATE - INTERVAL \'1 day\'';
+      }
+
     case 'variable':
       // In SQL context, variables are typically column names
       return expr.name;
+
+    case 'member_access': {
+      const object = compileToSQL(expr.object);
+      // Add parentheses around complex expressions to ensure proper precedence
+      const objectExpr = (expr.object.type === 'binary' || expr.object.type === 'unary')
+        ? `(${object})`
+        : object;
+      return `${objectExpr}.${expr.property}`;
+    }
 
     case 'function_call': {
       const args = expr.args.map(arg => compileToSQL(arg));

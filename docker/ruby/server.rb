@@ -12,10 +12,23 @@ server.mount_proc '/eval' do |req, res|
     expression = data['expression']
     variables = data['variables'] || {}
 
+    # Helper to deep convert hash keys to symbols
+    def deep_symbolize_keys(obj)
+      case obj
+      when Hash
+        obj.transform_keys(&:to_sym).transform_values { |v| deep_symbolize_keys(v) }
+      when Array
+        obj.map { |item| deep_symbolize_keys(item) }
+      else
+        obj
+      end
+    end
+
     # Define variables in the binding
     binding_context = binding
     variables.each do |key, value|
-      binding_context.local_variable_set(key.to_sym, value)
+      symbolized_value = deep_symbolize_keys(value)
+      binding_context.local_variable_set(key.to_sym, symbolized_value)
     end
 
     # Evaluate the expression

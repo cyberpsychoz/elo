@@ -5,7 +5,7 @@ import { dateLiteral, dateTimeLiteral, durationLiteral } from './ast';
 
 describe('Temporal - Date Literals', () => {
   it('should parse date literal', () => {
-    const ast = parse('d"2024-01-15"');
+    const ast = parse('D2024-01-15');
     assert.strictEqual(ast.type, 'date');
     if (ast.type === 'date') {
       assert.strictEqual(ast.value, '2024-01-15');
@@ -30,7 +30,7 @@ describe('Temporal - Date Literals', () => {
 
 describe('Temporal - DateTime Literals', () => {
   it('should parse datetime literal', () => {
-    const ast = parse('dt"2024-01-15T10:30:00Z"');
+    const ast = parse('D2024-01-15T10:30:00Z');
     assert.strictEqual(ast.type, 'datetime');
     if (ast.type === 'datetime') {
       assert.strictEqual(ast.value, '2024-01-15T10:30:00Z');
@@ -104,7 +104,7 @@ describe('Temporal - Duration Literals', () => {
 
 describe('Temporal - Date Arithmetic', () => {
   it('should parse date + duration', () => {
-    const ast = parse('d"2024-01-15" + P1D');
+    const ast = parse('D2024-01-15 + P1D');
     assert.strictEqual(ast.type, 'binary');
     if (ast.type === 'binary') {
       assert.strictEqual(ast.operator, '+');
@@ -114,7 +114,7 @@ describe('Temporal - Date Arithmetic', () => {
   });
 
   it('should compile date + duration', () => {
-    const ast = parse('d"2024-01-15" + P1D');
+    const ast = parse('D2024-01-15 + P1D');
     assert.strictEqual(
       compileToRuby(ast),
       "Date.parse('2024-01-15') + ActiveSupport::Duration.parse('P1D')"
@@ -130,7 +130,7 @@ describe('Temporal - Date Arithmetic', () => {
   });
 
   it('should parse date - date', () => {
-    const ast = parse('d"2024-12-31" - d"2024-01-01"');
+    const ast = parse('D2024-12-31 - D2024-01-01');
     assert.strictEqual(ast.type, 'binary');
     if (ast.type === 'binary') {
       assert.strictEqual(ast.operator, '-');
@@ -142,7 +142,7 @@ describe('Temporal - Date Arithmetic', () => {
 
 describe('Temporal - Date Comparisons', () => {
   it('should parse date < date', () => {
-    const ast = parse('d"2024-01-15" < d"2024-12-31"');
+    const ast = parse('D2024-01-15 < D2024-12-31');
     assert.strictEqual(ast.type, 'binary');
     if (ast.type === 'binary') {
       assert.strictEqual(ast.operator, '<');
@@ -150,7 +150,7 @@ describe('Temporal - Date Comparisons', () => {
   });
 
   it('should compile date comparison', () => {
-    const ast = parse('d"2024-01-15" < d"2024-12-31"');
+    const ast = parse('D2024-01-15 < D2024-12-31');
     assert.strictEqual(
       compileToRuby(ast),
       "Date.parse('2024-01-15') < Date.parse('2024-12-31')"
@@ -168,7 +168,7 @@ describe('Temporal - Date Comparisons', () => {
 
 describe('Temporal - Complex Expressions', () => {
   it('should parse date range check', () => {
-    const ast = parse('event_date >= d"2024-01-01" && event_date <= d"2024-01-01" + P30D');
+    const ast = parse('event_date >= D2024-01-01 && event_date <= D2024-01-01 + P30D');
     assert.strictEqual(ast.type, 'binary');
     if (ast.type === 'binary') {
       assert.strictEqual(ast.operator, '&&');
@@ -197,9 +197,112 @@ describe('Temporal - Complex Expressions', () => {
   });
 });
 
+describe('Temporal - Temporal Keywords', () => {
+  it('should parse NOW keyword', () => {
+    const ast = parse('NOW');
+    assert.strictEqual(ast.type, 'temporal_keyword');
+    if (ast.type === 'temporal_keyword') {
+      assert.strictEqual(ast.keyword, 'NOW');
+    }
+  });
+
+  it('should parse TODAY keyword', () => {
+    const ast = parse('TODAY');
+    assert.strictEqual(ast.type, 'temporal_keyword');
+    if (ast.type === 'temporal_keyword') {
+      assert.strictEqual(ast.keyword, 'TODAY');
+    }
+  });
+
+  it('should parse TOMORROW keyword', () => {
+    const ast = parse('TOMORROW');
+    assert.strictEqual(ast.type, 'temporal_keyword');
+    if (ast.type === 'temporal_keyword') {
+      assert.strictEqual(ast.keyword, 'TOMORROW');
+    }
+  });
+
+  it('should parse YESTERDAY keyword', () => {
+    const ast = parse('YESTERDAY');
+    assert.strictEqual(ast.type, 'temporal_keyword');
+    if (ast.type === 'temporal_keyword') {
+      assert.strictEqual(ast.keyword, 'YESTERDAY');
+    }
+  });
+
+  it('should compile NOW to JavaScript', () => {
+    const ast = parse('NOW');
+    assert.strictEqual(compileToJavaScript(ast), 'new Date()');
+  });
+
+  it('should compile TODAY to JavaScript', () => {
+    const ast = parse('TODAY');
+    assert.strictEqual(compileToJavaScript(ast), 'new Date(new Date().setHours(0, 0, 0, 0))');
+  });
+
+  it('should compile TOMORROW to JavaScript', () => {
+    const ast = parse('TOMORROW');
+    assert.strictEqual(compileToJavaScript(ast), 'new Date(new Date().setHours(24, 0, 0, 0))');
+  });
+
+  it('should compile YESTERDAY to JavaScript', () => {
+    const ast = parse('YESTERDAY');
+    assert.strictEqual(compileToJavaScript(ast), 'new Date(new Date().setHours(-24, 0, 0, 0))');
+  });
+
+  it('should compile NOW to Ruby', () => {
+    const ast = parse('NOW');
+    assert.strictEqual(compileToRuby(ast), 'DateTime.now');
+  });
+
+  it('should compile TODAY to Ruby', () => {
+    const ast = parse('TODAY');
+    assert.strictEqual(compileToRuby(ast), 'Date.today');
+  });
+
+  it('should compile TOMORROW to Ruby', () => {
+    const ast = parse('TOMORROW');
+    assert.strictEqual(compileToRuby(ast), 'Date.today + 1');
+  });
+
+  it('should compile YESTERDAY to Ruby', () => {
+    const ast = parse('YESTERDAY');
+    assert.strictEqual(compileToRuby(ast), 'Date.today - 1');
+  });
+
+  it('should compile NOW to SQL', () => {
+    const ast = parse('NOW');
+    assert.strictEqual(compileToSQL(ast), 'CURRENT_TIMESTAMP');
+  });
+
+  it('should compile TODAY to SQL', () => {
+    const ast = parse('TODAY');
+    assert.strictEqual(compileToSQL(ast), 'CURRENT_DATE');
+  });
+
+  it('should compile TOMORROW to SQL', () => {
+    const ast = parse('TOMORROW');
+    assert.strictEqual(compileToSQL(ast), 'CURRENT_DATE + INTERVAL \'1 day\'');
+  });
+
+  it('should compile YESTERDAY to SQL', () => {
+    const ast = parse('YESTERDAY');
+    assert.strictEqual(compileToSQL(ast), 'CURRENT_DATE - INTERVAL \'1 day\'');
+  });
+
+  it('should use temporal keywords in expressions', () => {
+    const ast = parse('TODAY > D2024-01-01');
+    assert.strictEqual(ast.type, 'binary');
+    if (ast.type === 'binary') {
+      assert.strictEqual(ast.left.type, 'temporal_keyword');
+      assert.strictEqual(ast.right.type, 'date');
+    }
+  });
+});
+
 describe('Temporal - Edge Cases', () => {
   it('should handle datetime with milliseconds', () => {
-    const ast = parse('dt"2024-01-15T10:30:00.123Z"');
+    const ast = parse('D2024-01-15T10:30:00.123Z');
     assert.strictEqual(ast.type, 'datetime');
     if (ast.type === 'datetime') {
       assert.strictEqual(ast.value, '2024-01-15T10:30:00.123Z');

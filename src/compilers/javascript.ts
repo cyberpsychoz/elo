@@ -18,8 +18,29 @@ export function compileToJavaScript(expr: Expr): string {
       // Duration as ISO8601 string - requires a library like dayjs or moment
       return `Duration.parse('${expr.value}')`;
 
+    case 'temporal_keyword':
+      switch (expr.keyword) {
+        case 'NOW':
+          return 'new Date()';
+        case 'TODAY':
+          return 'new Date(new Date().setHours(0, 0, 0, 0))';
+        case 'TOMORROW':
+          return 'new Date(new Date().setHours(24, 0, 0, 0))';
+        case 'YESTERDAY':
+          return 'new Date(new Date().setHours(-24, 0, 0, 0))';
+      }
+
     case 'variable':
       return expr.name;
+
+    case 'member_access': {
+      const object = compileToJavaScript(expr.object);
+      // Add parentheses around complex expressions to ensure proper precedence
+      const objectExpr = (expr.object.type === 'binary' || expr.object.type === 'unary')
+        ? `(${object})`
+        : object;
+      return `${objectExpr}.${expr.property}`;
+    }
 
     case 'function_call': {
       const args = expr.args.map(arg => compileToJavaScript(arg));

@@ -20,8 +20,8 @@ that can be evaluated in different environments.
 - **Literals**:
   - Numbers: `42`, `3.14`
   - Booleans: `true`, `false`
-  - Dates: `d"2024-01-15"`
-  - DateTimes: `dt"2024-01-15T10:30:00Z"`
+  - Dates: `D2024-01-15`
+  - DateTimes: `D2024-01-15T10:30:00Z`
   - Durations: `P1D`, `PT1H30M`, `P1Y2M3D` (ISO8601)
 - **Parentheses** for grouping
 - **Multi-target compilation**:
@@ -146,13 +146,13 @@ console.log(compileToSQL(ast3));        // => NOT disabled
 
 ```typescript
 // Date literals
-const date = parse('d"2024-01-15"');
+const date = parse('D2024-01-15');
 console.log(compileToRuby(date));       // => Date.parse('2024-01-15')
 console.log(compileToJavaScript(date)); // => new Date('2024-01-15')
 console.log(compileToSQL(date));        // => DATE '2024-01-15'
 
 // DateTime literals
-const datetime = parse('dt"2024-01-15T10:30:00Z"');
+const datetime = parse('D2024-01-15T10:30:00Z');
 console.log(compileToRuby(datetime));       // => DateTime.parse('2024-01-15T10:30:00Z')
 console.log(compileToJavaScript(datetime)); // => new Date('2024-01-15T10:30:00Z')
 console.log(compileToSQL(datetime));        // => TIMESTAMP '2024-01-15 10:30:00'
@@ -166,20 +166,20 @@ console.log(compileToJavaScript(duration)); // => Duration.parse('P1D')
 console.log(compileToSQL(duration));        // => INTERVAL 'P1D'
 
 // Date arithmetic
-const futureDate = parse('d"2024-01-15" + P1D');
+const futureDate = parse('D2024-01-15 + P1D');
 console.log(compileToRuby(futureDate));
 // => Date.parse('2024-01-15') + ActiveSupport::Duration.parse('P1D')
 console.log(compileToSQL(futureDate));
 // => DATE '2024-01-15' + INTERVAL 'P1D'
 
 // Date comparisons
-const dateCheck = parse('d"2024-01-15" < d"2024-12-31"');
+const dateCheck = parse('D2024-01-15 < D2024-12-31');
 console.log(compileToSQL(dateCheck));
 // => DATE '2024-01-15' < DATE '2024-12-31'
 
 // Complex temporal expressions
 const ageCheck = parse('current_date - birth_date > P18Y');
-const rangeCheck = parse('event_date >= d"2024-01-01" && event_date <= d"2024-01-01" + P30D');
+const rangeCheck = parse('event_date >= D2024-01-01 && event_date <= D2024-01-01 + P30D');
 ```
 
 ### Programmatic AST Construction
@@ -220,11 +220,11 @@ node dist/examples/demo.js      # Quick demo
 - `!active` - Negation
 
 **Temporal:**
-- `d"2024-01-15" + P1D` - Add 1 day to a date
-- `d"2024-12-31" - d"2024-01-01"` - Calculate days between dates
+- `D2024-01-15 + P1D` - Add 1 day to a date
+- `D2024-12-31 - D2024-01-01` - Calculate days between dates
 - `current_date - birth_date > P18Y` - Age validation
-- `event_date >= d"2024-01-01" && event_date <= d"2024-01-01" + P30D` - Date range check
-- `dt"2024-01-15T09:00:00Z" + PT2H30M` - Add duration to datetime
+- `event_date >= D2024-01-01 && event_date <= D2024-01-01 + P30D` - Date range check
+- `D2024-01-15T09:00:00Z + PT2H30M` - Add duration to datetime
 
 ## Grammar
 
@@ -243,8 +243,8 @@ primary    -> NUMBER | BOOLEAN | DATE | DATETIME | DURATION | IDENTIFIER | '(' e
 ```
 
 **Temporal Literal Syntax:**
-- `DATE` → `d"YYYY-MM-DD"` (e.g., `d"2024-01-15"`)
-- `DATETIME` → `dt"ISO8601"` (e.g., `dt"2024-01-15T10:30:00Z"`)
+- `DATE` → `DYYYY-MM-DD` (e.g., `D2024-01-15`)
+- `DATETIME` → `DISO8601` (e.g., `D2024-01-15T10:30:00Z`)
 - `DURATION` → ISO8601 duration (e.g., `P1D`, `PT1H30M`, `P1Y2M3D`)
   - Years: `Y`, Months: `M`, Weeks: `W`, Days: `D`
   - Time separator: `T`

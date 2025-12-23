@@ -47,4 +47,4 @@ console.log('=== Bootstrap testing ===');
 console.log('You can now write self-testing Klang expressions:');
 console.log('  assert(2 + 2 == 4)');
 console.log('  assert(5 > 3)');
-console.log('  assert(d"2024-01-15" > d"2024-01-10")');
+console.log('  assert(D2024-01-15 > D2024-01-10)');

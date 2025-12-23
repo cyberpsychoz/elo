@@ -17,8 +17,29 @@ export function compileToRuby(expr: Expr): string {
     case 'duration':
       return `ActiveSupport::Duration.parse('${expr.value}')`;
 
+    case 'temporal_keyword':
+      switch (expr.keyword) {
+        case 'NOW':
+          return 'DateTime.now';
+        case 'TODAY':
+          return 'Date.today';
+        case 'TOMORROW':
+          return 'Date.today + 1';
+        case 'YESTERDAY':
+          return 'Date.today - 1';
+      }
+
     case 'variable':
       return expr.name;
+
+    case 'member_access': {
+      const object = compileToRuby(expr.object);
+      // Add parentheses around complex expressions to ensure proper precedence
+      const objectExpr = (expr.object.type === 'binary' || expr.object.type === 'unary')
+        ? `(${object})`
+        : object;
+      return `${objectExpr}[:${expr.property}]`;
+    }
 
     case 'function_call': {
       const args = expr.args.map(arg => compileToRuby(arg));
