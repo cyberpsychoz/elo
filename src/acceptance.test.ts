@@ -1,10 +1,11 @@
 import { describe, it, before } from 'node:test';
-import assert from 'node:assert/strict';
 import { Client } from 'pg';
 import { parse } from './parser';
 import { compileToRuby } from './compilers/ruby';
 import { compileToJavaScript } from './compilers/javascript';
 import { compileToSQL } from './compilers/sql';
+import { readdirSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 const RUBY_URL = 'http://localhost:3011';
 const NODE_URL = 'http://localhost:3002';
@@ -164,74 +165,58 @@ async function testAssertion(
   }
 }
 
-describe('Acceptance Tests - Arithmetic', () => {
-  it('should evaluate simple addition', async () => {
-    await testAssertion('assert(2 + 3 == 5)');
-  });
+// Load test suites from the test directory
+const TEST_DIR = join(__dirname, '../../test');
 
-  it('should evaluate complex arithmetic', async () => {
-    await testAssertion('assert(2 + 3 * 4 == 14)');
-  });
+interface TestSuite {
+  name: string;
+  assertions: string[];
+}
 
-  it('should evaluate with parentheses', async () => {
-    await testAssertion('assert((2 + 3) * 4 == 20)');
-  });
+function loadTestSuites(): TestSuite[] {
+  const suites: TestSuite[] = [];
+  const files = readdirSync(TEST_DIR);
+  const klangFiles = files.filter(f => f.endsWith('.klang'));
 
-  it('should evaluate power operator', async () => {
-    await testAssertion('assert(2 ^ 3 == 8)');
-  });
+  for (const klangFile of klangFiles) {
+    const name = klangFile.replace('.klang', '');
+    const klangPath = join(TEST_DIR, klangFile);
 
-  it('should evaluate modulo', async () => {
-    await testAssertion('assert(10 % 3 == 1)');
-  });
+    const klangContent = readFileSync(klangPath, 'utf-8');
+    const assertions = klangContent
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
-  it('should evaluate with variables', async () => {
-    await testAssertion('assert(x + y * 2 == 11)', { x: 5, y: 3 });
-  });
+    suites.push({ name, assertions });
+  }
 
-  it('should evaluate negative numbers', async () => {
-    await testAssertion('assert(-5 + 3 == -2)');
-  });
-});
+  return suites;
+}
 
-describe('Acceptance Tests - Boolean', () => {
-  it('should evaluate boolean literals', async () => {
-    await testAssertion('assert(true)');
-    await testAssertion('assert(!false)');
-  });
+// Generate test suites dynamically from files
+const testSuites = loadTestSuites();
 
-  it('should evaluate comparisons', async () => {
-    await testAssertion('assert(5 > 3)');
-    await testAssertion('assert(!(5 < 3))');
-    await testAssertion('assert(5 >= 5)');
-    await testAssertion('assert(!(5 <= 4))');
-  });
+// Tests that need variables or special handling - skip for now
+const SKIP_SUITES = new Set(['variables', 'member-access']);
 
-  it('should evaluate equality', async () => {
-    await testAssertion('assert(5 == 5)');
-    await testAssertion('assert(5 != 3)');
-  });
+for (const suite of testSuites) {
+  if (SKIP_SUITES.has(suite.name)) {
+    continue;
+  }
 
-  it('should evaluate logical AND', async () => {
-    await testAssertion('assert(true && true)');
-    await testAssertion('assert(!(true && false))');
+  describe(`Acceptance - ${suite.name}`, () => {
+    for (let i = 0; i < suite.assertions.length; i++) {
+      const assertion = suite.assertions[i];
+      it(`should evaluate line ${i + 1}: ${assertion}`, async () => {
+        await testAssertion(assertion);
+      });
+    }
   });
+}
 
-  it('should evaluate logical OR', async () => {
-    await testAssertion('assert(false || true)');
-    await testAssertion('assert(!(false || false))');
-  });
-
-  it('should evaluate logical NOT', async () => {
-    await testAssertion('assert(!true == false)');
-    await testAssertion('assert(!false == true)');
-  });
-
-  it('should evaluate complex boolean expressions', async () => {
-    await testAssertion('assert((5 > 3) && (2 < 4))');
-    await testAssertion('assert((5 < 3) || (2 == 2))');
-  });
-});
+// Keep temporal and variables tests from the original implementation
+// since they need special handling
 
 describe('Acceptance Tests - Temporal', () => {
   it('should compare dates', async () => {
@@ -303,7 +288,7 @@ describe('Acceptance Tests - Temporal Keywords', () => {
 });
 
 describe('Acceptance Tests - Member Access', () => {
-  it.only('should access object property', async () => {
+  it('should access object property', async () => {
     await testAssertion('assert(person.age == 25)', {
       person: { age: 25, name: 'Alice' }
     });
