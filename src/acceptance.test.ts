@@ -200,48 +200,27 @@ const testSuites = loadTestSuites();
 // Tests that need variables or special handling - skip for now
 const SKIP_SUITES = new Set(['variables', 'member-access']);
 
+// Suites that need to skip SQL evaluation (e.g., duration arithmetic not supported in SQL)
+const SKIP_SQL_SUITES = new Set(['temporal-duration']);
+
 for (const suite of testSuites) {
   if (SKIP_SUITES.has(suite.name)) {
     continue;
   }
 
+  const skipSQL = SKIP_SQL_SUITES.has(suite.name);
+
   describe(`Acceptance - ${suite.name}`, () => {
     for (let i = 0; i < suite.assertions.length; i++) {
       const assertion = suite.assertions[i];
       it(`should evaluate line ${i + 1}: ${assertion}`, async () => {
-        await testAssertion(assertion);
+        await testAssertion(assertion, {}, skipSQL ? { skipSQL: true } : {});
       });
     }
   });
 }
 
-// Keep temporal and variables tests from the original implementation
-// since they need special handling
-
-describe('Acceptance Tests - Temporal', () => {
-  it('should compare dates', async () => {
-    await testAssertion('assert(D2024-01-15 > D2024-01-10)');
-    await testAssertion('assert(!(D2024-01-15 < D2024-01-10))');
-    await testAssertion('assert(D2024-01-15 >= D2024-01-15)');
-    await testAssertion('assert(D2024-01-15 <= D2024-01-15)');
-  });
-
-  it('should compare datetimes', async () => {
-    await testAssertion('assert(D2024-01-15T10:30:00Z > D2024-01-15T09:00:00Z)');
-    await testAssertion('assert(D2024-01-15T10:30:00Z < D2024-01-15T11:00:00Z)');
-    await testAssertion('assert(D2024-01-15T10:30:00Z >= D2024-01-15T10:30:00Z)');
-  });
-
-  it('should add duration to date', async () => {
-    await testAssertion('assert(D2024-01-15 + P1D > D2024-01-15)', {}, { skipSQL: true });
-    await testAssertion('assert(D2024-01-15 + P1D < D2024-01-17)', {}, { skipSQL: true });
-  });
-
-  it('should subtract duration from date', async () => {
-    await testAssertion('assert(D2024-01-15 - P1D < D2024-01-15)', {}, { skipSQL: true });
-    await testAssertion('assert(D2024-01-15 - P1D > D2024-01-13)', {}, { skipSQL: true });
-  });
-});
+// Keep only tests that truly need variables passed in
 
 describe('Acceptance Tests - Variables', () => {
   it('should handle numeric variables', async () => {
@@ -254,36 +233,6 @@ describe('Acceptance Tests - Variables', () => {
 
   it('should handle mixed variable types', async () => {
     await testAssertion('assert(age >= 18 && isActive)', { age: 25, isActive: true });
-  });
-});
-
-describe('Acceptance Tests - Temporal Keywords', () => {
-  it('should evaluate NOW keyword', async () => {
-    await testAssertion('assert(NOW > D2020-01-01T00:00:00Z)');
-  });
-
-  it('should evaluate TODAY keyword', async () => {
-    await testAssertion('assert(TODAY >= D2020-01-01)');
-  });
-
-  it('should evaluate TOMORROW keyword', async () => {
-    await testAssertion('assert(TOMORROW > TODAY)');
-  });
-
-  it('should evaluate YESTERDAY keyword', async () => {
-    await testAssertion('assert(YESTERDAY < TODAY)');
-  });
-
-  it('should use temporal keywords in comparisons', async () => {
-    await testAssertion('assert(TOMORROW > YESTERDAY)');
-  });
-
-  it('should compare NOW with past datetime', async () => {
-    await testAssertion('assert(NOW > D2024-01-01T00:00:00Z)');
-  });
-
-  it('should compare TODAY with past date', async () => {
-    await testAssertion('assert(TODAY > D2024-01-01)');
   });
 });
 

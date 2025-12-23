@@ -1,0 +1,7 @@
+assert(NOW > D2020-01-01T00:00:00Z)
+assert(TODAY >= D2020-01-01)
+assert(TOMORROW > TODAY)
+assert(YESTERDAY < TODAY)
+assert(TOMORROW > YESTERDAY)
+assert(NOW > D2024-01-01T00:00:00Z)
+assert(TODAY > D2024-01-01)
