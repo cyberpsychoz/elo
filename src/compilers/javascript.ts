@@ -33,6 +33,21 @@ export function compileToJavaScript(expr: Expr): string {
         return `Math.pow(${left}, ${right})`;
       }
 
+      // Handle date + duration and date - duration
+      if ((expr.operator === '+' || expr.operator === '-') &&
+          (expr.left.type === 'date' || expr.left.type === 'datetime') &&
+          expr.right.type === 'duration') {
+        const method = expr.operator === '+' ? 'addTo' : 'subtractFrom';
+        return `${right}.${method}(${left})`;
+      }
+
+      // Handle duration + date (commutative addition)
+      if (expr.operator === '+' &&
+          expr.left.type === 'duration' &&
+          (expr.right.type === 'date' || expr.right.type === 'datetime')) {
+        return `${left}.addTo(${right})`;
+      }
+
       // Add parentheses for nested expressions to preserve precedence
       const leftExpr = needsParens(expr.left, expr.operator, 'left')
         ? `(${left})`

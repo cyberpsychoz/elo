@@ -15,8 +15,8 @@ export function compileToSQL(expr: Expr): string {
       return `DATE '${expr.value}'`;
 
     case 'datetime':
-      // Convert ISO8601 to PostgreSQL TIMESTAMP
-      return `TIMESTAMP '${expr.value.replace('T', ' ').replace('Z', '')}'`;
+      // Convert ISO8601 to PostgreSQL TIMESTAMP WITH TIME ZONE in UTC
+      return `TIMESTAMP WITH TIME ZONE '${expr.value}'`;
 
     case 'duration':
       // Convert ISO8601 duration to PostgreSQL INTERVAL
@@ -43,12 +43,16 @@ export function compileToSQL(expr: Expr): string {
         return `POWER(${left}, ${right})`;
       }
 
-      // Convert logical operators to SQL syntax
+      // Convert operators to SQL syntax
       let sqlOp: string = expr.operator;
       if (expr.operator === '&&') {
         sqlOp = 'AND';
       } else if (expr.operator === '||') {
         sqlOp = 'OR';
+      } else if (expr.operator === '==') {
+        sqlOp = '=';
+      } else if (expr.operator === '!=') {
+        sqlOp = '<>';
       }
 
       // Add parentheses for nested expressions to preserve precedence

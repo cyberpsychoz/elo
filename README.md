@@ -38,6 +38,8 @@ npm run build
 
 ## Testing
 
+### Unit Tests
+
 Klang includes a comprehensive test suite with 136 tests across 31 suites covering:
 - Parser and lexer functionality (literals, operators, precedence)
 - AST construction and helper functions
@@ -46,12 +48,55 @@ Klang includes a comprehensive test suite with 136 tests across 31 suites coveri
 - Integration tests with real-world examples
 - Edge cases and error handling
 
-Run the tests:
+Run the unit tests:
 ```bash
 npm test
 ```
 
 Current test results: **136 tests, 0 failures**
+
+### Acceptance Tests
+
+Klang includes acceptance tests that validate compiled expressions execute correctly in actual Ruby, JavaScript, and PostgreSQL runtimes using Docker containers.
+
+**Architecture:**
+- **Ruby evaluation server** (port 3011): WEBrick HTTP server that evaluates Ruby expressions
+- **Node.js evaluation server** (port 3002): HTTP server that evaluates JavaScript expressions
+- **PostgreSQL database** (port 5432): PostgreSQL 16 for SQL query execution
+- **Test suite**: Compiles Klang expressions to all three targets and verifies results match
+
+**Prerequisites:**
+- Docker and Docker Compose installed
+
+**Running Acceptance Tests:**
+
+1. Start the Docker services:
+```bash
+npm run docker:up
+```
+
+2. Run the acceptance tests:
+```bash
+npm run test:acceptance
+```
+
+3. Stop the services when done:
+```bash
+npm run docker:down
+```
+
+**View service logs:**
+```bash
+npm run docker:logs
+```
+
+**Test Coverage:**
+- Arithmetic operations (addition, multiplication, power, modulo, negation)
+- Boolean expressions (literals, comparisons, logical operators)
+- Temporal types (date/datetime literals, comparisons, arithmetic with durations)
+- Variable substitution across all three runtimes
+
+The acceptance tests validate that the same Klang expression produces semantically equivalent results when evaluated in Ruby, JavaScript, and PostgreSQL.
 
 ## Usage
 
@@ -218,6 +263,7 @@ klang/
 │   ├── parser.test.ts         # Parser and lexer tests
 │   ├── integration.test.ts    # End-to-end integration tests
 │   ├── temporal.test.ts       # Temporal feature tests
+│   ├── acceptance.test.ts     # Acceptance tests (Docker-based)
 │   └── compilers/
 │       ├── ruby.ts            # Ruby code generator
 │       ├── ruby.test.ts       # Ruby compiler tests
@@ -230,6 +276,14 @@ klang/
 │   ├── boolean.ts             # Boolean expression examples
 │   ├── temporal.ts            # Temporal expression examples
 │   └── demo.ts                # Quick demo
+├── docker/
+│   ├── ruby/
+│   │   ├── Dockerfile         # Ruby evaluation server image
+│   │   └── server.rb          # WEBrick HTTP server for Ruby eval
+│   └── node/
+│       ├── Dockerfile         # Node.js evaluation server image
+│       └── server.js          # HTTP server for JavaScript eval
+├── docker-compose.yml         # Multi-container orchestration
 ├── package.json
 ├── tsconfig.json
 └── README.md

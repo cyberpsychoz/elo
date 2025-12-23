@@ -91,14 +91,14 @@ describe('SQL Compiler - Comparison Operators', () => {
     assert.strictEqual(compileToSQL(ast), 'x >= 10');
   });
 
-  it('should compile equality', () => {
+  it('should compile equality to =', () => {
     const ast = binary('==', variable('x'), literal(10));
-    assert.strictEqual(compileToSQL(ast), 'x == 10');
+    assert.strictEqual(compileToSQL(ast), 'x = 10');
   });
 
-  it('should compile inequality', () => {
+  it('should compile inequality to <>', () => {
     const ast = binary('!=', variable('x'), literal(10));
-    assert.strictEqual(compileToSQL(ast), 'x != 10');
+    assert.strictEqual(compileToSQL(ast), 'x <> 10');
   });
 });
 
@@ -219,7 +219,7 @@ describe('SQL Compiler - Complex Expressions', () => {
       ),
       binary('==', variable('vip'), literal(true))
     );
-    assert.strictEqual(compileToSQL(ast), 'price > 100 AND discount >= 10 OR vip == TRUE');
+    assert.strictEqual(compileToSQL(ast), 'price > 100 AND discount >= 10 OR vip = TRUE');
   });
 
   it('should compile mixed arithmetic and boolean', () => {
@@ -248,7 +248,7 @@ describe('SQL Compiler - WHERE clause scenarios', () => {
       binary('==', variable('status'), literal(1)),
       binary('==', variable('status'), literal(2))
     );
-    assert.strictEqual(compileToSQL(ast), 'status == 1 OR status == 2');
+    assert.strictEqual(compileToSQL(ast), 'status = 1 OR status = 2');
   });
 
   it('should compile NOT NULL check simulation', () => {
