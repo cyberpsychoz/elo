@@ -1,7 +1,7 @@
-true
-x > 10
-age == 25
-x > 0 && x < 100
-status == 1 || status == 2
-!active
-price > 100 && discount >= 10 || vip == true
+(function() { if (!(true)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(15 > 10)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(25 == 25)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(50 > 0 && 50 < 100)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(1 == 1 || 2 == 2)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(!false)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(150 > 100 && 15 >= 10 || true == true)) throw new Error("Assertion failed"); return true; })()

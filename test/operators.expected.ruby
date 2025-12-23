@@ -1,12 +1,12 @@
-1 + 2
-5 - 3
-4 * 3
-10 / 2
-10 % 3
-2 ** 3
-x < 10
-x > 10
-x <= 10
-x >= 10
-x == 10
-x != 10
+(raise "Assertion failed" unless 1 + 2 == 3; true)
+(raise "Assertion failed" unless 5 - 3 == 2; true)
+(raise "Assertion failed" unless 4 * 3 == 12; true)
+(raise "Assertion failed" unless 10 / 2 == 5; true)
+(raise "Assertion failed" unless 10 % 3 == 1; true)
+(raise "Assertion failed" unless 2 ** 3 == 8; true)
+(raise "Assertion failed" unless 5 < 10; true)
+(raise "Assertion failed" unless 15 > 10; true)
+(raise "Assertion failed" unless 10 <= 10; true)
+(raise "Assertion failed" unless 10 >= 10; true)
+(raise "Assertion failed" unless 10 == 10; true)
+(raise "Assertion failed" unless 5 != 10; true)

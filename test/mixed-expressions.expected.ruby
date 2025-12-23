@@ -1,4 +1,4 @@
-total * 1.1 > 1000
-price * quantity - discount
-value >= min && value <= max
-amount > 0 && (approved || amount < 1000)
+(raise "Assertion failed" unless 100 * 1.1 > 100; true)
+(raise "Assertion failed" unless 10 * 5 - 10 == 40; true)
+(raise "Assertion failed" unless 75 >= 50 && 75 <= 100; true)
+(raise "Assertion failed" unless 50 > 0 && (true || 50 < 1000); true)

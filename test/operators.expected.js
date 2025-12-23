@@ -1,12 +1,12 @@
-1 + 2
-5 - 3
-4 * 3
-10 / 2
-10 % 3
-Math.pow(2, 3)
-x < 10
-x > 10
-x <= 10
-x >= 10
-x == 10
-x != 10
+(function() { if (!(1 + 2 == 3)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(5 - 3 == 2)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(4 * 3 == 12)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(10 / 2 == 5)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(10 % 3 == 1)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(Math.pow(2, 3) == 8)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(5 < 10)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(15 > 10)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(10 <= 10)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(10 >= 10)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(10 == 10)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(5 != 10)) throw new Error("Assertion failed"); return true; })()

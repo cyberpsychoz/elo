@@ -1,7 +1,7 @@
-2 + 3
-2 + 3 * 4
-2 ** 3
-2 ** 3 + 1
-(x + 5) * (y - 3) / 2
--x + 10
-a % b + c / d
+(raise "Assertion failed" unless 2 + 3 == 5; true)
+(raise "Assertion failed" unless 2 + 3 * 4 == 14; true)
+(raise "Assertion failed" unless 2 ** 3 == 8; true)
+(raise "Assertion failed" unless 2 ** 3 + 1 == 9; true)
+(raise "Assertion failed" unless (5 + 5) * (10 - 3) / 2 == 35; true)
+(raise "Assertion failed" unless -5 + 10 == 5; true)
+(raise "Assertion failed" unless 10 % 3 + 8 / 2 == 5; true)

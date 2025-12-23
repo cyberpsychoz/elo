@@ -1,7 +1,7 @@
-2 + 3
-2 + 3 * 4
-POWER(2, 3)
-POWER(2, 3) + 1
-(x + 5) * (y - 3) / 2
--x + 10
-a % b + c / d
+CASE WHEN 2 + 3 = 5 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN 2 + 3 * 4 = 14 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN POWER(2, 3) = 8 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN POWER(2, 3) + 1 = 9 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN (5 + 5) * (10 - 3) / 2 = 35 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN -5 + 10 = 5 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN 10 % 3 + 8 / 2 = 5 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END

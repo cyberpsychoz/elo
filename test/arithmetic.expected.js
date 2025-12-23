@@ -1,7 +1,7 @@
-2 + 3
-2 + 3 * 4
-Math.pow(2, 3)
-Math.pow(2, 3) + 1
-(x + 5) * (y - 3) / 2
--x + 10
-a % b + c / d
+(function() { if (!(2 + 3 == 5)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(2 + 3 * 4 == 14)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(Math.pow(2, 3) == 8)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(Math.pow(2, 3) + 1 == 9)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!((5 + 5) * (10 - 3) / 2 == 35)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(-5 + 10 == 5)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(10 % 3 + 8 / 2 == 5)) throw new Error("Assertion failed"); return true; })()

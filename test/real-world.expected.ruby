@@ -1,6 +1,6 @@
-price * (1 - discount / 100)
-subtotal + subtotal * tax_rate
-principal * (1 + rate) ** years
-age >= 18 && (income > 30000 || has_guarantor == true)
-actual / target * 100
-weight / height ** 2
+(raise "Assertion failed" unless 100 * (1 - 20 / 100) == 80; true)
+(raise "Assertion failed" unless 90 + 90 * 0.1 == 99; true)
+(raise "Assertion failed" unless 1000 * (1 + 0.05) ** 10 > 1500; true)
+(raise "Assertion failed" unless 30 >= 18 && (50000 > 30000 || true == true); true)
+(raise "Assertion failed" unless 80 / 100 * 100 == 80; true)
+(raise "Assertion failed" unless 70 / 1.75 ** 2 < 25; true)

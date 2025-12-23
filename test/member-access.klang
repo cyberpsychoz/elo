@@ -1,5 +1,4 @@
-t.age
-t.person.age
-t.age > 35
-t.age + 5
-t.age >= 18 && t.active
+assert(person.age == 25)
+assert(employee.salary > 50000)
+assert(customer.balance + 100 == 600)
+assert(student.gpa >= 3 && student.enrolled)

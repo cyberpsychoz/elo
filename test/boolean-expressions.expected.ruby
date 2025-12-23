@@ -1,7 +1,7 @@
-true
-x > 10
-age == 25
-x > 0 && x < 100
-status == 1 || status == 2
-!active
-price > 100 && discount >= 10 || vip == true
+(raise "Assertion failed" unless true; true)
+(raise "Assertion failed" unless 15 > 10; true)
+(raise "Assertion failed" unless 25 == 25; true)
+(raise "Assertion failed" unless 50 > 0 && 50 < 100; true)
+(raise "Assertion failed" unless 1 == 1 || 2 == 2; true)
+(raise "Assertion failed" unless !false; true)
+(raise "Assertion failed" unless 150 > 100 && 15 >= 10 || true == true; true)

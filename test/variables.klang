@@ -1,4 +1,4 @@
-x + y
-price + tax
-user_age + account_balance
-var1 + var2
+assert(x + y == 15)
+assert(price + tax == 110)
+assert(user_age + account_balance == 2525)
+assert(var1 + var2 == 30)

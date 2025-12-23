@@ -1,6 +1,6 @@
-price * (1 - discount / 100)
-subtotal + subtotal * tax_rate
-principal * POWER(1 + rate, years)
-age >= 18 AND (income > 30000 OR has_guarantor = TRUE)
-actual / target * 100
-weight / POWER(height, 2)
+CASE WHEN 100 * (1 - 20 / 100) = 80 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN 90 + 90 * 0.1 = 99 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN 1000 * POWER(1 + 0.05, 10) > 1500 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN 30 >= 18 AND (50000 > 30000 OR TRUE = TRUE) THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN 80 / 100 * 100 = 80 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN 70 / POWER(1.75, 2) < 25 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
