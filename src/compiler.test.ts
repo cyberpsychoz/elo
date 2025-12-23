@@ -1,0 +1,107 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'fs';
+import { join } from 'path';
+import { parse } from './parser';
+import { compileToJavaScript } from './compilers/javascript';
+import { compileToRuby } from './compilers/ruby';
+import { compileToSQL } from './compilers/sql';
+
+/**
+ * Compiler tests using test fixtures from test/ directory.
+ *
+ * Each test suite has:
+ * - <name>.klang - Klang expressions, one per line
+ * - <name>.expected.js - Expected JavaScript compilation
+ * - <name>.expected.ruby - Expected Ruby compilation
+ * - <name>.expected.sql - Expected SQL compilation
+ */
+
+const TEST_DIR = join(__dirname, '../test');
+
+interface TestSuite {
+  name: string;
+  klang: string[];
+  expectedJS: string[];
+  expectedRuby: string[];
+  expectedSQL: string[];
+}
+
+function loadTestSuites(): TestSuite[] {
+  const suites: TestSuite[] = [];
+
+  // Find all .klang files
+  const files = readdirSync(TEST_DIR);
+  const klangFiles = files.filter(f => f.endsWith('.klang'));
+
+  for (const klangFile of klangFiles) {
+    const name = klangFile.replace('.klang', '');
+
+    // Read all related files
+    const klangPath = join(TEST_DIR, `${name}.klang`);
+    const jsPath = join(TEST_DIR, `${name}.expected.js`);
+    const rubyPath = join(TEST_DIR, `${name}.expected.ruby`);
+    const sqlPath = join(TEST_DIR, `${name}.expected.sql`);
+
+    const klang = readFileSync(klangPath, 'utf-8').split('\n');
+    const expectedJS = readFileSync(jsPath, 'utf-8').split('\n');
+    const expectedRuby = readFileSync(rubyPath, 'utf-8').split('\n');
+    const expectedSQL = readFileSync(sqlPath, 'utf-8').split('\n');
+
+    suites.push({
+      name,
+      klang,
+      expectedJS,
+      expectedRuby,
+      expectedSQL
+    });
+  }
+
+  return suites;
+}
+
+const testSuites = loadTestSuites();
+
+for (const suite of testSuites) {
+  describe(`Compiler - ${suite.name}`, () => {
+    for (let i = 0; i < suite.klang.length; i++) {
+      const expr = suite.klang[i].trim();
+
+      // Skip empty lines
+      if (!expr) continue;
+
+      const lineNum = i + 1;
+
+      it(`should compile line ${lineNum}: ${expr}`, () => {
+        const ast = parse(expr);
+
+        // Test JavaScript compilation
+        const actualJS = compileToJavaScript(ast);
+        const expectedJS = suite.expectedJS[i].trim();
+        assert.strictEqual(
+          actualJS,
+          expectedJS,
+          `JavaScript compilation mismatch on line ${lineNum}`
+        );
+
+        // Test Ruby compilation
+        const actualRuby = compileToRuby(ast);
+        const expectedRuby = suite.expectedRuby[i].trim();
+        assert.strictEqual(
+          actualRuby,
+          expectedRuby,
+          `Ruby compilation mismatch on line ${lineNum}`
+        );
+
+        // Test SQL compilation
+        const actualSQL = compileToSQL(ast);
+        const expectedSQL = suite.expectedSQL[i].trim();
+        assert.strictEqual(
+          actualSQL,
+          expectedSQL,
+          `SQL compilation mismatch on line ${lineNum}`
+        );
+      });
+    }
+  });
+}
