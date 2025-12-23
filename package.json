@@ -10,6 +10,7 @@
     "test": "npm run build && node --test dist/**/*.test.js",
     "test:watch": "tsc --watch & node --test --watch --test-only dist/**/*.test.js",
     "test:acceptance": "npm run build && node --test dist/src/acceptance.test.js",
+    "test:local": "./scripts/test-local.sh",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f"
