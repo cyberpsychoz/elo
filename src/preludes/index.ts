@@ -14,7 +14,20 @@ const isoWeek = require('dayjs/plugin/isoWeek');
 const quarterOfYear = require('dayjs/plugin/quarterOfYear');
 dayjs.extend(duration);
 dayjs.extend(isoWeek);
-dayjs.extend(quarterOfYear);`,
+dayjs.extend(quarterOfYear);
+
+// Klang runtime helpers for dynamic temporal arithmetic
+const klang = {
+  add(left, right) {
+    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.add(right);
+    if (dayjs.isDuration(left) && dayjs.isDayjs(right)) return right.add(left);
+    return left + right;
+  },
+  subtract(left, right) {
+    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.subtract(right);
+    return left - right;
+  }
+};`,
 
     testable: `// Dayjs with plugins for temporal operations
 const _dayjs = require('dayjs');
@@ -57,6 +70,18 @@ const klang = {
 
   today() {
     return this.fixedTime ? this.fixedTime.startOf('day') : dayjs().startOf('day');
+  },
+
+  // Runtime helpers for dynamic temporal arithmetic
+  add(left, right) {
+    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.add(right);
+    if (dayjs.isDuration(left) && dayjs.isDayjs(right)) return right.add(left);
+    return left + right;
+  },
+
+  subtract(left, right) {
+    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.subtract(right);
+    return left - right;
   }
 };`
   },

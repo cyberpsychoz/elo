@@ -49,12 +49,12 @@ describe('JavaScript Compiler - Variables', () => {
 describe('JavaScript Compiler - Arithmetic Operators', () => {
   it('should compile addition', () => {
     const ast = binary('+', literal(1), literal(2));
-    assert.strictEqual(compileToJavaScript(ast), '1 + 2');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.add(1, 2)');
   });
 
   it('should compile subtraction', () => {
     const ast = binary('-', literal(5), literal(3));
-    assert.strictEqual(compileToJavaScript(ast), '5 - 3');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.subtract(5, 3)');
   });
 
   it('should compile multiplication', () => {
@@ -88,7 +88,7 @@ describe('JavaScript Compiler - Arithmetic Operators', () => {
       binary('+', literal(1), literal(2)),
       literal(3)
     );
-    assert.strictEqual(compileToJavaScript(ast), 'Math.pow(1 + 2, 3)');
+    assert.strictEqual(compileToJavaScript(ast), 'Math.pow(klang.add(1, 2), 3)');
   });
 });
 
@@ -161,17 +161,18 @@ describe('JavaScript Compiler - Unary Operators', () => {
 describe('JavaScript Compiler - Operator Precedence', () => {
   it('should handle multiplication before addition', () => {
     const ast = binary('+', literal(2), binary('*', literal(3), literal(4)));
-    assert.strictEqual(compileToJavaScript(ast), '2 + 3 * 4');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.add(2, 3 * 4)');
   });
 
   it('should add parentheses when needed', () => {
     const ast = binary('*', binary('+', literal(2), literal(3)), literal(4));
-    assert.strictEqual(compileToJavaScript(ast), '(2 + 3) * 4');
+    // klang.add() is a function call - no parens needed since function calls have higher precedence
+    assert.strictEqual(compileToJavaScript(ast), 'klang.add(2, 3) * 4');
   });
 
   it('should handle power with addition', () => {
     const ast = binary('+', binary('^', literal(2), literal(3)), literal(1));
-    assert.strictEqual(compileToJavaScript(ast), 'Math.pow(2, 3) + 1');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.add(Math.pow(2, 3), 1)');
   });
 
   it('should handle complex power expression', () => {
@@ -187,7 +188,7 @@ describe('JavaScript Compiler - Complex Expressions', () => {
       binary('+', variable('a'), variable('b')),
       variable('c')
     );
-    assert.strictEqual(compileToJavaScript(ast), '(a + b) * c');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.add(a, b) * c');
   });
 
   it('should compile price * quantity - discount', () => {
@@ -196,7 +197,7 @@ describe('JavaScript Compiler - Complex Expressions', () => {
       binary('*', variable('price'), variable('quantity')),
       variable('discount')
     );
-    assert.strictEqual(compileToJavaScript(ast), 'price * quantity - discount');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.subtract(price * quantity, discount)');
   });
 
   it('should compile x > 0 && x < 100', () => {
@@ -218,7 +219,7 @@ describe('JavaScript Compiler - Complex Expressions', () => {
       ),
       literal(2)
     );
-    assert.strictEqual(compileToJavaScript(ast), '(x + 5) * (y - 3) / 2');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.add(x, 5) * klang.subtract(y, 3) / 2');
   });
 
   it('should compile mixed arithmetic and boolean', () => {
@@ -247,7 +248,7 @@ describe('JavaScript Compiler - Edge Cases', () => {
       binary('*', literal(2), binary('^', literal(3), literal(2))),
       literal(1)
     );
-    assert.strictEqual(compileToJavaScript(ast), '2 * Math.pow(3, 2) + 1');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.add(2 * Math.pow(3, 2), 1)');
   });
 
   it('should handle multiple unary operators', () => {
@@ -257,24 +258,24 @@ describe('JavaScript Compiler - Edge Cases', () => {
 });
 
 describe('JavaScript Compiler - Date Arithmetic', () => {
-  it('should compile date + duration using dayjs.add()', () => {
+  it('should compile date + duration using klang.add()', () => {
     const ast = binary('+', { type: 'date', value: '2024-01-15' }, { type: 'duration', value: 'P1D' });
-    assert.strictEqual(compileToJavaScript(ast), "dayjs('2024-01-15').add(dayjs.duration('P1D'))");
+    assert.strictEqual(compileToJavaScript(ast), "klang.add(dayjs('2024-01-15'), dayjs.duration('P1D'))");
   });
 
-  it('should compile date - duration using dayjs.subtract()', () => {
+  it('should compile date - duration using klang.subtract()', () => {
     const ast = binary('-', { type: 'date', value: '2024-01-15' }, { type: 'duration', value: 'P1D' });
-    assert.strictEqual(compileToJavaScript(ast), "dayjs('2024-01-15').subtract(dayjs.duration('P1D'))");
+    assert.strictEqual(compileToJavaScript(ast), "klang.subtract(dayjs('2024-01-15'), dayjs.duration('P1D'))");
   });
 
   it('should compile duration + datetime (commutative)', () => {
     const ast = binary('+', { type: 'duration', value: 'PT2H' }, { type: 'datetime', value: '2024-01-15T10:00:00Z' });
-    assert.strictEqual(compileToJavaScript(ast), "dayjs('2024-01-15T10:00:00Z').add(dayjs.duration('PT2H'))");
+    assert.strictEqual(compileToJavaScript(ast), "klang.add(dayjs.duration('PT2H'), dayjs('2024-01-15T10:00:00Z'))");
   });
 
   it('should compile datetime + duration', () => {
     const ast = binary('+', { type: 'datetime', value: '2024-01-15T10:00:00Z' }, { type: 'duration', value: 'PT1H30M' });
-    assert.strictEqual(compileToJavaScript(ast), "dayjs('2024-01-15T10:00:00Z').add(dayjs.duration('PT1H30M'))");
+    assert.strictEqual(compileToJavaScript(ast), "klang.add(dayjs('2024-01-15T10:00:00Z'), dayjs.duration('PT1H30M'))");
   });
 });
 
@@ -317,7 +318,7 @@ describe('JavaScript Compiler - Let Expressions', () => {
       [{ name: 'x', value: literal(1) }, { name: 'y', value: literal(2) }],
       binary('+', variable('x'), variable('y'))
     );
-    assert.strictEqual(compileToJavaScript(ast), '((x) => ((y) => x + y)(2))(1)');
+    assert.strictEqual(compileToJavaScript(ast), '((x) => ((y) => klang.add(x, y))(2))(1)');
   });
 
   it('should compile nested let expressions', () => {
@@ -327,7 +328,7 @@ describe('JavaScript Compiler - Let Expressions', () => {
     );
     assert.strictEqual(
       compileToJavaScript(ast),
-      '((x) => ((y) => x + y)(2))(1)'
+      '((x) => ((y) => klang.add(x, y))(2))(1)'
     );
   });
 
@@ -336,6 +337,6 @@ describe('JavaScript Compiler - Let Expressions', () => {
       [{ name: 'x', value: binary('+', literal(1), literal(2)) }],
       binary('*', variable('x'), literal(3))
     );
-    assert.strictEqual(compileToJavaScript(ast), '((x) => x * 3)(1 + 2)');
+    assert.strictEqual(compileToJavaScript(ast), '((x) => x * 3)(klang.add(1, 2))');
   });
 });

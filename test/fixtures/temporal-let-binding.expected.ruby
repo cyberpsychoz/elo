@@ -1,0 +1,3 @@
+->(x) { x + ActiveSupport::Duration.parse('P1D') }.call(Date.today)
+->(d) { Date.today + d }.call(ActiveSupport::Duration.parse('P1D'))
+->(x) { ->(d) { x + d }.call(ActiveSupport::Duration.parse('P1D')) }.call(Date.today)

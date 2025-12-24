@@ -31,7 +31,7 @@ function kcWithError(args: string): { stdout: string; stderr: string; exitCode: 
 describe('CLI - Basic compilation', () => {
   it('should compile expression to JavaScript by default', () => {
     const result = kc('-e "2 + 3"');
-    assert.strictEqual(result, '2 + 3');
+    assert.strictEqual(result, 'klang.add(2, 3)');
   });
 
   it('should compile expression to Ruby', () => {
@@ -46,7 +46,7 @@ describe('CLI - Basic compilation', () => {
 
   it('should handle complex expressions', () => {
     const result = kc('-e "2 + 3 * 4"');
-    assert.strictEqual(result, '2 + 3 * 4');
+    assert.strictEqual(result, 'klang.add(2, 3 * 4)');
   });
 
   it('should handle power operator in JavaScript', () => {
@@ -146,7 +146,9 @@ describe('CLI - Prelude inclusion', () => {
       assert.ok(result.includes("const dayjs = require('dayjs')"));
       assert.ok(result.includes('dayjs.extend(duration)'));
       assert.ok(result.includes("dayjs().startOf('day')"));
-      assert.ok(!result.includes('const klang'));
+      // klang namespace is now included in production mode for runtime helpers (add/subtract)
+      assert.ok(result.includes('const klang'));
+      assert.ok(result.includes('add(left, right)'));
     });
 
     it('should include minimal SQL prelude', () => {
@@ -188,7 +190,7 @@ describe('CLI - File input', () => {
 
     try {
       const result = kc(`${inputFile}`);
-      assert.strictEqual(result, '2 + 3 * 4');
+      assert.strictEqual(result, 'klang.add(2, 3 * 4)');
     } finally {
       unlinkSync(inputFile);
     }
@@ -219,7 +221,7 @@ describe('CLI - File output', () => {
 
       const { readFileSync } = require('fs');
       const content = readFileSync(outputFile, 'utf-8').trim();
-      assert.strictEqual(content, '2 + 3');
+      assert.strictEqual(content, 'klang.add(2, 3)');
     } finally {
       try { unlinkSync(outputFile); } catch {}
     }
@@ -276,7 +278,7 @@ describe('CLI - Error handling', () => {
 describe('CLI - Long options', () => {
   it('should accept --expression', () => {
     const result = kc('--expression "2 + 3"');
-    assert.strictEqual(result, '2 + 3');
+    assert.strictEqual(result, 'klang.add(2, 3)');
   });
 
   it('should accept --target', () => {

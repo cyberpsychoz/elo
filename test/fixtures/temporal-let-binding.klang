@@ -1,0 +1,3 @@
+let x = TODAY in x + P1D
+let d = P1D in TODAY + d
+let x = TODAY, d = P1D in x + d

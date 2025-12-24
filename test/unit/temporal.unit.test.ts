@@ -121,7 +121,7 @@ describe('Temporal - Date Arithmetic', () => {
     );
     assert.strictEqual(
       compileToJavaScript(ast),
-      "dayjs('2024-01-15').add(dayjs.duration('P1D'))"
+      "klang.add(dayjs('2024-01-15'), dayjs.duration('P1D'))"
     );
     assert.strictEqual(
       compileToSQL(ast),

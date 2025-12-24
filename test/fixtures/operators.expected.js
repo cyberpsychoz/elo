@@ -1,5 +1,5 @@
-(function() { if (!(1 + 2 == 3)) throw new Error("Assertion failed"); return true; })()
-(function() { if (!(5 - 3 == 2)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(klang.add(1, 2) == 3)) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(klang.subtract(5, 3) == 2)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(4 * 3 == 12)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(10 / 2 == 5)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(10 % 3 == 1)) throw new Error("Assertion failed"); return true; })()

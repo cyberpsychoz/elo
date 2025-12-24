@@ -193,13 +193,15 @@ function main() {
     return;
   }
 
-  // Get the source expression
-  let source: string;
+  // Get the source expression(s)
+  let sources: string[];
   if (options.expression) {
-    source = options.expression;
+    sources = [options.expression];
   } else if (options.inputFile) {
     try {
-      source = readFileSync(options.inputFile, 'utf-8').trim();
+      const content = readFileSync(options.inputFile, 'utf-8');
+      // Split into lines and filter out empty lines
+      sources = content.split('\n').filter(line => line.trim() !== '');
     } catch (error) {
       console.error(`Error reading file ${options.inputFile}: ${error}`);
       process.exit(1);
@@ -210,14 +212,22 @@ function main() {
     process.exit(1);
   }
 
-  // Compile the expression
-  let output: string;
+  // Compile each expression
+  let outputs: string[];
   try {
-    output = compile(source, options.target, options.mode, options.prelude);
+    outputs = sources.map((source, index) => {
+      try {
+        return compile(source.trim(), options.target, options.mode, index === 0 && options.prelude);
+      } catch (error) {
+        throw new Error(`Line ${index + 1}: ${error}`);
+      }
+    });
   } catch (error) {
     console.error(`Compilation error: ${error}`);
     process.exit(1);
   }
+
+  const output = outputs.join('\n');
 
   // Output the result
   if (options.outputFile) {

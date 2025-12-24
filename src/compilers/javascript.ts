@@ -137,20 +137,15 @@ export function compileToJavaScript(expr: Expr, options?: JavaScriptCompileOptio
         return `Math.pow(${left}, ${right})`;
       }
 
-      // Handle temporal + duration and temporal - duration
-      // This includes chained operations like (TODAY + P1M) + PT12H
-      if ((expr.operator === '+' || expr.operator === '-') &&
-          isTemporalExpression(expr.left) &&
-          expr.right.type === 'duration') {
-        const method = expr.operator === '+' ? 'add' : 'subtract';
-        return `${left}.${method}(${right})`;
+      // Use klang runtime helpers for +/- operators
+      // This ensures correctness for all operand types (numbers, dates, durations)
+      // Type inference can optimize this later when we're 100% sure of operand types
+      if (expr.operator === '+') {
+        return `klang.add(${left}, ${right})`;
       }
 
-      // Handle duration + temporal (commutative addition)
-      if (expr.operator === '+' &&
-          expr.left.type === 'duration' &&
-          isTemporalExpression(expr.right)) {
-        return `${right}.add(${left})`;
+      if (expr.operator === '-') {
+        return `klang.subtract(${left}, ${right})`;
       }
 
       // Handle date/temporal equality/inequality comparisons using valueOf()
@@ -183,40 +178,21 @@ export function compileToJavaScript(expr: Expr, options?: JavaScriptCompileOptio
   }
 }
 
-/**
- * Checks if an expression results in a temporal value (date/datetime/dayjs object)
- * This includes direct temporal types and binary expressions that produce temporal results
- */
-function isTemporalExpression(expr: Expr): boolean {
-  if (expr.type === 'date' || expr.type === 'datetime' || expr.type === 'temporal_keyword') {
-    return true;
-  }
-  // Binary expression with temporal + duration or duration + temporal results in temporal
-  if (expr.type === 'binary' && (expr.operator === '+' || expr.operator === '-')) {
-    const leftIsTemporal = isTemporalExpression(expr.left);
-    const rightIsTemporal = isTemporalExpression(expr.right);
-    const leftIsDuration = expr.left.type === 'duration';
-    const rightIsDuration = expr.right.type === 'duration';
-
-    // temporal +/- duration = temporal
-    if (leftIsTemporal && rightIsDuration) return true;
-    // duration + temporal = temporal
-    if (leftIsDuration && rightIsTemporal && expr.operator === '+') return true;
-  }
-  return false;
-}
-
 function needsParens(expr: Expr, parentOp: string, side: 'left' | 'right'): boolean {
   if (expr.type !== 'binary') return false;
+
+  // +, -, ^ are compiled as function calls (klang.add, klang.subtract, Math.pow)
+  // Function calls don't need parentheses for precedence
+  if (expr.operator === '+' || expr.operator === '-' || expr.operator === '^') {
+    return false;
+  }
 
   const precedence: Record<string, number> = {
     '||': 0,
     '&&': 1,
     '==': 2, '!=': 2,
     '<': 3, '>': 3, '<=': 3, '>=': 3,
-    '+': 4, '-': 4,
     '*': 5, '/': 5, '%': 5,
-    '^': 6
   };
 
   const parentPrec = precedence[parentOp] || 0;

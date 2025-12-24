@@ -1,1 +1,1 @@
-dayjs().startOf('day').add(dayjs.duration('P1M')).add(dayjs.duration('PT12H'))
+klang.add(klang.add(dayjs().startOf('day'), dayjs.duration('P1M')), dayjs.duration('PT12H'))
