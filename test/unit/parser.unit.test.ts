@@ -435,3 +435,71 @@ describe('Parser - Function Calls', () => {
     assert.strictEqual(funcCall.args[0].type, 'binary');
   });
 });
+
+describe('Parser - Let Expressions', () => {
+  it('should parse simple let expression', () => {
+    const ast = parse('let x = 1 in x');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.bindings.length, 1);
+      assert.strictEqual(ast.bindings[0].name, 'x');
+      assert.deepStrictEqual(ast.bindings[0].value, { type: 'literal', value: 1 });
+      assert.deepStrictEqual(ast.body, { type: 'variable', name: 'x' });
+    }
+  });
+
+  it('should parse let with multiple bindings', () => {
+    const ast = parse('let x = 1, y = 2 in x + y');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.bindings.length, 2);
+      assert.strictEqual(ast.bindings[0].name, 'x');
+      assert.strictEqual(ast.bindings[1].name, 'y');
+      assert.strictEqual(ast.body.type, 'binary');
+    }
+  });
+
+  it('should parse nested let expressions', () => {
+    const ast = parse('let x = 1 in let y = 2 in x + y');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.bindings.length, 1);
+      assert.strictEqual(ast.body.type, 'let');
+    }
+  });
+
+  it('should parse let with complex binding value', () => {
+    const ast = parse('let x = 1 + 2 in x * 3');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.bindings[0].value.type, 'binary');
+      assert.strictEqual(ast.body.type, 'binary');
+    }
+  });
+
+  it('should parse let in larger expression', () => {
+    const ast = parse('1 + let x = 2 in x');
+    assert.strictEqual(ast.type, 'binary');
+    if (ast.type === 'binary') {
+      assert.strictEqual(ast.operator, '+');
+      assert.strictEqual(ast.right.type, 'let');
+    }
+  });
+
+  it('should parse let with function call in body', () => {
+    const ast = parse('let x = 5, y = 3 in assert(x + y == 8)');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.bindings.length, 2);
+      assert.strictEqual(ast.body.type, 'function_call');
+    }
+  });
+
+  it('should throw on let without in keyword', () => {
+    assert.throws(() => parse('let x = 1 x'), /Expected IN/);
+  });
+
+  it('should throw on let without binding value', () => {
+    assert.throws(() => parse('let x in x'), /Expected ASSIGN/);
+  });
+});

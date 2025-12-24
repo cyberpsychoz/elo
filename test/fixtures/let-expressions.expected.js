@@ -1,0 +1,5 @@
+((x) => x)(12)
+((x, y) => x + y)(12, 13)
+((x, y) => (function() { if (!(x + y == 8)) throw new Error("Assertion failed"); return true; })())(5, 3)
+((x, y) => (function() { if (!(x * y == 6)) throw new Error("Assertion failed"); return true; })())(2, 3)
+((a) => ((b) => (function() { if (!(a + b == 30)) throw new Error("Assertion failed"); return true; })())(20))(10)

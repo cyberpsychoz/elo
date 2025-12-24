@@ -108,6 +108,14 @@ export function compileToSQL(expr: Expr): string {
 
       return `${leftExpr} ${sqlOp} ${rightExpr}`;
     }
+
+    case 'let': {
+      const bindingCols = expr.bindings
+        .map(b => `${compileToSQL(b.value)} AS ${b.name}`)
+        .join(', ');
+      const body = compileToSQL(expr.body);
+      return `(SELECT ${body} FROM (SELECT ${bindingCols}) AS _let)`;
+    }
   }
 }
 

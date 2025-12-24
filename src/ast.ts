@@ -2,7 +2,7 @@
  * AST node types for Klang expressions
  */
 
-export type Expr = Literal | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess;
+export type Expr = Literal | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr;
 
 /**
  * Literal value (number or boolean)
@@ -96,6 +96,23 @@ export interface MemberAccess {
 }
 
 /**
+ * Variable binding in a let expression
+ */
+export interface LetBinding {
+  name: string;
+  value: Expr;
+}
+
+/**
+ * Let expression: let x = 1, y = 2 in body
+ */
+export interface LetExpr {
+  type: 'let';
+  bindings: LetBinding[];
+  body: Expr;
+}
+
+/**
  * Helper functions to create AST nodes
  */
 export function literal(value: number | boolean): Literal {
@@ -136,4 +153,8 @@ export function functionCall(name: string, args: Expr[]): FunctionCall {
 
 export function memberAccess(object: Expr, property: string): MemberAccess {
   return { type: 'member_access', object, property };
+}
+
+export function letExpr(bindings: LetBinding[], body: Expr): LetExpr {
+  return { type: 'let', bindings, body };
 }

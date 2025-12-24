@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileToRuby } from '../../../src/compilers/ruby';
-import { literal, variable, binary, unary } from '../../../src/ast';
+import { literal, variable, binary, unary, letExpr } from '../../../src/ast';
 
 describe('Ruby Compiler - Literals', () => {
   it('should compile numeric literals', () => {
@@ -235,5 +235,39 @@ describe('Ruby Compiler - Edge Cases', () => {
   it('should handle unary with binary', () => {
     const ast = binary('+', unary('-', variable('x')), literal(10));
     assert.strictEqual(compileToRuby(ast), '-x + 10');
+  });
+});
+
+describe('Ruby Compiler - Let Expressions', () => {
+  it('should compile simple let expression', () => {
+    const ast = letExpr([{ name: 'x', value: literal(1) }], variable('x'));
+    assert.strictEqual(compileToRuby(ast), '->(x) { x }.call(1)');
+  });
+
+  it('should compile let with multiple bindings', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: literal(1) }, { name: 'y', value: literal(2) }],
+      binary('+', variable('x'), variable('y'))
+    );
+    assert.strictEqual(compileToRuby(ast), '->(x, y) { x + y }.call(1, 2)');
+  });
+
+  it('should compile nested let expressions', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: literal(1) }],
+      letExpr([{ name: 'y', value: literal(2) }], binary('+', variable('x'), variable('y')))
+    );
+    assert.strictEqual(
+      compileToRuby(ast),
+      '->(x) { ->(y) { x + y }.call(2) }.call(1)'
+    );
+  });
+
+  it('should compile let with complex binding value', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: binary('+', literal(1), literal(2)) }],
+      binary('*', variable('x'), literal(3))
+    );
+    assert.strictEqual(compileToRuby(ast), '->(x) { x * 3 }.call(1 + 2)');
   });
 });

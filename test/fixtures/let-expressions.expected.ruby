@@ -1,0 +1,5 @@
+->(x) { x }.call(12)
+->(x, y) { x + y }.call(12, 13)
+->(x, y) { (raise "Assertion failed" unless x + y == 8; true) }.call(5, 3)
+->(x, y) { (raise "Assertion failed" unless x * y == 6; true) }.call(2, 3)
+->(a) { ->(b) { (raise "Assertion failed" unless a + b == 30; true) }.call(20) }.call(10)

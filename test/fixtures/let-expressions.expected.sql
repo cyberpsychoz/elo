@@ -1,0 +1,5 @@
+(SELECT x FROM (SELECT 12 AS x) AS _let)
+(SELECT x + y FROM (SELECT 12 AS x, 13 AS y) AS _let)
+(SELECT CASE WHEN x + y = 8 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END FROM (SELECT 5 AS x, 3 AS y) AS _let)
+(SELECT CASE WHEN x * y = 6 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END FROM (SELECT 2 AS x, 3 AS y) AS _let)
+(SELECT (SELECT CASE WHEN a + b = 30 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END FROM (SELECT 20 AS b) AS _let) FROM (SELECT 10 AS a) AS _let)

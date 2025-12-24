@@ -100,6 +100,13 @@ export function compileToJavaScript(expr: Expr): string {
 
       return `${leftExpr} ${expr.operator} ${rightExpr}`;
     }
+
+    case 'let': {
+      const params = expr.bindings.map(b => b.name).join(', ');
+      const args = expr.bindings.map(b => compileToJavaScript(b.value)).join(', ');
+      const body = compileToJavaScript(expr.body);
+      return `((${params}) => ${body})(${args})`;
+    }
   }
 }
 

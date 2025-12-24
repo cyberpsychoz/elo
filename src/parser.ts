@@ -1,4 +1,4 @@
-import { Expr, literal, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess } from './ast';
+import { Expr, literal, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, LetBinding } from './ast';
 
 /**
  * Token types
@@ -29,6 +29,9 @@ type TokenType =
   | 'AND'
   | 'OR'
   | 'NOT'
+  | 'LET'
+  | 'IN'
+  | 'ASSIGN'
   | 'EOF';
 
 interface Token {
@@ -189,11 +192,17 @@ class Lexer {
       }
     }
 
-    // Identifiers and keywords (true, false, NOW, TODAY, TOMORROW, YESTERDAY)
+    // Identifiers and keywords (true, false, let, in, NOW, TODAY, TOMORROW, YESTERDAY)
     if (/[a-zA-Z_]/.test(this.current)) {
       const id = this.readIdentifier();
       if (id === 'true' || id === 'false') {
         return { type: 'BOOLEAN', value: id, position: pos };
+      }
+      if (id === 'let') {
+        return { type: 'LET', value: id, position: pos };
+      }
+      if (id === 'in') {
+        return { type: 'IN', value: id, position: pos };
       }
       if (id === 'NOW' || id === 'TODAY' || id === 'TOMORROW' || id === 'YESTERDAY') {
         return { type: 'IDENTIFIER', value: id, position: pos };
@@ -216,10 +225,15 @@ class Lexer {
       this.advance();
       return { type: 'GTE', value: '>=', position: pos };
     }
-    if (char === '=' && next === '=') {
+    if (char === '=') {
+      if (next === '=') {
+        this.advance();
+        this.advance();
+        return { type: 'EQ', value: '==', position: pos };
+      }
+      // Single = is ASSIGN
       this.advance();
-      this.advance();
-      return { type: 'EQ', value: '==', position: pos };
+      return { type: 'ASSIGN', value: '=', position: pos };
     }
     if (char === '!' && next === '=') {
       this.advance();
@@ -521,7 +535,40 @@ export class Parser {
     return node;
   }
 
+  private letExpr(): Expr {
+    this.eat('LET');
+
+    const bindings: LetBinding[] = [];
+
+    // Parse first binding
+    const firstName = this.currentToken.value;
+    this.eat('IDENTIFIER');
+    this.eat('ASSIGN');
+    // Binding values parsed at logical_or level (prevents unparenthesized nested let in bindings)
+    const firstValue = this.logical_or();
+    bindings.push({ name: firstName, value: firstValue });
+
+    // Parse additional bindings
+    while (this.currentToken.type === 'COMMA') {
+      this.eat('COMMA');
+      const name = this.currentToken.value;
+      this.eat('IDENTIFIER');
+      this.eat('ASSIGN');
+      const value = this.logical_or();
+      bindings.push({ name, value });
+    }
+
+    this.eat('IN');
+    const body = this.expr(); // Body can be any expression including nested let
+
+    return letExpr(bindings, body);
+  }
+
   private expr(): Expr {
+    // Let expressions have lowest precedence
+    if (this.currentToken.type === 'LET') {
+      return this.letExpr();
+    }
     return this.logical_or();
   }
 

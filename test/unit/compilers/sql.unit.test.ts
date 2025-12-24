@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileToSQL } from '../../../src/compilers/sql';
-import { literal, variable, binary, unary } from '../../../src/ast';
+import { literal, variable, binary, unary, letExpr } from '../../../src/ast';
 
 describe('SQL Compiler - Literals', () => {
   it('should compile numeric literals', () => {
@@ -292,5 +292,39 @@ describe('SQL Compiler - Edge Cases', () => {
       binary('||', variable('c'), variable('d'))
     );
     assert.strictEqual(compileToSQL(ast), '(a OR b) AND (c OR d)');
+  });
+});
+
+describe('SQL Compiler - Let Expressions', () => {
+  it('should compile simple let expression', () => {
+    const ast = letExpr([{ name: 'x', value: literal(1) }], variable('x'));
+    assert.strictEqual(compileToSQL(ast), '(SELECT x FROM (SELECT 1 AS x) AS _let)');
+  });
+
+  it('should compile let with multiple bindings', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: literal(1) }, { name: 'y', value: literal(2) }],
+      binary('+', variable('x'), variable('y'))
+    );
+    assert.strictEqual(compileToSQL(ast), '(SELECT x + y FROM (SELECT 1 AS x, 2 AS y) AS _let)');
+  });
+
+  it('should compile nested let expressions', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: literal(1) }],
+      letExpr([{ name: 'y', value: literal(2) }], binary('+', variable('x'), variable('y')))
+    );
+    assert.strictEqual(
+      compileToSQL(ast),
+      '(SELECT (SELECT x + y FROM (SELECT 2 AS y) AS _let) FROM (SELECT 1 AS x) AS _let)'
+    );
+  });
+
+  it('should compile let with complex binding value', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: binary('+', literal(1), literal(2)) }],
+      binary('*', variable('x'), literal(3))
+    );
+    assert.strictEqual(compileToSQL(ast), '(SELECT x * 3 FROM (SELECT 1 + 2 AS x) AS _let)');
   });
 });

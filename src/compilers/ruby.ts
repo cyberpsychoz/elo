@@ -80,6 +80,13 @@ export function compileToRuby(expr: Expr): string {
 
       return `${leftExpr} ${op} ${rightExpr}`;
     }
+
+    case 'let': {
+      const params = expr.bindings.map(b => b.name).join(', ');
+      const args = expr.bindings.map(b => compileToRuby(b.value)).join(', ');
+      const body = compileToRuby(expr.body);
+      return `->(${params}) { ${body} }.call(${args})`;
+    }
   }
 }
 

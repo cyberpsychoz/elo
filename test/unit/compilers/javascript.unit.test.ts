@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileToJavaScript } from '../../../src/compilers/javascript';
-import { literal, variable, binary, unary } from '../../../src/ast';
+import { literal, variable, binary, unary, letExpr } from '../../../src/ast';
 
 describe('JavaScript Compiler - Literals', () => {
   it('should compile numeric literals', () => {
@@ -280,5 +280,39 @@ describe('JavaScript Compiler - Function Calls', () => {
       args: [{ type: 'literal' as const, value: 42 }]
     };
     assert.strictEqual(compileToJavaScript(ast), 'foo(42)');
+  });
+});
+
+describe('JavaScript Compiler - Let Expressions', () => {
+  it('should compile simple let expression', () => {
+    const ast = letExpr([{ name: 'x', value: literal(1) }], variable('x'));
+    assert.strictEqual(compileToJavaScript(ast), '((x) => x)(1)');
+  });
+
+  it('should compile let with multiple bindings', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: literal(1) }, { name: 'y', value: literal(2) }],
+      binary('+', variable('x'), variable('y'))
+    );
+    assert.strictEqual(compileToJavaScript(ast), '((x, y) => x + y)(1, 2)');
+  });
+
+  it('should compile nested let expressions', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: literal(1) }],
+      letExpr([{ name: 'y', value: literal(2) }], binary('+', variable('x'), variable('y')))
+    );
+    assert.strictEqual(
+      compileToJavaScript(ast),
+      '((x) => ((y) => x + y)(2))(1)'
+    );
+  });
+
+  it('should compile let with complex binding value', () => {
+    const ast = letExpr(
+      [{ name: 'x', value: binary('+', literal(1), literal(2)) }],
+      binary('*', variable('x'), literal(3))
+    );
+    assert.strictEqual(compileToJavaScript(ast), '((x) => x * 3)(1 + 2)');
   });
 });
