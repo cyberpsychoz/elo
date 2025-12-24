@@ -38,6 +38,21 @@
           <option value="ruby">Ruby</option>
           <option value="sql">SQL</option>
         </select>
+        <select
+          data-playground-target="mode"
+          data-action="change->playground#compile"
+        >
+          <option value="production">Production</option>
+          <option value="testable">Testable</option>
+        </select>
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            data-playground-target="prelude"
+            data-action="change->playground#compile"
+          />
+          Prelude
+        </label>
         <button
           data-playground-target="runButton"
           data-action="click->playground#run"
