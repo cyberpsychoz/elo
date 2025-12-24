@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: klang
+          POSTGRES_PASSWORD: klang
+          POSTGRES_DB: klang
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: false
+
+    - name: Install Ruby dependencies
+      run: gem install activesupport
+
+    - name: Install Node.js dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
+
+    - name: Run unit tests
+      run: npm run test:unit
+
+    - name: Run integration tests
+      run: npm run test:integration
+
+    - name: Run acceptance tests
+      run: npm run test:acceptance
+      env:
+        PGHOST: localhost
+        PGPORT: 5432
+        PGUSER: klang
+        PGPASSWORD: klang
+        PGDATABASE: klang
+
+    - name: Run all tests
+      run: npm test
+      env:
+        PGHOST: localhost
+        PGPORT: 5432
+        PGUSER: klang
+        PGPASSWORD: klang
+        PGDATABASE: klang

@@ -1,5 +1,7 @@
 # What is Klang?
 
+[![CI](https://github.com/enspirit/k/actions/workflows/ci.yml/badge.svg)](https://github.com/enspirit/k/actions/workflows/ci.yml)
+
 A small expression language that compiles/translates to Ruby, Javascript and PostgreSQL.
 
 ## Aim
