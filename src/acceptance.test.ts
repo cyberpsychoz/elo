@@ -1,4 +1,4 @@
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import { Client } from 'pg';
 import { parse } from './parser';
 import { compileToRuby } from './compilers/ruby';
@@ -29,6 +29,13 @@ before(async () => {
 
   // Set timezone to UTC to ensure consistent date/time handling
   await pgClient.query("SET TIME ZONE 'UTC'");
+});
+
+after(async () => {
+  // Close PostgreSQL connection
+  if (pgClient) {
+    await pgClient.end();
+  }
 });
 
 async function waitForServices() {
