@@ -4,6 +4,9 @@
   "description": "A small expression language that compiles to Ruby, Javascript and PostgreSQL",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "kc": "./bin/kc"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",

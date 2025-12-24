@@ -75,18 +75,18 @@ export function compileToJavaScript(expr: Expr): string {
         return `Math.pow(${left}, ${right})`;
       }
 
-      // Handle date + duration and date - duration
+      // Handle date/temporal + duration and date/temporal - duration
       if ((expr.operator === '+' || expr.operator === '-') &&
-          (expr.left.type === 'date' || expr.left.type === 'datetime') &&
+          (expr.left.type === 'date' || expr.left.type === 'datetime' || expr.left.type === 'temporal_keyword') &&
           expr.right.type === 'duration') {
         const method = expr.operator === '+' ? 'addTo' : 'subtractFrom';
         return `${right}.${method}(${left})`;
       }
 
-      // Handle duration + date (commutative addition)
+      // Handle duration + date/temporal (commutative addition)
       if (expr.operator === '+' &&
           expr.left.type === 'duration' &&
-          (expr.right.type === 'date' || expr.right.type === 'datetime')) {
+          (expr.right.type === 'date' || expr.right.type === 'datetime' || expr.right.type === 'temporal_keyword')) {
         return `${left}.addTo(${right})`;
       }
 
