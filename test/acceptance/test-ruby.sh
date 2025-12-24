@@ -5,6 +5,7 @@
 set -e
 
 TEST_DIR="${1:-test/fixtures}"
+PRELUDE="src/preludes/prelude.rb"
 FAILED=0
 PASSED=0
 SKIPPED=0
@@ -29,7 +30,8 @@ for file in "$TEST_DIR"/*.expected.ruby; do
         continue
     fi
 
-    if ruby "$file" 2>/dev/null; then
+    # Load prelude to provide Date, DateTime, and Duration support
+    if ruby -r "./$PRELUDE" "$file" 2>/dev/null; then
         echo "  ✓ $(basename "$file")"
         ((PASSED++))
     else

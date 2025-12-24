@@ -1,34 +1,5 @@
 services:
-  # Ruby environment for evaluating Ruby expressions
-  ruby:
-    build:
-      context: ./docker/ruby
-      dockerfile: Dockerfile
-    container_name: klang-ruby
-    volumes:
-      - ./docker/ruby:/app
-    command: ruby /app/server.rb
-    ports:
-      - "3011:3001"
-    networks:
-      - klang-net
-
-  # Node.js environment for evaluating JavaScript expressions
-  node:
-    build:
-      context: ./docker/node
-      dockerfile: Dockerfile
-    container_name: klang-node
-    volumes:
-      - ./docker/node:/app
-    working_dir: /app
-    command: node server.js
-    ports:
-      - "3002:3002"
-    networks:
-      - klang-net
-
-  # PostgreSQL for evaluating SQL expressions
+  # PostgreSQL for SQL acceptance tests
   postgres:
     image: postgres:16-alpine
     container_name: klang-postgres
@@ -38,14 +9,8 @@ services:
       POSTGRES_DB: klang
     ports:
       - "5432:5432"
-    networks:
-      - klang-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U klang"]
       interval: 5s
       timeout: 5s
       retries: 5
-
-networks:
-  klang-net:
-    driver: bridge

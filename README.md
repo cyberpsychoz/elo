@@ -81,36 +81,44 @@ npm run test:acceptance
 ```
 
 **Architecture:**
-- **Ruby evaluation server** (port 3011): WEBrick HTTP server
-- **Node.js evaluation server** (port 3002): HTTP server
-- **PostgreSQL database** (port 5432): PostgreSQL 16
-- **Test suite**: Executes compiled code and verifies semantic equivalence
+- **Shell-based test runner**: Executes compiled `.expected.{ruby,js,sql}` files directly
+- **Ruby runtime**: Tests via system Ruby installation
+- **Node.js runtime**: Tests via system Node.js installation
+- **PostgreSQL database** (optional): Tests SQL compilation if PostgreSQL is available
 
-**Prerequisites:** Docker and Docker Compose
-
-**Running acceptance tests:**
-
-1. Start Docker services:
-```bash
-npm run docker:up
-```
-
-2. Run acceptance tests:
-```bash
-npm run test:acceptance
-```
-
-3. Stop services:
-```bash
-npm run docker:down
-```
+**Prerequisites:**
+- Ruby (for Ruby tests)
+- Node.js (for JavaScript tests)
+- PostgreSQL (optional, for SQL tests - gracefully skipped if unavailable)
 
 **Test coverage:**
-- Arithmetic operations across all three runtimes
-- Boolean expressions with variable substitution
-- Temporal operations (dates, datetimes, durations)
+- 9 test suites across 3 runtime languages
+- Arithmetic, boolean, temporal operations, and real-world expressions
+- Skipped: `member-access` and `variables` suites (require variable injection - will be addressed later)
 
-**Files:** `acceptance.test.ts`, `scripts/test-{js,ruby,sql}.sh`
+**Running tests:**
+
+```bash
+# Run all acceptance tests (Ruby + JavaScript + SQL)
+npm run test:acceptance
+
+# Run specific language tests
+./test/acceptance/test-ruby.sh
+./test/acceptance/test-js.sh
+./test/acceptance/test-sql.sh
+```
+
+**PostgreSQL setup (optional for SQL tests):**
+
+```bash
+# Start PostgreSQL with Docker
+npm run docker:up
+
+# Or install PostgreSQL locally and ensure it's running on port 5432
+# with user: klang, password: klang, database: klang
+```
+
+**Files:** `test/acceptance/test-{local,ruby,js,sql}.sh`
 
 ### Run All Tests
 
@@ -120,7 +128,7 @@ npm test
 
 Runs all three test stages in sequence: unit → integration → acceptance.
 
-**Current results:** 257 tests passing
+**Current results:** 190 tests passing (125 unit + 65 integration + shell acceptance tests)
 
 ## Usage
 
@@ -316,27 +324,18 @@ klang/
 │   ├── integration/
 │   │   └── compiler.integration.test.ts
 │   └── acceptance/
-│       └── acceptance.test.ts
+│       ├── test-local.sh            # Run all acceptance tests
+│       ├── test-ruby.sh             # Test Ruby runtime
+│       ├── test-js.sh               # Test JavaScript runtime
+│       └── test-sql.sh              # Test SQL runtime
 ├── bin/
 │   └── kc                           # Klang compiler CLI
-├── scripts/
-│   ├── test-local.sh                # Run all local acceptance tests
-│   ├── test-js.sh                   # Test JavaScript runtime
-│   ├── test-ruby.sh                 # Test Ruby runtime
-│   └── test-sql.sh                  # Test SQL runtime
 ├── examples/
 │   ├── basic.ts                     # Arithmetic expression examples
 │   ├── boolean.ts                   # Boolean expression examples
 │   ├── temporal.ts                  # Temporal expression examples
 │   └── demo.ts                      # Quick demo
-├── docker/
-│   ├── ruby/
-│   │   ├── Dockerfile               # Ruby evaluation server image
-│   │   └── server.rb                # WEBrick HTTP server for Ruby eval
-│   └── node/
-│       ├── Dockerfile               # Node.js evaluation server image
-│       └── server.js                # HTTP server for JavaScript eval
-├── docker-compose.yml               # Multi-container orchestration
+├── docker-compose.yml               # PostgreSQL for SQL testing
 ├── package.json
 ├── tsconfig.json
 └── README.md

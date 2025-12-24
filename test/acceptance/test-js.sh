@@ -5,6 +5,7 @@
 set -e
 
 TEST_DIR="${1:-test/fixtures}"
+PRELUDE="src/preludes/prelude.js"
 FAILED=0
 PASSED=0
 SKIPPED=0
@@ -30,8 +31,9 @@ for file in "$TEST_DIR"/*.expected.js; do
     fi
 
     # Run each line separately to avoid IIFE issues
+    # Prepend prelude to provide Duration class
     if while IFS= read -r line; do
-        [ -n "$line" ] && echo "$line" | node - || exit 1
+        [ -n "$line" ] && { cat "$PRELUDE"; echo "$line"; } | node - || exit 1
     done < "$file" 2>/dev/null; then
         echo "  ✓ $(basename "$file")"
         ((PASSED++))
