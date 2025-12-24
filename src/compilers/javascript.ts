@@ -110,6 +110,16 @@ export function compileToJavaScript(expr: Expr): string {
         return `${right}.add(${left})`;
       }
 
+      // Handle date/temporal equality/inequality comparisons using valueOf()
+      // dayjs objects need valueOf() for proper comparison
+      const isTemporalType = (type: string) =>
+        type === 'date' || type === 'datetime' || type === 'temporal_keyword';
+      if ((expr.operator === '==' || expr.operator === '!=') &&
+          (isTemporalType(expr.left.type) || isTemporalType(expr.right.type))) {
+        const op = expr.operator === '==' ? '===' : '!==';
+        return `+${left} ${op} +${right}`;
+      }
+
       // Add parentheses for nested expressions to preserve precedence
       const leftExpr = needsParens(expr.left, expr.operator, 'left')
         ? `(${left})`

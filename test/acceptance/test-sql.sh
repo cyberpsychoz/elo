@@ -18,8 +18,8 @@ PGPASSWORD="${PGPASSWORD:-klang}"
 PGDATABASE="${PGDATABASE:-klang}"
 export PGPASSWORD
 
-# Files that require variables - skip for local testing
-SKIP_FILES=("member-access" "variables")
+# Files that require variables or time mocking - skip for local testing
+SKIP_FILES=("member-access" "variables" "temporal-mocked")
 
 should_skip() {
     local file=$1

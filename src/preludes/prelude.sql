@@ -1,1 +1,3 @@
--- SQL prelude (currently empty - no imports needed)
+-- SQL prelude (currently empty - PostgreSQL temporal functions are built-in)
+-- Note: Time injection for SQL requires compiler changes to use custom functions
+-- instead of CURRENT_TIMESTAMP/CURRENT_DATE. For now, SQL time-mocked tests are skipped.
