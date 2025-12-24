@@ -50,21 +50,6 @@ jobs:
     - name: Build project
       run: npm run build
 
-    - name: Run unit tests
-      run: npm run test:unit
-
-    - name: Run integration tests
-      run: npm run test:integration
-
-    - name: Run acceptance tests
-      run: npm run test:acceptance
-      env:
-        PGHOST: localhost
-        PGPORT: 5432
-        PGUSER: klang
-        PGPASSWORD: klang
-        PGDATABASE: klang
-
     - name: Run all tests
       run: npm test
       env:
