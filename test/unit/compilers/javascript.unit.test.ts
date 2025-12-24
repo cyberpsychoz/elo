@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { compileToJavaScript } from './javascript';
-import { literal, variable, binary, unary } from '../ast';
+import { compileToJavaScript } from '../../../src/compilers/javascript';
+import { literal, variable, binary, unary } from '../../../src/ast';
 
 describe('JavaScript Compiler - Literals', () => {
   it('should compile numeric literals', () => {

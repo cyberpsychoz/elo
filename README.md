@@ -300,10 +300,23 @@ klang/
 │       ├── sql.ts                   # PostgreSQL code generator
 │       └── sql.unit.test.ts         # SQL compiler unit tests
 ├── test/
-│   ├── *.klang                      # Klang test expressions
-│   ├── *.expected.js                # Expected JavaScript output
-│   ├── *.expected.ruby              # Expected Ruby output
-│   └── *.expected.sql               # Expected SQL output
+│   ├── fixtures/                    # Test fixtures
+│   │   ├── *.klang                  # Klang test expressions
+│   │   ├── *.expected.js            # Expected JavaScript output
+│   │   ├── *.expected.ruby          # Expected Ruby output
+│   │   └── *.expected.sql           # Expected SQL output
+│   ├── unit/                        # Unit tests
+│   │   ├── ast.unit.test.ts
+│   │   ├── parser.unit.test.ts
+│   │   ├── temporal.unit.test.ts
+│   │   └── compilers/
+│   │       ├── javascript.unit.test.ts
+│   │       ├── ruby.unit.test.ts
+│   │       └── sql.unit.test.ts
+│   ├── integration/
+│   │   └── compiler.integration.test.ts
+│   └── acceptance/
+│       └── acceptance.test.ts
 ├── bin/
 │   └── kc                           # Klang compiler CLI
 ├── scripts/

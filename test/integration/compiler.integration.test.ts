@@ -2,10 +2,10 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { parse } from './parser';
-import { compileToJavaScript } from './compilers/javascript';
-import { compileToRuby } from './compilers/ruby';
-import { compileToSQL } from './compilers/sql';
+import { parse } from '../../src/parser';
+import { compileToJavaScript } from '../../src/compilers/javascript';
+import { compileToRuby } from '../../src/compilers/ruby';
+import { compileToSQL } from '../../src/compilers/sql';
 
 /**
  * Compiler tests using test fixtures from test/ directory.
@@ -17,7 +17,7 @@ import { compileToSQL } from './compilers/sql';
  * - <name>.expected.sql - Expected SQL compilation
  */
 
-const TEST_DIR = join(__dirname, '../../test');
+const TEST_DIR = join(__dirname, '../../../test/fixtures');
 
 interface TestSuite {
   name: string;

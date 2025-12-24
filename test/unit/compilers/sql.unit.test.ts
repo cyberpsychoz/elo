@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { compileToSQL } from './sql';
-import { literal, variable, binary, unary } from '../ast';
+import { compileToSQL } from '../../../src/compilers/sql';
+import { literal, variable, binary, unary } from '../../../src/ast';
 
 describe('SQL Compiler - Literals', () => {
   it('should compile numeric literals', () => {

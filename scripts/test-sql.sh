@@ -5,7 +5,7 @@
 
 set -e
 
-TEST_DIR="${1:-test}"
+TEST_DIR="${1:-test/fixtures}"
 FAILED=0
 PASSED=0
 SKIPPED=0

@@ -5,7 +5,7 @@
 
 set -e
 
-TEST_DIR="${1:-test}"
+TEST_DIR="${1:-test/fixtures}"
 SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "Running local acceptance tests..."

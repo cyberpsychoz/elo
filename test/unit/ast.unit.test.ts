@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { literal, variable, binary, unary } from './ast';
+import { literal, variable, binary, unary } from '../../src/ast';
 
 describe('AST - literal() helper', () => {
   it('should create numeric literal', () => {

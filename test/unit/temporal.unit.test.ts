@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parse, compileToRuby, compileToJavaScript, compileToSQL } from './index';
-import { dateLiteral, dateTimeLiteral, durationLiteral } from './ast';
+import { parse, compileToRuby, compileToJavaScript, compileToSQL } from '../../src/index';
+import { dateLiteral, dateTimeLiteral, durationLiteral } from '../../src/ast';
 
 describe('Temporal - Date Literals', () => {
   it('should parse date literal', () => {

@@ -1,9 +1,9 @@
 import { describe, it, before, after } from 'node:test';
 import { Client } from 'pg';
-import { parse } from './parser';
-import { compileToRuby } from './compilers/ruby';
-import { compileToJavaScript } from './compilers/javascript';
-import { compileToSQL } from './compilers/sql';
+import { parse } from '../../src/parser';
+import { compileToRuby } from '../../src/compilers/ruby';
+import { compileToJavaScript } from '../../src/compilers/javascript';
+import { compileToSQL } from '../../src/compilers/sql';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -173,7 +173,7 @@ async function testAssertion(
 }
 
 // Load test suites from the test directory
-const TEST_DIR = join(__dirname, '../../test');
+const TEST_DIR = join(__dirname, '../../../test/fixtures');
 
 interface TestSuite {
   name: string;

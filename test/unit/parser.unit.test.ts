@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parse } from './parser';
-import { Expr } from './ast';
+import { parse } from '../../src/parser';
+import { Expr } from '../../src/ast';
 
 describe('Parser - Numeric Literals', () => {
   it('should parse integer literals', () => {

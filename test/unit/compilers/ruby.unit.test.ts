@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { compileToRuby } from './ruby';
-import { literal, variable, binary, unary } from '../ast';
+import { compileToRuby } from '../../../src/compilers/ruby';
+import { literal, variable, binary, unary } from '../../../src/ast';
 
 describe('Ruby Compiler - Literals', () => {
   it('should compile numeric literals', () => {
