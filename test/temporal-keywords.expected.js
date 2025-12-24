@@ -1,0 +1,7 @@
+(function() { if (!(new Date() > new Date('2020-01-01T00:00:00Z'))) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(new Date(new Date().setHours(0, 0, 0, 0)) >= new Date('2020-01-01'))) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(new Date(new Date().setHours(24, 0, 0, 0)) > new Date(new Date().setHours(0, 0, 0, 0)))) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(new Date(new Date().setHours(-24, 0, 0, 0)) < new Date(new Date().setHours(0, 0, 0, 0)))) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(new Date(new Date().setHours(24, 0, 0, 0)) > new Date(new Date().setHours(-24, 0, 0, 0)))) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(new Date() > new Date('2024-01-01T00:00:00Z'))) throw new Error("Assertion failed"); return true; })()
+(function() { if (!(new Date(new Date().setHours(0, 0, 0, 0)) > new Date('2024-01-01'))) throw new Error("Assertion failed"); return true; })()

@@ -15,8 +15,10 @@ export function compileToSQL(expr: Expr): string {
       return `DATE '${expr.value}'`;
 
     case 'datetime':
-      // Convert ISO8601 to PostgreSQL TIMESTAMP WITH TIME ZONE in UTC
-      return `TIMESTAMP WITH TIME ZONE '${expr.value}'`;
+      // Convert ISO8601 to PostgreSQL TIMESTAMP format
+      // '2024-01-15T10:30:00Z' -> '2024-01-15 10:30:00'
+      const formatted = expr.value.replace('T', ' ').replace('Z', '').split('.')[0];
+      return `TIMESTAMP '${formatted}'`;
 
     case 'duration':
       // Convert ISO8601 duration to PostgreSQL INTERVAL

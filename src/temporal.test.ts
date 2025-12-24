@@ -121,7 +121,7 @@ describe('Temporal - Date Arithmetic', () => {
     );
     assert.strictEqual(
       compileToJavaScript(ast),
-      "new Date('2024-01-15') + Duration.parse('P1D')"
+      "Duration.parse('P1D').addTo(new Date('2024-01-15'))"
     );
     assert.strictEqual(
       compileToSQL(ast),
