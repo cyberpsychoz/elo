@@ -4,6 +4,6 @@
 
 export * from './ast';
 export * from './parser';
-export { compileToRuby } from './compilers/ruby';
-export { compileToJavaScript } from './compilers/javascript';
+export { compileToRuby, RubyCompileOptions } from './compilers/ruby';
+export { compileToJavaScript, JavaScriptCompileOptions } from './compilers/javascript';
 export { compileToSQL, SQLCompileOptions } from './compilers/sql';

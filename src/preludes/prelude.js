@@ -25,3 +25,19 @@ if (process.env.KLANG_NOW) {
 } else {
   dayjs = _dayjs;
 }
+
+// Klang namespace for testable temporal expressions
+// In testable mode, the compiler uses klang.now() and klang.today()
+// which can be overridden for deterministic testing.
+const klang = {
+  // Fixed time for testing (set via KLANG_NOW env var or klang.fixedTime)
+  fixedTime: process.env.KLANG_NOW ? _dayjs(process.env.KLANG_NOW) : null,
+
+  now() {
+    return this.fixedTime ? this.fixedTime.clone() : dayjs();
+  },
+
+  today() {
+    return this.fixedTime ? this.fixedTime.startOf('day') : dayjs().startOf('day');
+  }
+};

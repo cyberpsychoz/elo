@@ -1,10 +1,46 @@
 import { Expr } from '../ast';
 
 /**
+ * JavaScript compilation options
+ */
+export interface JavaScriptCompileOptions {
+  /**
+   * Temporal mode controls how temporal expressions are compiled:
+   * - 'production': Uses dayjs() directly
+   * - 'testable': Uses klang.now()/klang.today() that can be overridden
+   */
+  temporalMode?: 'production' | 'testable';
+}
+
+/**
+ * Temporal provider abstraction - returns JavaScript expressions for current time/date
+ */
+interface TemporalProvider {
+  now(): string;
+  today(): string;
+}
+
+const productionProvider: TemporalProvider = {
+  now: () => 'dayjs()',
+  today: () => "dayjs().startOf('day')",
+};
+
+const testableProvider: TemporalProvider = {
+  now: () => 'klang.now()',
+  today: () => 'klang.today()',
+};
+
+function getTemporalProvider(options?: JavaScriptCompileOptions): TemporalProvider {
+  const mode = options?.temporalMode ?? 'production';
+  return mode === 'testable' ? testableProvider : productionProvider;
+}
+
+/**
  * Compiles Klang expressions to JavaScript code
  * Uses dayjs for temporal operations
  */
-export function compileToJavaScript(expr: Expr): string {
+export function compileToJavaScript(expr: Expr, options?: JavaScriptCompileOptions): string {
+  const temporal = getTemporalProvider(options);
   switch (expr.type) {
     case 'literal':
       return expr.value.toString();
@@ -18,43 +54,45 @@ export function compileToJavaScript(expr: Expr): string {
     case 'duration':
       return `dayjs.duration('${expr.value}')`;
 
-    case 'temporal_keyword':
+    case 'temporal_keyword': {
+      const mode = options?.temporalMode ?? 'production';
       switch (expr.keyword) {
         case 'NOW':
-          return 'dayjs()';
+          return temporal.now();
         case 'TODAY':
-          return 'dayjs().startOf(\'day\')';
+          return temporal.today();
         case 'TOMORROW':
-          return 'dayjs().startOf(\'day\').add(1, \'day\')';
+          return `${temporal.today()}.add(1, 'day')`;
         case 'YESTERDAY':
-          return 'dayjs().startOf(\'day\').subtract(1, \'day\')';
+          return `${temporal.today()}.subtract(1, 'day')`;
         case 'SOD':
-          return 'dayjs().startOf(\'day\')';
+          return mode === 'testable' ? temporal.today() : "dayjs().startOf('day')";
         case 'EOD':
-          return 'dayjs().endOf(\'day\')';
+          return mode === 'testable' ? `${temporal.today()}.endOf('day')` : "dayjs().endOf('day')";
         case 'SOW':
-          return 'dayjs().startOf(\'isoWeek\')';
+          return mode === 'testable' ? `${temporal.today()}.startOf('isoWeek')` : "dayjs().startOf('isoWeek')";
         case 'EOW':
-          return 'dayjs().endOf(\'isoWeek\')';
+          return mode === 'testable' ? `${temporal.today()}.endOf('isoWeek')` : "dayjs().endOf('isoWeek')";
         case 'SOM':
-          return 'dayjs().startOf(\'month\')';
+          return mode === 'testable' ? `${temporal.today()}.startOf('month')` : "dayjs().startOf('month')";
         case 'EOM':
-          return 'dayjs().endOf(\'month\')';
+          return mode === 'testable' ? `${temporal.today()}.endOf('month')` : "dayjs().endOf('month')";
         case 'SOQ':
-          return 'dayjs().startOf(\'quarter\')';
+          return mode === 'testable' ? `${temporal.today()}.startOf('quarter')` : "dayjs().startOf('quarter')";
         case 'EOQ':
-          return 'dayjs().endOf(\'quarter\')';
+          return mode === 'testable' ? `${temporal.today()}.endOf('quarter')` : "dayjs().endOf('quarter')";
         case 'SOY':
-          return 'dayjs().startOf(\'year\')';
+          return mode === 'testable' ? `${temporal.today()}.startOf('year')` : "dayjs().startOf('year')";
         case 'EOY':
-          return 'dayjs().endOf(\'year\')';
+          return mode === 'testable' ? `${temporal.today()}.endOf('year')` : "dayjs().endOf('year')";
       }
+    }
 
     case 'variable':
       return expr.name;
 
     case 'member_access': {
-      const object = compileToJavaScript(expr.object);
+      const object = compileToJavaScript(expr.object, options);
       // Add parentheses around complex expressions to ensure proper precedence
       const objectExpr = (expr.object.type === 'binary' || expr.object.type === 'unary')
         ? `(${object})`
@@ -63,7 +101,7 @@ export function compileToJavaScript(expr: Expr): string {
     }
 
     case 'function_call': {
-      const args = expr.args.map(arg => compileToJavaScript(arg));
+      const args = expr.args.map(arg => compileToJavaScript(arg, options));
 
       // Built-in assert function
       if (expr.name === 'assert') {
@@ -80,15 +118,15 @@ export function compileToJavaScript(expr: Expr): string {
     }
 
     case 'unary': {
-      const operand = compileToJavaScript(expr.operand);
+      const operand = compileToJavaScript(expr.operand, options);
       // Add parentheses around binary expressions to preserve precedence
       const operandExpr = expr.operand.type === 'binary' ? `(${operand})` : operand;
       return `${expr.operator}${operandExpr}`;
     }
 
     case 'binary': {
-      const left = compileToJavaScript(expr.left);
-      const right = compileToJavaScript(expr.right);
+      const left = compileToJavaScript(expr.left, options);
+      const right = compileToJavaScript(expr.right, options);
 
       // Handle power operator specially
       if (expr.operator === '^') {
@@ -133,8 +171,8 @@ export function compileToJavaScript(expr: Expr): string {
 
     case 'let': {
       const params = expr.bindings.map(b => b.name).join(', ');
-      const args = expr.bindings.map(b => compileToJavaScript(b.value)).join(', ');
-      const body = compileToJavaScript(expr.body);
+      const args = expr.bindings.map(b => compileToJavaScript(b.value, options)).join(', ');
+      const body = compileToJavaScript(expr.body, options);
       return `((${params}) => ${body})(${args})`;
     }
   }

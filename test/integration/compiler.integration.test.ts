@@ -25,7 +25,9 @@ interface TestSuite {
   expectedJS: string[];
   expectedRuby: string[];
   expectedSQL: string[];
-  expectedTestableSQL?: string[];  // Optional testable SQL variant
+  expectedTestableJS?: string[];    // Optional testable JavaScript variant
+  expectedTestableRuby?: string[];  // Optional testable Ruby variant
+  expectedTestableSQL?: string[];   // Optional testable SQL variant
 }
 
 function loadTestSuites(): TestSuite[] {
@@ -49,7 +51,17 @@ function loadTestSuites(): TestSuite[] {
     const expectedRuby = readFileSync(rubyPath, 'utf-8').split('\n');
     const expectedSQL = readFileSync(sqlPath, 'utf-8').split('\n');
 
-    // Check for testable SQL variant
+    // Check for testable variants
+    const testableJsPath = join(TEST_DIR, `${name}.expected.testable.js`);
+    const expectedTestableJS = existsSync(testableJsPath)
+      ? readFileSync(testableJsPath, 'utf-8').split('\n')
+      : undefined;
+
+    const testableRubyPath = join(TEST_DIR, `${name}.expected.testable.ruby`);
+    const expectedTestableRuby = existsSync(testableRubyPath)
+      ? readFileSync(testableRubyPath, 'utf-8').split('\n')
+      : undefined;
+
     const testableSqlPath = join(TEST_DIR, `${name}.expected.testable.sql`);
     const expectedTestableSQL = existsSync(testableSqlPath)
       ? readFileSync(testableSqlPath, 'utf-8').split('\n')
@@ -61,6 +73,8 @@ function loadTestSuites(): TestSuite[] {
       expectedJS,
       expectedRuby,
       expectedSQL,
+      expectedTestableJS,
+      expectedTestableRuby,
       expectedTestableSQL
     });
   }
@@ -83,7 +97,7 @@ for (const suite of testSuites) {
       it(`should compile line ${lineNum}: ${expr}`, () => {
         const ast = parse(expr);
 
-        // Test JavaScript compilation
+        // Test JavaScript compilation (production mode)
         const actualJS = compileToJavaScript(ast);
         const expectedJS = suite.expectedJS[i].trim();
         assert.strictEqual(
@@ -92,7 +106,18 @@ for (const suite of testSuites) {
           `JavaScript compilation mismatch on line ${lineNum}`
         );
 
-        // Test Ruby compilation
+        // Test JavaScript compilation (testable mode) if variant exists
+        if (suite.expectedTestableJS) {
+          const actualTestableJS = compileToJavaScript(ast, { temporalMode: 'testable' });
+          const expectedTestableJS = suite.expectedTestableJS[i].trim();
+          assert.strictEqual(
+            actualTestableJS,
+            expectedTestableJS,
+            `Testable JavaScript compilation mismatch on line ${lineNum}`
+          );
+        }
+
+        // Test Ruby compilation (production mode)
         const actualRuby = compileToRuby(ast);
         const expectedRuby = suite.expectedRuby[i].trim();
         assert.strictEqual(
@@ -100,6 +125,17 @@ for (const suite of testSuites) {
           expectedRuby,
           `Ruby compilation mismatch on line ${lineNum}`
         );
+
+        // Test Ruby compilation (testable mode) if variant exists
+        if (suite.expectedTestableRuby) {
+          const actualTestableRuby = compileToRuby(ast, { temporalMode: 'testable' });
+          const expectedTestableRuby = suite.expectedTestableRuby[i].trim();
+          assert.strictEqual(
+            actualTestableRuby,
+            expectedTestableRuby,
+            `Testable Ruby compilation mismatch on line ${lineNum}`
+          );
+        }
 
         // Test SQL compilation (production mode)
         const actualSQL = compileToSQL(ast);
