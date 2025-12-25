@@ -50,6 +50,11 @@ function needsParens(child: IRExpr, parentOp: string, side: 'left' | 'right'): b
   if (childPrec === parentPrec && side === 'right' && (parentOp === '-' || parentOp === '/')) {
     return true;
   }
+  // Non-associative operators in Ruby need parens when chained
+  const nonAssociative = ['==', '!=', '<', '>', '<=', '>='];
+  if (childPrec === parentPrec && nonAssociative.includes(parentOp) && nonAssociative.includes(childOp)) {
+    return true;
+  }
 
   return false;
 }
