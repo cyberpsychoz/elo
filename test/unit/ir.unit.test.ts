@@ -111,31 +111,33 @@ describe('IR variable factory', () => {
 
 describe('IR call factory', () => {
   it('irCall creates function call with no args', () => {
-    const node = irCall('today', [], Types.date);
+    const node = irCall('today', [], [], Types.date);
     assert.deepStrictEqual(node, {
       type: 'call',
       fn: 'today',
       args: [],
+      argTypes: [],
       resultType: Types.date,
     });
   });
 
   it('irCall creates function call with args', () => {
-    const node = irCall('add_int_int', [irInt(1), irInt(2)], Types.int);
-    assert.strictEqual(node.fn, 'add_int_int');
+    const node = irCall('add', [irInt(1), irInt(2)], [Types.int, Types.int], Types.int);
+    assert.strictEqual(node.fn, 'add');
     assert.strictEqual(node.args.length, 2);
+    assert.deepStrictEqual(node.argTypes, [Types.int, Types.int]);
     assert.deepStrictEqual(node.resultType, Types.int);
   });
 
   it('irCall defaults to any result type', () => {
-    const node = irCall('unknown_fn', [irVariable('x')]);
+    const node = irCall('unknown_fn', [irVariable('x')], [Types.any]);
     assert.deepStrictEqual(node.resultType, Types.any);
   });
 
   it('irCall allows nested calls', () => {
-    const inner = irCall('today', [], Types.date);
-    const outer = irCall('add_date_duration', [inner, irDuration('P1D')], Types.date);
-    assert.strictEqual(outer.fn, 'add_date_duration');
+    const inner = irCall('today', [], [], Types.date);
+    const outer = irCall('add', [inner, irDuration('P1D')], [Types.date, Types.duration], Types.date);
+    assert.strictEqual(outer.fn, 'add');
     assert.strictEqual(outer.args[0].type, 'call');
   });
 });
@@ -158,7 +160,7 @@ describe('IR let factory', () => {
         { name: 'x', value: irInt(1) },
         { name: 'y', value: irInt(2) },
       ],
-      irCall('add_int_int', [irVariable('x', Types.int), irVariable('y', Types.int)], Types.int)
+      irCall('add', [irVariable('x', Types.int), irVariable('y', Types.int)], [Types.int, Types.int], Types.int)
     );
     assert.strictEqual(node.bindings.length, 2);
   });
@@ -219,14 +221,14 @@ describe('inferType', () => {
   });
 
   it('infers type from call result type', () => {
-    assert.deepStrictEqual(inferType(irCall('add_int_int', [], Types.int)), Types.int);
-    assert.deepStrictEqual(inferType(irCall('today', [], Types.date)), Types.date);
+    assert.deepStrictEqual(inferType(irCall('add', [], [], Types.int)), Types.int);
+    assert.deepStrictEqual(inferType(irCall('today', [], [], Types.date)), Types.date);
   });
 
   it('infers type from let body', () => {
     const node = irLet(
       [{ name: 'x', value: irInt(1) }],
-      irCall('add_int_int', [irVariable('x', Types.int), irInt(2)], Types.int)
+      irCall('add', [irVariable('x', Types.int), irInt(2)], [Types.int, Types.int], Types.int)
     );
     assert.deepStrictEqual(inferType(node), Types.int);
   });

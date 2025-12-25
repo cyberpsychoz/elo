@@ -96,8 +96,9 @@ describe('transform - binary operators with integers', () => {
     const ir = transform(binary('+', literal(1), literal(2)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_int_int');
+      assert.strictEqual(ir.fn, 'add');
       assert.strictEqual(ir.args.length, 2);
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.int);
     }
   });
@@ -106,7 +107,8 @@ describe('transform - binary operators with integers', () => {
     const ir = transform(binary('-', literal(5), literal(3)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'sub_int_int');
+      assert.strictEqual(ir.fn, 'sub');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.int);
     }
   });
@@ -115,7 +117,8 @@ describe('transform - binary operators with integers', () => {
     const ir = transform(binary('*', literal(4), literal(3)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'mul_int_int');
+      assert.strictEqual(ir.fn, 'mul');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.int);
     }
   });
@@ -124,7 +127,8 @@ describe('transform - binary operators with integers', () => {
     const ir = transform(binary('/', literal(10), literal(3)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'div_int_int');
+      assert.strictEqual(ir.fn, 'div');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.float);
     }
   });
@@ -133,7 +137,8 @@ describe('transform - binary operators with integers', () => {
     const ir = transform(binary('%', literal(10), literal(3)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'mod_int_int');
+      assert.strictEqual(ir.fn, 'mod');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.int);
     }
   });
@@ -142,7 +147,8 @@ describe('transform - binary operators with integers', () => {
     const ir = transform(binary('^', literal(2), literal(3)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'pow_int_int');
+      assert.strictEqual(ir.fn, 'pow');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.int);
     }
   });
@@ -153,7 +159,8 @@ describe('transform - binary operators with floats', () => {
     const ir = transform(binary('+', literal(1.5), literal(2.5)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_float_float');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.float, Types.float]);
       assert.deepStrictEqual(ir.resultType, Types.float);
     }
   });
@@ -162,7 +169,8 @@ describe('transform - binary operators with floats', () => {
     const ir = transform(binary('+', literal(1), literal(2.5)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_int_float');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.float]);
       assert.deepStrictEqual(ir.resultType, Types.float);
     }
   });
@@ -173,7 +181,8 @@ describe('transform - comparison operators', () => {
     const ir = transform(binary('<', literal(1), literal(2)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'lt_int_int');
+      assert.strictEqual(ir.fn, 'lt');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -182,7 +191,8 @@ describe('transform - comparison operators', () => {
     const ir = transform(binary('>', literal(1), literal(2)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'gt_int_int');
+      assert.strictEqual(ir.fn, 'gt');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -191,7 +201,8 @@ describe('transform - comparison operators', () => {
     const ir = transform(binary('<=', literal(1), literal(2)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'lte_int_int');
+      assert.strictEqual(ir.fn, 'lte');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -200,7 +211,8 @@ describe('transform - comparison operators', () => {
     const ir = transform(binary('>=', literal(1), literal(2)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'gte_int_int');
+      assert.strictEqual(ir.fn, 'gte');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -209,7 +221,8 @@ describe('transform - comparison operators', () => {
     const ir = transform(binary('==', literal(1), literal(2)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'eq_int_int');
+      assert.strictEqual(ir.fn, 'eq');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -218,7 +231,8 @@ describe('transform - comparison operators', () => {
     const ir = transform(binary('!=', literal(1), literal(2)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'neq_int_int');
+      assert.strictEqual(ir.fn, 'neq');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -229,7 +243,8 @@ describe('transform - logical operators', () => {
     const ir = transform(binary('&&', literal(true), literal(false)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'and_bool_bool');
+      assert.strictEqual(ir.fn, 'and');
+      assert.deepStrictEqual(ir.argTypes, [Types.bool, Types.bool]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -238,7 +253,8 @@ describe('transform - logical operators', () => {
     const ir = transform(binary('||', literal(true), literal(false)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'or_bool_bool');
+      assert.strictEqual(ir.fn, 'or');
+      assert.deepStrictEqual(ir.argTypes, [Types.bool, Types.bool]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -249,7 +265,8 @@ describe('transform - temporal arithmetic', () => {
     const ir = transform(binary('+', dateLiteral('2024-01-15'), durationLiteral('P1D')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_date_duration');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.date, Types.duration]);
       assert.deepStrictEqual(ir.resultType, Types.date);
     }
   });
@@ -258,7 +275,8 @@ describe('transform - temporal arithmetic', () => {
     const ir = transform(binary('+', dateTimeLiteral('2024-01-15T10:00:00'), durationLiteral('PT1H')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_datetime_duration');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.datetime, Types.duration]);
       assert.deepStrictEqual(ir.resultType, Types.datetime);
     }
   });
@@ -267,7 +285,8 @@ describe('transform - temporal arithmetic', () => {
     const ir = transform(binary('+', durationLiteral('P1D'), durationLiteral('P2D')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_duration_duration');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.duration, Types.duration]);
       assert.deepStrictEqual(ir.resultType, Types.duration);
     }
   });
@@ -278,7 +297,8 @@ describe('transform - string operations', () => {
     const ir = transform(binary('+', stringLiteral('hello'), stringLiteral(' world')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_string_string');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.string, Types.string]);
       assert.deepStrictEqual(ir.resultType, Types.string);
     }
   });
@@ -289,7 +309,8 @@ describe('transform - unknown types', () => {
     const ir = transform(binary('+', variable('a'), variable('b')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_any_any');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.any, Types.any]);
       assert.deepStrictEqual(ir.resultType, Types.any);
     }
   });
@@ -298,7 +319,8 @@ describe('transform - unknown types', () => {
     const ir = transform(binary('+', literal(1), variable('x')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_int_any');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.any]);
       assert.deepStrictEqual(ir.resultType, Types.any);
     }
   });
@@ -309,7 +331,8 @@ describe('transform - unary operators', () => {
     const ir = transform(unary('-', literal(5)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'neg_int');
+      assert.strictEqual(ir.fn, 'neg');
+      assert.deepStrictEqual(ir.argTypes, [Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.int);
     }
   });
@@ -318,7 +341,8 @@ describe('transform - unary operators', () => {
     const ir = transform(unary('-', literal(3.14)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'neg_float');
+      assert.strictEqual(ir.fn, 'neg');
+      assert.deepStrictEqual(ir.argTypes, [Types.float]);
       assert.deepStrictEqual(ir.resultType, Types.float);
     }
   });
@@ -327,7 +351,8 @@ describe('transform - unary operators', () => {
     const ir = transform(unary('+', literal(5)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'pos_int');
+      assert.strictEqual(ir.fn, 'pos');
+      assert.deepStrictEqual(ir.argTypes, [Types.int]);
       assert.deepStrictEqual(ir.resultType, Types.int);
     }
   });
@@ -336,7 +361,8 @@ describe('transform - unary operators', () => {
     const ir = transform(unary('!', literal(true)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'not_bool');
+      assert.strictEqual(ir.fn, 'not');
+      assert.deepStrictEqual(ir.argTypes, [Types.bool]);
       assert.deepStrictEqual(ir.resultType, Types.bool);
     }
   });
@@ -345,7 +371,8 @@ describe('transform - unary operators', () => {
     const ir = transform(unary('-', variable('x')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'neg_any');
+      assert.strictEqual(ir.fn, 'neg');
+      assert.deepStrictEqual(ir.argTypes, [Types.any]);
       assert.deepStrictEqual(ir.resultType, Types.any);
     }
   });
@@ -376,8 +403,9 @@ describe('transform - temporal keywords', () => {
     const ir = transform(temporalKeyword('TOMORROW'));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_date_duration');
+      assert.strictEqual(ir.fn, 'add');
       assert.strictEqual(ir.args.length, 2);
+      assert.deepStrictEqual(ir.argTypes, [Types.date, Types.duration]);
       assert.deepStrictEqual(ir.resultType, Types.date);
       // First arg should be today()
       const todayCall = ir.args[0];
@@ -392,8 +420,9 @@ describe('transform - temporal keywords', () => {
     const ir = transform(temporalKeyword('YESTERDAY'));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'sub_date_duration');
+      assert.strictEqual(ir.fn, 'sub');
       assert.strictEqual(ir.args.length, 2);
+      assert.deepStrictEqual(ir.argTypes, [Types.date, Types.duration]);
       assert.deepStrictEqual(ir.resultType, Types.date);
     }
   });
@@ -537,10 +566,11 @@ describe('transform - let expressions', () => {
     );
     assert.strictEqual(ir.type, 'let');
     if (ir.type === 'let') {
-      // Body should be add_int_int since x is known to be int
+      // Body should be add with [int, int] since x is known to be int
       assert.strictEqual(ir.body.type, 'call');
       if (ir.body.type === 'call') {
-        assert.strictEqual(ir.body.fn, 'add_int_int');
+        assert.strictEqual(ir.body.fn, 'add');
+        assert.deepStrictEqual(ir.body.argTypes, [Types.int, Types.int]);
         assert.deepStrictEqual(ir.body.resultType, Types.int);
       }
     }
@@ -563,7 +593,8 @@ describe('transform - let expressions', () => {
       if (ir.body.type === 'let') {
         assert.strictEqual(ir.body.body.type, 'call');
         if (ir.body.body.type === 'call') {
-          assert.strictEqual(ir.body.body.fn, 'add_int_int');
+          assert.strictEqual(ir.body.body.fn, 'add');
+          assert.deepStrictEqual(ir.body.body.argTypes, [Types.int, Types.int]);
         }
       }
     }
@@ -576,11 +607,13 @@ describe('transform - complex expressions', () => {
     const ir = transform(binary('*', binary('+', literal(1), literal(2)), literal(3)));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'mul_int_int');
+      assert.strictEqual(ir.fn, 'mul');
+      assert.deepStrictEqual(ir.argTypes, [Types.int, Types.int]);
       // First arg is the nested add
       assert.strictEqual(ir.args[0].type, 'call');
       if (ir.args[0].type === 'call') {
-        assert.strictEqual(ir.args[0].fn, 'add_int_int');
+        assert.strictEqual(ir.args[0].fn, 'add');
+        assert.deepStrictEqual(ir.args[0].argTypes, [Types.int, Types.int]);
       }
     }
   });
@@ -589,7 +622,8 @@ describe('transform - complex expressions', () => {
     const ir = transform(binary('+', temporalKeyword('TODAY'), durationLiteral('P1D')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
-      assert.strictEqual(ir.fn, 'add_date_duration');
+      assert.strictEqual(ir.fn, 'add');
+      assert.deepStrictEqual(ir.argTypes, [Types.date, Types.duration]);
       assert.deepStrictEqual(ir.resultType, Types.date);
     }
   });

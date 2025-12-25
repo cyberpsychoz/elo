@@ -79,51 +79,57 @@ describe('JavaScript Compiler - Arithmetic Operators (typed literals)', () => {
 });
 
 describe('JavaScript Compiler - Arithmetic Operators (unknown types)', () => {
-  it('should use klang.power for variables', () => {
+  it('should use klang.pow fallback for variables', () => {
     const ast = binary('^', variable('x'), variable('y'));
-    assert.strictEqual(compileToJavaScript(ast), 'klang.power(x, y)');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.pow(x, y)');
   });
 
-  it('should use klang.add for variables', () => {
+  it('should use klang.add fallback for variables', () => {
     const ast = binary('+', variable('a'), variable('b'));
     assert.strictEqual(compileToJavaScript(ast), 'klang.add(a, b)');
   });
 
-  it('should use klang.multiply for mixed known/unknown', () => {
+  it('should use klang.mul fallback for mixed known/unknown', () => {
     const ast = binary('*', literal(2), variable('x'));
-    assert.strictEqual(compileToJavaScript(ast), 'klang.multiply(2, x)');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.mul(2, x)');
   });
 });
 
 describe('JavaScript Compiler - Comparison Operators', () => {
-  it('should compile less than', () => {
+  it('should compile less than with typed operands', () => {
+    const ast = binary('<', literal(5), literal(10));
+    assert.strictEqual(compileToJavaScript(ast), '5 < 10');
+  });
+
+  it('should compile greater than with typed operands', () => {
+    const ast = binary('>', literal(15), literal(10));
+    assert.strictEqual(compileToJavaScript(ast), '15 > 10');
+  });
+
+  it('should compile less than or equal with typed operands', () => {
+    const ast = binary('<=', literal(5), literal(10));
+    assert.strictEqual(compileToJavaScript(ast), '5 <= 10');
+  });
+
+  it('should compile greater than or equal with typed operands', () => {
+    const ast = binary('>=', literal(15), literal(10));
+    assert.strictEqual(compileToJavaScript(ast), '15 >= 10');
+  });
+
+  it('should compile equality with typed operands', () => {
+    const ast = binary('==', literal(10), literal(10));
+    assert.strictEqual(compileToJavaScript(ast), '10 == 10');
+  });
+
+  it('should compile inequality with typed operands', () => {
+    const ast = binary('!=', literal(5), literal(10));
+    assert.strictEqual(compileToJavaScript(ast), '5 != 10');
+  });
+
+  it('should use native operators for comparison with unknown types', () => {
+    // JS comparison always uses native operators, even with unknown types
     const ast = binary('<', variable('x'), literal(10));
     assert.strictEqual(compileToJavaScript(ast), 'x < 10');
-  });
-
-  it('should compile greater than', () => {
-    const ast = binary('>', variable('x'), literal(10));
-    assert.strictEqual(compileToJavaScript(ast), 'x > 10');
-  });
-
-  it('should compile less than or equal', () => {
-    const ast = binary('<=', variable('x'), literal(10));
-    assert.strictEqual(compileToJavaScript(ast), 'x <= 10');
-  });
-
-  it('should compile greater than or equal', () => {
-    const ast = binary('>=', variable('x'), literal(10));
-    assert.strictEqual(compileToJavaScript(ast), 'x >= 10');
-  });
-
-  it('should compile equality', () => {
-    const ast = binary('==', variable('x'), literal(10));
-    assert.strictEqual(compileToJavaScript(ast), 'x == 10');
-  });
-
-  it('should compile inequality', () => {
-    const ast = binary('!=', variable('x'), literal(10));
-    assert.strictEqual(compileToJavaScript(ast), 'x != 10');
   });
 });
 
@@ -139,8 +145,13 @@ describe('JavaScript Compiler - Logical Operators', () => {
   });
 
   it('should compile NOT', () => {
+    const ast = unary('!', literal(true));
+    assert.strictEqual(compileToJavaScript(ast), '!true');
+  });
+
+  it('should use klang fallback for NOT with unknown type', () => {
     const ast = unary('!', variable('active'));
-    assert.strictEqual(compileToJavaScript(ast), '!active');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.not(active)');
   });
 });
 
@@ -155,9 +166,9 @@ describe('JavaScript Compiler - Unary Operators', () => {
     assert.strictEqual(compileToJavaScript(ast), '+5');
   });
 
-  it('should compile negated variable', () => {
+  it('should use klang fallback for negated variable (unknown type)', () => {
     const ast = unary('-', variable('x'));
-    assert.strictEqual(compileToJavaScript(ast), '-x');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.neg(x)');
   });
 });
 
@@ -185,13 +196,13 @@ describe('JavaScript Compiler - Operator Precedence (typed)', () => {
 });
 
 describe('JavaScript Compiler - Complex Expressions (unknown types)', () => {
-  it('should compile (a + b) * c with runtime helpers', () => {
+  it('should compile (a + b) * c with klang helpers', () => {
     const ast = binary(
       '*',
       binary('+', variable('a'), variable('b')),
       variable('c')
     );
-    assert.strictEqual(compileToJavaScript(ast), 'klang.multiply(klang.add(a, b), c)');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.mul(klang.add(a, b), c)');
   });
 
   it('should compile price * quantity - discount', () => {
@@ -200,10 +211,11 @@ describe('JavaScript Compiler - Complex Expressions (unknown types)', () => {
       binary('*', variable('price'), variable('quantity')),
       variable('discount')
     );
-    assert.strictEqual(compileToJavaScript(ast), 'klang.subtract(klang.multiply(price, quantity), discount)');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.sub(klang.mul(price, quantity), discount)');
   });
 
-  it('should compile x > 0 && x < 100', () => {
+  it('should compile x > 0 && x < 100 with native operators', () => {
+    // Comparison and logical operators use native JS even with unknown types
     const ast = binary(
       '&&',
       binary('>', variable('x'), literal(0)),
@@ -222,16 +234,17 @@ describe('JavaScript Compiler - Complex Expressions (unknown types)', () => {
       ),
       literal(2)
     );
-    assert.strictEqual(compileToJavaScript(ast), 'klang.divide(klang.multiply(klang.add(x, 5), klang.subtract(y, 3)), 2)');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.div(klang.mul(klang.add(x, 5), klang.sub(y, 3)), 2)');
   });
 
   it('should compile mixed arithmetic and boolean', () => {
+    // Comparison uses native operators, but arithmetic uses klang helpers
     const ast = binary(
       '>',
       binary('*', variable('total'), literal(1.1)),
       literal(1000)
     );
-    assert.strictEqual(compileToJavaScript(ast), 'klang.multiply(total, 1.1) > 1000');
+    assert.strictEqual(compileToJavaScript(ast), 'klang.mul(total, 1.1) > 1000');
   });
 });
 
@@ -254,9 +267,10 @@ describe('JavaScript Compiler - Edge Cases', () => {
     assert.strictEqual(compileToJavaScript(ast), '2 * Math.pow(3, 2) + 1');
   });
 
-  it('should handle multiple unary operators', () => {
+  it('should handle multiple unary operators with unknown type', () => {
     const ast = unary('!', unary('!', variable('x')));
-    assert.strictEqual(compileToJavaScript(ast), '!!x');
+    // Unknown type uses fallback
+    assert.strictEqual(compileToJavaScript(ast), 'klang.not(klang.not(x))');
   });
 });
 
@@ -305,7 +319,8 @@ describe('JavaScript Compiler - Function Calls', () => {
       name: 'foo',
       args: [{ type: 'literal' as const, value: 42 }]
     };
-    assert.strictEqual(compileToJavaScript(ast), 'foo(42)');
+    // Unknown functions use klang. prefix
+    assert.strictEqual(compileToJavaScript(ast), 'klang.foo(42)');
   });
 });
 

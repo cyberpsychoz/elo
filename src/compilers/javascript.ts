@@ -1,6 +1,8 @@
 import { Expr } from '../ast';
 import { IRExpr, IRCall } from '../ir';
 import { transform } from '../transform';
+import { Types } from '../types';
+import { StdLib, EmitContext, simpleBinaryOp, nullary, fnCall } from '../stdlib';
 
 /**
  * JavaScript compilation options
@@ -32,86 +34,39 @@ const JS_PRECEDENCE: Record<string, number> = {
   '<': 4, '>': 4, '<=': 4, '>=': 4,
   '+': 5, '-': 5,
   '*': 6, '/': 6, '%': 6,
-  // Power uses Math.pow() so doesn't need precedence handling
 };
 
 /**
- * Get the JavaScript operator for an IR function name
+ * Map IR function names to JS operators for precedence checking
  */
-function getJSOperator(fn: string): string | null {
-  if (fn.startsWith('add_')) return '+';
-  if (fn.startsWith('sub_')) return '-';
-  if (fn.startsWith('mul_')) return '*';
-  if (fn.startsWith('div_')) return '/';
-  if (fn.startsWith('mod_')) return '%';
-  if (fn.startsWith('lt_')) return '<';
-  if (fn.startsWith('gt_')) return '>';
-  if (fn.startsWith('lte_')) return '<=';
-  if (fn.startsWith('gte_')) return '>=';
-  if (fn.startsWith('eq_')) return '==';
-  if (fn.startsWith('neq_')) return '!=';
-  if (fn.startsWith('and_')) return '&&';
-  if (fn.startsWith('or_')) return '||';
-  return null;
-}
+const OP_MAP: Record<string, string> = {
+  'add': '+', 'sub': '-', 'mul': '*', 'div': '/', 'mod': '%',
+  'lt': '<', 'gt': '>', 'lte': '<=', 'gte': '>=',
+  'eq': '==', 'neq': '!=', 'and': '&&', 'or': '||',
+};
 
 /**
  * Check if a call will be emitted as a native JS binary operator
  */
-function isNativeArithmetic(fn: string): boolean {
-  const numericFns = [
-    'add_int_int', 'add_float_float', 'add_int_float', 'add_float_int', 'add_string_string',
-    'sub_int_int', 'sub_float_float', 'sub_int_float', 'sub_float_int',
-    'mul_int_int', 'mul_float_float', 'mul_int_float', 'mul_float_int',
-    'div_int_int', 'div_float_float', 'div_int_float', 'div_float_int',
-    'mod_int_int', 'mod_float_float', 'mod_int_float', 'mod_float_int',
-  ];
-  return numericFns.includes(fn);
-}
+function isNativeBinaryOp(ir: IRExpr): boolean {
+  if (ir.type !== 'call') return false;
+  const { fn, argTypes } = ir;
 
-/**
- * Check if a call will be emitted as any native JS binary operator
- */
-function isNativeBinaryOp(fn: string): boolean {
-  // Arithmetic
-  if (isNativeArithmetic(fn)) return true;
-  // Comparisons
-  if (fn.startsWith('lt_') || fn.startsWith('gt_') ||
-      fn.startsWith('lte_') || fn.startsWith('gte_') ||
-      fn.startsWith('eq_') || fn.startsWith('neq_')) return true;
-  // Logical
-  if (fn.startsWith('and_') || fn.startsWith('or_')) return true;
-  return false;
-}
-
-/**
- * Check if an IR expression needs parentheses when used as child of a binary op
- */
-function needsParens(child: IRExpr, parentOp: string, side: 'left' | 'right'): boolean {
-  if (child.type !== 'call') return false;
-
-  const childOp = getJSOperator(child.fn);
-  if (!childOp) return false;
-
-  // Check if this child will be emitted as native JS
-  if (!isNativeArithmetic(child.fn) &&
-      !child.fn.startsWith('lt_') && !child.fn.startsWith('gt_') &&
-      !child.fn.startsWith('lte_') && !child.fn.startsWith('gte_') &&
-      !child.fn.startsWith('eq_') && !child.fn.startsWith('neq_') &&
-      !child.fn.startsWith('and_') && !child.fn.startsWith('or_')) {
-    return false;
+  // Arithmetic with numeric types
+  if (['add', 'sub', 'mul', 'div', 'mod'].includes(fn)) {
+    const [left, right] = argTypes;
+    if ((left.kind === 'int' || left.kind === 'float') &&
+        (right.kind === 'int' || right.kind === 'float')) {
+      return true;
+    }
+    // String concatenation
+    if (fn === 'add' && left.kind === 'string' && right.kind === 'string') {
+      return true;
+    }
   }
 
-  const parentPrec = JS_PRECEDENCE[parentOp] || 0;
-  const childPrec = JS_PRECEDENCE[childOp] || 0;
-
-  // Lower precedence child needs parens
-  if (childPrec < parentPrec) return true;
-
-  // Same precedence on right side needs parens for left-associative ops
-  // (to preserve evaluation order)
-  if (childPrec === parentPrec && side === 'right') {
-    // Most operators are left-associative
+  // Comparison and logical operators
+  if (['lt', 'gt', 'lte', 'gte', 'eq', 'neq', 'and', 'or'].includes(fn)) {
     return true;
   }
 
@@ -119,9 +74,187 @@ function needsParens(child: IRExpr, parentOp: string, side: 'left' | 'right'): b
 }
 
 /**
+ * Check if an IR expression needs parentheses when used as child of a binary op
+ */
+function needsParens(child: IRExpr, parentOp: string, side: 'left' | 'right'): boolean {
+  if (!isNativeBinaryOp(child)) return false;
+
+  const call = child as IRCall;
+  const childOp = OP_MAP[call.fn];
+  if (!childOp) return false;
+
+  const parentPrec = JS_PRECEDENCE[parentOp] || 0;
+  const childPrec = JS_PRECEDENCE[childOp] || 0;
+
+  if (childPrec < parentPrec) return true;
+  if (childPrec === parentPrec && side === 'right') return true;
+
+  return false;
+}
+
+// Build the JavaScript standard library
+const jsLib = new StdLib<string>();
+
+// Temporal nullary functions
+jsLib.register('today', [], nullary("dayjs().startOf('day')"));
+jsLib.register('now', [], nullary('dayjs()'));
+
+// Period boundary functions
+const periodBoundaryMap: Record<string, string> = {
+  'start_of_day': "startOf('day')",
+  'end_of_day': "endOf('day')",
+  'start_of_week': "startOf('isoWeek')",
+  'end_of_week': "endOf('isoWeek')",
+  'start_of_month': "startOf('month')",
+  'end_of_month': "endOf('month')",
+  'start_of_quarter': "startOf('quarter')",
+  'end_of_quarter': "endOf('quarter')",
+  'start_of_year': "startOf('year')",
+  'end_of_year': "endOf('year')",
+};
+
+for (const [fn, method] of Object.entries(periodBoundaryMap)) {
+  jsLib.register(fn, [Types.datetime], (args, ctx) => `${ctx.emit(args[0])}.${method}`);
+}
+
+// Numeric arithmetic - native JS operators
+for (const leftType of [Types.int, Types.float]) {
+  for (const rightType of [Types.int, Types.float]) {
+    jsLib.register('add', [leftType, rightType], simpleBinaryOp('+'));
+    jsLib.register('sub', [leftType, rightType], simpleBinaryOp('-'));
+    jsLib.register('mul', [leftType, rightType], simpleBinaryOp('*'));
+    jsLib.register('div', [leftType, rightType], simpleBinaryOp('/'));
+    jsLib.register('mod', [leftType, rightType], simpleBinaryOp('%'));
+    jsLib.register('pow', [leftType, rightType], fnCall('Math.pow'));
+  }
+}
+
+// String concatenation
+jsLib.register('add', [Types.string, Types.string], simpleBinaryOp('+'));
+
+// Temporal addition
+jsLib.register('add', [Types.date, Types.duration], (args, ctx) =>
+  `${ctx.emit(args[0])}.add(${ctx.emit(args[1])})`);
+jsLib.register('add', [Types.datetime, Types.duration], (args, ctx) =>
+  `${ctx.emit(args[0])}.add(${ctx.emit(args[1])})`);
+jsLib.register('add', [Types.duration, Types.date], (args, ctx) =>
+  `${ctx.emit(args[1])}.add(${ctx.emit(args[0])})`);
+jsLib.register('add', [Types.duration, Types.datetime], (args, ctx) =>
+  `${ctx.emit(args[1])}.add(${ctx.emit(args[0])})`);
+jsLib.register('add', [Types.duration, Types.duration], (args, ctx) =>
+  `${ctx.emit(args[0])}.add(${ctx.emit(args[1])})`);
+
+// Temporal subtraction
+jsLib.register('sub', [Types.date, Types.duration], (args, ctx) =>
+  `${ctx.emit(args[0])}.subtract(${ctx.emit(args[1])})`);
+jsLib.register('sub', [Types.datetime, Types.duration], (args, ctx) =>
+  `${ctx.emit(args[0])}.subtract(${ctx.emit(args[1])})`);
+
+// Duration scaling: n * duration or duration * n
+jsLib.register('mul', [Types.int, Types.duration], (args, ctx) =>
+  `dayjs.duration(${ctx.emit(args[1])}.asMilliseconds() * ${ctx.emit(args[0])})`);
+jsLib.register('mul', [Types.float, Types.duration], (args, ctx) =>
+  `dayjs.duration(${ctx.emit(args[1])}.asMilliseconds() * ${ctx.emit(args[0])})`);
+jsLib.register('mul', [Types.duration, Types.int], (args, ctx) =>
+  `dayjs.duration(${ctx.emit(args[0])}.asMilliseconds() * ${ctx.emit(args[1])})`);
+jsLib.register('mul', [Types.duration, Types.float], (args, ctx) =>
+  `dayjs.duration(${ctx.emit(args[0])}.asMilliseconds() * ${ctx.emit(args[1])})`);
+
+// Duration division
+jsLib.register('div', [Types.duration, Types.int], (args, ctx) =>
+  `dayjs.duration(${ctx.emit(args[0])}.asMilliseconds() / ${ctx.emit(args[1])})`);
+jsLib.register('div', [Types.duration, Types.float], (args, ctx) =>
+  `dayjs.duration(${ctx.emit(args[0])}.asMilliseconds() / ${ctx.emit(args[1])})`);
+
+// Comparison operators - registered for specific types, with 'any' catch-all for runtime
+const allBasicTypes = [Types.int, Types.float, Types.string, Types.bool, Types.date, Types.datetime, Types.any];
+for (const leftType of allBasicTypes) {
+  for (const rightType of allBasicTypes) {
+    // Date equality uses valueOf comparison for exact match
+    if ((leftType === Types.date || leftType === Types.datetime) &&
+        (rightType === Types.date || rightType === Types.datetime)) {
+      jsLib.register('eq', [leftType, rightType], (args, ctx) =>
+        `+${ctx.emit(args[0])} === +${ctx.emit(args[1])}`);
+      jsLib.register('neq', [leftType, rightType], (args, ctx) =>
+        `+${ctx.emit(args[0])} !== +${ctx.emit(args[1])}`);
+      jsLib.register('lt', [leftType, rightType], simpleBinaryOp('<'));
+      jsLib.register('gt', [leftType, rightType], simpleBinaryOp('>'));
+      jsLib.register('lte', [leftType, rightType], simpleBinaryOp('<='));
+      jsLib.register('gte', [leftType, rightType], simpleBinaryOp('>='));
+    } else {
+      // All other comparisons use native JS operators
+      jsLib.register('lt', [leftType, rightType], simpleBinaryOp('<'));
+      jsLib.register('gt', [leftType, rightType], simpleBinaryOp('>'));
+      jsLib.register('lte', [leftType, rightType], simpleBinaryOp('<='));
+      jsLib.register('gte', [leftType, rightType], simpleBinaryOp('>='));
+      jsLib.register('eq', [leftType, rightType], simpleBinaryOp('=='));
+      jsLib.register('neq', [leftType, rightType], simpleBinaryOp('!='));
+    }
+  }
+}
+
+// Logical operators - always native, including with any type
+for (const leftType of [Types.bool, Types.any]) {
+  for (const rightType of [Types.bool, Types.any]) {
+    jsLib.register('and', [leftType, rightType], simpleBinaryOp('&&'));
+    jsLib.register('or', [leftType, rightType], simpleBinaryOp('||'));
+  }
+}
+
+// Unary operators
+for (const t of [Types.int, Types.float]) {
+  jsLib.register('neg', [t], (args, ctx) => {
+    const operand = ctx.emit(args[0]);
+    if (isNativeBinaryOp(args[0])) return `-(${operand})`;
+    return `-${operand}`;
+  });
+  jsLib.register('pos', [t], (args, ctx) => {
+    const operand = ctx.emit(args[0]);
+    if (isNativeBinaryOp(args[0])) return `+(${operand})`;
+    return `+${operand}`;
+  });
+}
+
+jsLib.register('not', [Types.bool], (args, ctx) => {
+  const operand = ctx.emit(args[0]);
+  if (isNativeBinaryOp(args[0])) return `!(${operand})`;
+  return `!${operand}`;
+});
+
+// Assert function - accept both bool and any (for dynamic expressions)
+for (const conditionType of [Types.bool, Types.any]) {
+  jsLib.register('assert', [conditionType], (args, ctx) => {
+    const condition = ctx.emit(args[0]);
+    return `(function() { if (!(${condition})) throw new Error("Assertion failed"); return true; })()`;
+  });
+  jsLib.register('assert', [conditionType, Types.string], (args, ctx) => {
+    const condition = ctx.emit(args[0]);
+    const message = ctx.emit(args[1]);
+    return `(function() { if (!(${condition})) throw new Error(${message}); return true; })()`;
+  });
+}
+
+// Fallback for unknown functions - use klang. namespace for runtime helpers
+jsLib.registerFallback((name, args, _argTypes, ctx) => {
+  const emittedArgs = args.map(a => ctx.emit(a)).join(', ');
+  return `klang.${name}(${emittedArgs})`;
+});
+
+/**
  * Emit JavaScript code from IR
  */
 function emitJS(ir: IRExpr): string {
+  const ctx: EmitContext<string> = {
+    emit: emitJS,
+    emitWithParens: (child, parentOp, side) => {
+      const emitted = emitJS(child);
+      if (needsParens(child, parentOp, side)) {
+        return `(${emitted})`;
+      }
+      return emitted;
+    },
+  };
+
   switch (ir.type) {
     case 'int_literal':
     case 'float_literal':
@@ -160,242 +293,6 @@ function emitJS(ir: IRExpr): string {
     }
 
     case 'call':
-      return emitCall(ir.fn, ir.args, ir);
+      return jsLib.emit(ir.fn, ir.args, ir.argTypes, ctx);
   }
-}
-
-/**
- * Emit a child expression, adding parens if needed for precedence
- */
-function emitChildWithParens(child: IRExpr, parentOp: string, side: 'left' | 'right'): string {
-  const emitted = emitJS(child);
-  if (needsParens(child, parentOp, side)) {
-    return `(${emitted})`;
-  }
-  return emitted;
-}
-
-/**
- * Emit a function call
- * Maps IR function names to JavaScript implementations
- */
-function emitCall(fn: string, args: IRExpr[], _ir: IRCall): string {
-  // Handle built-in assert
-  if (fn === 'assert') {
-    const emittedArgs = args.map(emitJS);
-    if (emittedArgs.length < 1 || emittedArgs.length > 2) {
-      throw new Error('assert requires 1 or 2 arguments: assert(condition, message?)');
-    }
-    const condition = emittedArgs[0];
-    const message = emittedArgs.length === 2 ? emittedArgs[1] : '"Assertion failed"';
-    return `(function() { if (!(${condition})) throw new Error(${message}); return true; })()`;
-  }
-
-  // Temporal nullary functions
-  if (fn === 'today') {
-    return "dayjs().startOf('day')";
-  }
-  if (fn === 'now') {
-    return 'dayjs()';
-  }
-
-  // Temporal period boundary functions
-  const periodBoundaryMap: Record<string, string> = {
-    'start_of_day': "startOf('day')",
-    'end_of_day': "endOf('day')",
-    'start_of_week': "startOf('isoWeek')",
-    'end_of_week': "endOf('isoWeek')",
-    'start_of_month': "startOf('month')",
-    'end_of_month': "endOf('month')",
-    'start_of_quarter': "startOf('quarter')",
-    'end_of_quarter': "endOf('quarter')",
-    'start_of_year': "startOf('year')",
-    'end_of_year': "endOf('year')",
-  };
-  if (fn in periodBoundaryMap) {
-    return `${emitJS(args[0])}.${periodBoundaryMap[fn]}`;
-  }
-
-  // Binary arithmetic operators
-  // Check for typed versions first, then fall back to runtime helpers
-
-  // Addition
-  if (fn.startsWith('add_')) {
-    // Native JS addition for int/float/string combinations
-    if (fn === 'add_int_int' || fn === 'add_float_float' ||
-        fn === 'add_int_float' || fn === 'add_float_int' ||
-        fn === 'add_string_string') {
-      const left = emitChildWithParens(args[0], '+', 'left');
-      const right = emitChildWithParens(args[1], '+', 'right');
-      return `${left} + ${right}`;
-    }
-    // dayjs addition for temporal types
-    if (fn === 'add_date_duration' || fn === 'add_datetime_duration') {
-      return `${emitJS(args[0])}.add(${emitJS(args[1])})`;
-    }
-    if (fn === 'add_duration_date' || fn === 'add_duration_datetime') {
-      return `${emitJS(args[1])}.add(${emitJS(args[0])})`;
-    }
-    if (fn === 'add_duration_duration') {
-      return `${emitJS(args[0])}.add(${emitJS(args[1])})`;
-    }
-    // Fallback to runtime helper
-    return `klang.add(${emitJS(args[0])}, ${emitJS(args[1])})`;
-  }
-
-  // Subtraction
-  if (fn.startsWith('sub_')) {
-    if (fn === 'sub_int_int' || fn === 'sub_float_float' ||
-        fn === 'sub_int_float' || fn === 'sub_float_int') {
-      const left = emitChildWithParens(args[0], '-', 'left');
-      const right = emitChildWithParens(args[1], '-', 'right');
-      return `${left} - ${right}`;
-    }
-    if (fn === 'sub_date_duration' || fn === 'sub_datetime_duration') {
-      return `${emitJS(args[0])}.subtract(${emitJS(args[1])})`;
-    }
-    return `klang.subtract(${emitJS(args[0])}, ${emitJS(args[1])})`;
-  }
-
-  // Multiplication
-  if (fn.startsWith('mul_')) {
-    if (fn === 'mul_int_int' || fn === 'mul_float_float' ||
-        fn === 'mul_int_float' || fn === 'mul_float_int') {
-      const left = emitChildWithParens(args[0], '*', 'left');
-      const right = emitChildWithParens(args[1], '*', 'right');
-      return `${left} * ${right}`;
-    }
-    // Duration scaling: n * duration or duration * n
-    if (fn === 'mul_int_duration' || fn === 'mul_float_duration') {
-      const scalar = emitJS(args[0]);
-      const dur = emitJS(args[1]);
-      return `dayjs.duration(${dur}.asMilliseconds() * ${scalar})`;
-    }
-    if (fn === 'mul_duration_int' || fn === 'mul_duration_float') {
-      const dur = emitJS(args[0]);
-      const scalar = emitJS(args[1]);
-      return `dayjs.duration(${dur}.asMilliseconds() * ${scalar})`;
-    }
-    return `klang.multiply(${emitJS(args[0])}, ${emitJS(args[1])})`;
-  }
-
-  // Division
-  if (fn.startsWith('div_')) {
-    if (fn === 'div_int_int' || fn === 'div_float_float' ||
-        fn === 'div_int_float' || fn === 'div_float_int') {
-      const left = emitChildWithParens(args[0], '/', 'left');
-      const right = emitChildWithParens(args[1], '/', 'right');
-      return `${left} / ${right}`;
-    }
-    // Duration division: duration / n
-    if (fn === 'div_duration_int' || fn === 'div_duration_float') {
-      const dur = emitJS(args[0]);
-      const scalar = emitJS(args[1]);
-      return `dayjs.duration(${dur}.asMilliseconds() / ${scalar})`;
-    }
-    return `klang.divide(${emitJS(args[0])}, ${emitJS(args[1])})`;
-  }
-
-  // Modulo
-  if (fn.startsWith('mod_')) {
-    if (fn === 'mod_int_int' || fn === 'mod_float_float' ||
-        fn === 'mod_int_float' || fn === 'mod_float_int') {
-      const left = emitChildWithParens(args[0], '%', 'left');
-      const right = emitChildWithParens(args[1], '%', 'right');
-      return `${left} % ${right}`;
-    }
-    return `klang.modulo(${emitJS(args[0])}, ${emitJS(args[1])})`;
-  }
-
-  // Power - uses Math.pow which is a function call, no precedence issues
-  if (fn.startsWith('pow_')) {
-    if (fn === 'pow_int_int' || fn === 'pow_float_float' ||
-        fn === 'pow_int_float' || fn === 'pow_float_int') {
-      return `Math.pow(${emitJS(args[0])}, ${emitJS(args[1])})`;
-    }
-    return `klang.power(${emitJS(args[0])}, ${emitJS(args[1])})`;
-  }
-
-  // Comparison operators - all emit native JS
-  if (fn.startsWith('lt_')) {
-    const left = emitChildWithParens(args[0], '<', 'left');
-    const right = emitChildWithParens(args[1], '<', 'right');
-    return `${left} < ${right}`;
-  }
-  if (fn.startsWith('gt_')) {
-    const left = emitChildWithParens(args[0], '>', 'left');
-    const right = emitChildWithParens(args[1], '>', 'right');
-    return `${left} > ${right}`;
-  }
-  if (fn.startsWith('lte_')) {
-    const left = emitChildWithParens(args[0], '<=', 'left');
-    const right = emitChildWithParens(args[1], '<=', 'right');
-    return `${left} <= ${right}`;
-  }
-  if (fn.startsWith('gte_')) {
-    const left = emitChildWithParens(args[0], '>=', 'left');
-    const right = emitChildWithParens(args[1], '>=', 'right');
-    return `${left} >= ${right}`;
-  }
-
-  // Equality - needs special handling for temporal types
-  if (fn.startsWith('eq_')) {
-    // Temporal equality needs valueOf() comparison
-    if (fn === 'eq_date_date' || fn === 'eq_datetime_datetime' ||
-        fn === 'eq_date_datetime' || fn === 'eq_datetime_date') {
-      return `+${emitJS(args[0])} === +${emitJS(args[1])}`;
-    }
-    const left = emitChildWithParens(args[0], '==', 'left');
-    const right = emitChildWithParens(args[1], '==', 'right');
-    return `${left} == ${right}`;
-  }
-  if (fn.startsWith('neq_')) {
-    if (fn === 'neq_date_date' || fn === 'neq_datetime_datetime' ||
-        fn === 'neq_date_datetime' || fn === 'neq_datetime_date') {
-      return `+${emitJS(args[0])} !== +${emitJS(args[1])}`;
-    }
-    const left = emitChildWithParens(args[0], '!=', 'left');
-    const right = emitChildWithParens(args[1], '!=', 'right');
-    return `${left} != ${right}`;
-  }
-
-  // Logical operators
-  if (fn.startsWith('and_')) {
-    const left = emitChildWithParens(args[0], '&&', 'left');
-    const right = emitChildWithParens(args[1], '&&', 'right');
-    return `${left} && ${right}`;
-  }
-  if (fn.startsWith('or_')) {
-    const left = emitChildWithParens(args[0], '||', 'left');
-    const right = emitChildWithParens(args[1], '||', 'right');
-    return `${left} || ${right}`;
-  }
-
-  // Unary operators
-  if (fn.startsWith('neg_')) {
-    const operand = emitJS(args[0]);
-    // Wrap binary operations in parens
-    if (args[0].type === 'call' && isNativeBinaryOp(args[0].fn)) {
-      return `-(${operand})`;
-    }
-    return `-${operand}`;
-  }
-  if (fn.startsWith('pos_')) {
-    const operand = emitJS(args[0]);
-    if (args[0].type === 'call' && isNativeBinaryOp(args[0].fn)) {
-      return `+(${operand})`;
-    }
-    return `+${operand}`;
-  }
-  if (fn.startsWith('not_')) {
-    const operand = emitJS(args[0]);
-    // Wrap binary operations in parens for correct precedence
-    if (args[0].type === 'call' && isNativeBinaryOp(args[0].fn)) {
-      return `!(${operand})`;
-    }
-    return `!${operand}`;
-  }
-
-  // Unknown function - emit as generic function call
-  return `${fn}(${args.map(emitJS).join(', ')})`;
 }

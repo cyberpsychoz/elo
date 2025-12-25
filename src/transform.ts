@@ -25,7 +25,7 @@ import {
   irMemberAccess,
   inferType,
 } from './ir';
-import { KlangType, Types, typeName } from './types';
+import { KlangType, Types } from './types';
 
 /**
  * Type environment: maps variable names to their inferred types
@@ -103,10 +103,13 @@ function transformBinaryOp(
   const leftType = inferType(leftIR);
   const rightType = inferType(rightIR);
 
-  const fn = resolveBinaryOp(operator, leftType, rightType);
+  const fn = opNameMap[operator];
+  if (!fn) {
+    throw new Error(`Unknown binary operator: ${operator}`);
+  }
   const resultType = inferBinaryResultType(operator, leftType, rightType);
 
-  return irCall(fn, [leftIR, rightIR], resultType);
+  return irCall(fn, [leftIR, rightIR], [leftType, rightType], resultType);
 }
 
 /**
@@ -116,106 +119,64 @@ function transformUnaryOp(operator: string, operand: Expr, env: TypeEnv): IRExpr
   const operandIR = transform(operand, env);
   const operandType = inferType(operandIR);
 
-  const fn = resolveUnaryOp(operator, operandType);
+  const fn = unaryOpNameMap[operator];
+  if (!fn) {
+    throw new Error(`Unknown unary operator: ${operator}`);
+  }
   const resultType = inferUnaryResultType(operator, operandType);
 
-  return irCall(fn, [operandIR], resultType);
+  return irCall(fn, [operandIR], [operandType], resultType);
 }
 
 /**
  * Transform a temporal keyword into a function call
  */
 function transformTemporalKeyword(keyword: string): IRExpr {
+  const today = () => irCall('today', [], [], Types.date);
+  const now = () => irCall('now', [], [], Types.datetime);
+
   switch (keyword) {
     case 'TODAY':
-      return irCall('today', [], Types.date);
+      return today();
 
     case 'NOW':
-      return irCall('now', [], Types.datetime);
+      return now();
 
     case 'TOMORROW':
-      return irCall(
-        'add_date_duration',
-        [irCall('today', [], Types.date), irDuration('P1D')],
-        Types.date
-      );
+      return irCall('add', [today(), irDuration('P1D')], [Types.date, Types.duration], Types.date);
 
     case 'YESTERDAY':
-      return irCall(
-        'sub_date_duration',
-        [irCall('today', [], Types.date), irDuration('P1D')],
-        Types.date
-      );
+      return irCall('sub', [today(), irDuration('P1D')], [Types.date, Types.duration], Types.date);
 
     case 'SOD':
-      return irCall(
-        'start_of_day',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('start_of_day', [now()], [Types.datetime], Types.datetime);
 
     case 'EOD':
-      return irCall(
-        'end_of_day',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('end_of_day', [now()], [Types.datetime], Types.datetime);
 
     case 'SOW':
-      return irCall(
-        'start_of_week',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('start_of_week', [now()], [Types.datetime], Types.datetime);
 
     case 'EOW':
-      return irCall(
-        'end_of_week',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('end_of_week', [now()], [Types.datetime], Types.datetime);
 
     case 'SOM':
-      return irCall(
-        'start_of_month',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('start_of_month', [now()], [Types.datetime], Types.datetime);
 
     case 'EOM':
-      return irCall(
-        'end_of_month',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('end_of_month', [now()], [Types.datetime], Types.datetime);
 
     case 'SOQ':
-      return irCall(
-        'start_of_quarter',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('start_of_quarter', [now()], [Types.datetime], Types.datetime);
 
     case 'EOQ':
-      return irCall(
-        'end_of_quarter',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('end_of_quarter', [now()], [Types.datetime], Types.datetime);
 
     case 'SOY':
-      return irCall(
-        'start_of_year',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('start_of_year', [now()], [Types.datetime], Types.datetime);
 
     case 'EOY':
-      return irCall(
-        'end_of_year',
-        [irCall('now', [], Types.datetime)],
-        Types.datetime
-      );
+      return irCall('end_of_year', [now()], [Types.datetime], Types.datetime);
 
     default:
       throw new Error(`Unknown temporal keyword: ${keyword}`);
@@ -227,8 +188,9 @@ function transformTemporalKeyword(keyword: string): IRExpr {
  */
 function transformFunctionCall(name: string, args: Expr[], env: TypeEnv): IRExpr {
   const argsIR = args.map((arg) => transform(arg, env));
+  const argTypes = argsIR.map(inferType);
   // For now, function calls have unknown result type
-  return irCall(name, argsIR, Types.any);
+  return irCall(name, argsIR, argTypes, Types.any);
 }
 
 /**
@@ -278,33 +240,6 @@ const unaryOpNameMap: Record<string, string> = {
   '!': 'not',
 };
 
-/**
- * Resolve a binary operator to a function name based on operand types
- */
-function resolveBinaryOp(op: string, left: KlangType, right: KlangType): string {
-  const opName = opNameMap[op];
-  if (!opName) {
-    throw new Error(`Unknown binary operator: ${op}`);
-  }
-
-  const leftName = typeName(left);
-  const rightName = typeName(right);
-
-  // Return typed function name
-  return `${opName}_${leftName}_${rightName}`;
-}
-
-/**
- * Resolve a unary operator to a function name based on operand type
- */
-function resolveUnaryOp(op: string, operand: KlangType): string {
-  const opName = unaryOpNameMap[op];
-  if (!opName) {
-    throw new Error(`Unknown unary operator: ${op}`);
-  }
-
-  return `${opName}_${typeName(operand)}`;
-}
 
 /**
  * Infer the result type of a binary operation

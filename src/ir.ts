@@ -94,11 +94,16 @@ export interface IRVariable {
 
 /**
  * Function call (includes operators rewritten as functions)
+ *
+ * The fn field contains a simple function name (e.g., 'add', 'sub', 'mul')
+ * rather than a type-mangled name. The argTypes array provides the types
+ * of each argument, allowing compilers to dispatch to the correct implementation.
  */
 export interface IRCall {
   type: 'call';
   fn: string;
   args: IRExpr[];
+  argTypes: KlangType[];
   resultType: KlangType;
 }
 
@@ -164,8 +169,8 @@ export function irVariable(name: string, inferredType: KlangType = Types.any): I
   return { type: 'variable', name, inferredType };
 }
 
-export function irCall(fn: string, args: IRExpr[], resultType: KlangType = Types.any): IRCall {
-  return { type: 'call', fn, args, resultType };
+export function irCall(fn: string, args: IRExpr[], argTypes: KlangType[], resultType: KlangType = Types.any): IRCall {
+  return { type: 'call', fn, args, argTypes, resultType };
 }
 
 export function irLet(bindings: IRLetBinding[], body: IRExpr): IRLet {
