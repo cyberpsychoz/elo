@@ -13,40 +13,16 @@ import {
   SQLCompileOptions
 } from '../../src/index';
 import { getPrelude, Target as PreludeTarget } from '../../src/preludes';
+import { createKlangRuntime } from '../../src/runtime';
 
 // Enable dayjs plugins
 dayjs.extend(duration);
 dayjs.extend(isoWeek);
 dayjs.extend(quarterOfYear);
 
-// Make dayjs available globally for eval
+// Make dayjs and klang runtime available globally for eval
 (window as any).dayjs = dayjs;
-
-// Make klang runtime helpers available globally for eval
-// All arithmetic is routed through these for extensibility and correctness
-(window as any).klang = {
-  add(left: any, right: any) {
-    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.add(right);
-    if (dayjs.isDuration(left) && dayjs.isDayjs(right)) return right.add(left);
-    return left + right;
-  },
-  subtract(left: any, right: any) {
-    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.subtract(right);
-    return left - right;
-  },
-  multiply(left: any, right: any) {
-    return left * right;
-  },
-  divide(left: any, right: any) {
-    return left / right;
-  },
-  modulo(left: any, right: any) {
-    return left % right;
-  },
-  power(left: any, right: any) {
-    return Math.pow(left, right);
-  }
-};
+(window as any).klang = createKlangRuntime(dayjs);
 
 type TargetLanguage = 'ruby' | 'javascript' | 'sql';
 type TemporalMode = 'production' | 'testable';
