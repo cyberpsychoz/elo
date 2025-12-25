@@ -107,6 +107,9 @@ for (const [fn, { truncate, end }] of Object.entries(periodBoundarySQL)) {
   });
 }
 
+// String concatenation uses || in SQL
+sqlLib.register('add', [Types.string, Types.string], sqlBinaryOp('||'));
+
 // SQL uses native operators for all types - type generalization handles all combinations
 sqlLib.register('add', [Types.any, Types.any], sqlBinaryOp('+'));
 sqlLib.register('sub', [Types.any, Types.any], sqlBinaryOp('-'));
@@ -184,6 +187,36 @@ sqlLib.register('assert', [Types.any, Types.string], (args, ctx) => {
   const condition = ctx.emit(args[0]);
   return `CASE WHEN ${condition} THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END`;
 });
+
+// String functions
+sqlLib.register('length', [Types.string], (args, ctx) => `LENGTH(${ctx.emit(args[0])})`);
+sqlLib.register('upper', [Types.string], (args, ctx) => `UPPER(${ctx.emit(args[0])})`);
+sqlLib.register('lower', [Types.string], (args, ctx) => `LOWER(${ctx.emit(args[0])})`);
+sqlLib.register('trim', [Types.string], (args, ctx) => `TRIM(${ctx.emit(args[0])})`);
+sqlLib.register('startsWith', [Types.string, Types.string], (args, ctx) =>
+  `starts_with(${ctx.emit(args[0])}, ${ctx.emit(args[1])})`);
+sqlLib.register('endsWith', [Types.string, Types.string], (args, ctx) =>
+  `(${ctx.emit(args[0])} LIKE '%' || ${ctx.emit(args[1])})`);
+sqlLib.register('contains', [Types.string, Types.string], (args, ctx) =>
+  `(POSITION(${ctx.emit(args[1])} IN ${ctx.emit(args[0])}) > 0)`);
+// PostgreSQL SUBSTRING is 1-based, Klang is 0-based
+sqlLib.register('substring', [Types.string, Types.int, Types.int], (args, ctx) =>
+  `SUBSTRING(${ctx.emit(args[0])} FROM ${ctx.emit(args[1])} + 1 FOR ${ctx.emit(args[2])})`);
+sqlLib.register('concat', [Types.string, Types.string], (args, ctx) =>
+  `CONCAT(${ctx.emit(args[0])}, ${ctx.emit(args[1])})`);
+// PostgreSQL POSITION is 1-based, return 0-based index (-1 if not found)
+sqlLib.register('indexOf', [Types.string, Types.string], (args, ctx) =>
+  `(POSITION(${ctx.emit(args[1])} IN ${ctx.emit(args[0])}) - 1)`);
+sqlLib.register('replace', [Types.string, Types.string, Types.string], (args, ctx) =>
+  `REGEXP_REPLACE(${ctx.emit(args[0])}, ${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+sqlLib.register('replaceAll', [Types.string, Types.string, Types.string], (args, ctx) =>
+  `REGEXP_REPLACE(${ctx.emit(args[0])}, ${ctx.emit(args[1])}, ${ctx.emit(args[2])}, 'g')`);
+sqlLib.register('isEmpty', [Types.string], (args, ctx) =>
+  `(LENGTH(${ctx.emit(args[0])}) = 0)`);
+sqlLib.register('padStart', [Types.string, Types.int, Types.string], (args, ctx) =>
+  `LPAD(${ctx.emit(args[0])}, ${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+sqlLib.register('padEnd', [Types.string, Types.int, Types.string], (args, ctx) =>
+  `RPAD(${ctx.emit(args[0])}, ${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
 
 // Fallback for unknown functions - uppercase for SQL
 sqlLib.registerFallback((name, args, _argTypes, ctx) => {

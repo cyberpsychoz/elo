@@ -219,7 +219,7 @@ result;</pre>
       <ul>
         <li><a href="#getting-started">Getting Started</a></li>
         <li><a href="#arithmetic">Arithmetic</a></li>
-        <li><a href="#strings">Strings</a></li>
+        <li><a href="#strings">Strings & Functions</a></li>
         <li><a href="#comparisons">Comparisons & Booleans</a></li>
         <li><a href="#variables">Local Variables</a></li>
         <li><a href="#dates">Dates & Times</a></li>
@@ -278,8 +278,9 @@ result;</pre>
 
       <section class="doc-section" id="strings">
         <h2>Strings</h2>
-        <p>K supports single-quoted string literals.</p>
+        <p>K supports single-quoted string literals and a comprehensive set of string functions.</p>
 
+        <h3>String Literals</h3>
         <div class="example" data-action="click->doc#tryExample">
           <div class="example-header">String Literal</div>
           <pre class="example-code">'hello world'</pre>
@@ -287,15 +288,52 @@ result;</pre>
         </div>
 
         <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">String Comparison</div>
-          <pre class="example-code">assert('hello' == 'hello')</pre>
-          <p class="example-desc">Compare strings with <code>==</code> and <code>!=</code>.</p>
-        </div>
-
-        <div class="example" data-action="click->doc#tryExample">
           <div class="example-header">Escaped Quotes</div>
           <pre class="example-code">'it\'s working'</pre>
           <p class="example-desc">Escape single quotes with backslash.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">String Concatenation</div>
+          <pre class="example-code">'hello' + ' ' + 'world'</pre>
+          <p class="example-desc">Use <code>+</code> operator or <code>concat()</code> function.</p>
+        </div>
+
+        <h3>String Functions</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Length &amp; Case</div>
+          <pre class="example-code">assert(length('hello') == 5 and upper('hello') == 'HELLO')</pre>
+          <p class="example-desc"><code>length(s)</code>, <code>upper(s)</code>, <code>lower(s)</code></p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Trim &amp; Padding</div>
+          <pre class="example-code">assert(trim('  hi  ') == 'hi' and padStart('42', 5, '0') == '00042')</pre>
+          <p class="example-desc"><code>trim(s)</code>, <code>padStart(s, len, pad)</code>, <code>padEnd(s, len, pad)</code></p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Search Functions</div>
+          <pre class="example-code">assert(startsWith('hello', 'he') and contains('hello', 'ell'))</pre>
+          <p class="example-desc"><code>startsWith(s, prefix)</code>, <code>endsWith(s, suffix)</code>, <code>contains(s, sub)</code></p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Index &amp; Substring</div>
+          <pre class="example-code">assert(indexOf('hello', 'l') == 2 and substring('hello', 1, 3) == 'ell')</pre>
+          <p class="example-desc"><code>indexOf(s, sub)</code> returns -1 if not found. <code>substring(s, start, len)</code> is 0-based.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Replace</div>
+          <pre class="example-code">assert(replace('abab', 'ab', 'x') == 'xab' and replaceAll('abab', 'ab', 'x') == 'xx')</pre>
+          <p class="example-desc"><code>replace(s, search, repl)</code> replaces first, <code>replaceAll()</code> replaces all.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Empty Check</div>
+          <pre class="example-code">assert(isEmpty('') and !isEmpty('hello'))</pre>
+          <p class="example-desc"><code>isEmpty(s)</code> returns true for empty strings.</p>
         </div>
       </section>
 

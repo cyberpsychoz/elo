@@ -176,6 +176,34 @@ rubyLib.register('assert', [Types.any, Types.string], (args, ctx) => {
   return `(raise ${message} unless ${condition}; true)`;
 });
 
+// String functions
+rubyLib.register('length', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.length`);
+rubyLib.register('upper', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.upcase`);
+rubyLib.register('lower', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.downcase`);
+rubyLib.register('trim', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.strip`);
+rubyLib.register('startsWith', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.start_with?(${ctx.emit(args[1])})`);
+rubyLib.register('endsWith', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.end_with?(${ctx.emit(args[1])})`);
+rubyLib.register('contains', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.include?(${ctx.emit(args[1])})`);
+rubyLib.register('substring', [Types.string, Types.int, Types.int], (args, ctx) =>
+  `${ctx.emit(args[0])}[${ctx.emit(args[1])}, ${ctx.emit(args[2])}]`);
+rubyLib.register('concat', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.concat(${ctx.emit(args[1])})`);
+rubyLib.register('indexOf', [Types.string, Types.string], (args, ctx) =>
+  `(${ctx.emit(args[0])}.index(${ctx.emit(args[1])}) || -1)`);
+rubyLib.register('replace', [Types.string, Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.sub(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+rubyLib.register('replaceAll', [Types.string, Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.gsub(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+rubyLib.register('isEmpty', [Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.empty?`);
+rubyLib.register('padStart', [Types.string, Types.int, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.rjust(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+rubyLib.register('padEnd', [Types.string, Types.int, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.ljust(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+
 // Fallback for unknown functions
 rubyLib.registerFallback((name, args, _argTypes, ctx) => {
   const emittedArgs = args.map(a => ctx.emit(a)).join(', ');

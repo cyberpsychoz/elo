@@ -121,12 +121,33 @@ klang/
 
 For detailed architecture documentation, see [CLAUDE.md](CLAUDE.md).
 
+## String Standard Library
+
+Klang includes a comprehensive string standard library with consistent behavior across all targets:
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `length(s)` | String length | `length('hello')` → `5` |
+| `upper(s)` | Convert to uppercase | `upper('hello')` → `'HELLO'` |
+| `lower(s)` | Convert to lowercase | `lower('HELLO')` → `'hello'` |
+| `trim(s)` | Remove leading/trailing whitespace | `trim('  hi  ')` → `'hi'` |
+| `startsWith(s, prefix)` | Check if starts with prefix | `startsWith('hello', 'he')` → `true` |
+| `endsWith(s, suffix)` | Check if ends with suffix | `endsWith('hello', 'lo')` → `true` |
+| `contains(s, sub)` | Check if contains substring | `contains('hello', 'ell')` → `true` |
+| `substring(s, start, len)` | Extract substring (0-based) | `substring('hello', 1, 3)` → `'ell'` |
+| `concat(s1, s2)` | Concatenate strings | `concat('hello', ' world')` → `'hello world'` |
+| `indexOf(s, sub)` | Find index of substring (-1 if not found) | `indexOf('hello', 'l')` → `2` |
+| `replace(s, search, repl)` | Replace first occurrence | `replace('abab', 'ab', 'x')` → `'xab'` |
+| `replaceAll(s, search, repl)` | Replace all occurrences | `replaceAll('abab', 'ab', 'x')` → `'xx'` |
+| `isEmpty(s)` | Check if empty string | `isEmpty('')` → `true` |
+| `padStart(s, len, pad)` | Pad start to length | `padStart('42', 5, '0')` → `'00042'` |
+| `padEnd(s, len, pad)` | Pad end to length | `padEnd('hi', 5, '.')` → `'hi...'` |
+
 ## Roadmap
 
 Future enhancements could include:
-- **String literals and operations**: String concatenation, pattern matching, substring operations
 - **Conditional expressions**: Ternary operator (`condition ? then : else`) or if-then-else syntax
-- **Function calls**: Built-in and user-defined functions (e.g., `abs(x)`, `round(price, 2)`)
+- **More stdlib functions**: Math functions (e.g., `abs(x)`, `round(price, 2)`), date formatting
 - **Array/list literals**: Support for arrays and collection operations
 - **Null handling**: Null literals and null-safe operations
 - **Type system**: Optional static type checking and type inference

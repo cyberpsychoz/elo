@@ -189,8 +189,33 @@ function transformTemporalKeyword(keyword: string): IRExpr {
 function transformFunctionCall(name: string, args: Expr[], env: TypeEnv): IRExpr {
   const argsIR = args.map((arg) => transform(arg, env));
   const argTypes = argsIR.map(inferType);
-  // For now, function calls have unknown result type
-  return irCall(name, argsIR, argTypes, Types.any);
+  const resultType = inferFunctionResultType(name, argTypes);
+  return irCall(name, argsIR, argTypes, resultType);
+}
+
+/**
+ * Infer the result type of a known stdlib function call
+ */
+function inferFunctionResultType(name: string, argTypes: KlangType[]): KlangType {
+  // String functions returning int
+  if (name === 'length' && argTypes.length === 1 && argTypes[0].kind === 'string') {
+    return Types.int;
+  }
+  // String functions returning string
+  if (['upper', 'lower', 'trim', 'substring', 'concat', 'replace', 'replaceAll', 'padStart', 'padEnd'].includes(name) &&
+      argTypes.length > 0 && argTypes[0].kind === 'string') {
+    return Types.string;
+  }
+  // String functions returning int
+  if (name === 'indexOf' && argTypes.length === 2 && argTypes[0].kind === 'string') {
+    return Types.int;
+  }
+  // String functions returning bool
+  if (['startsWith', 'endsWith', 'contains', 'isEmpty'].includes(name) &&
+      argTypes.length > 0 && argTypes[0].kind === 'string') {
+    return Types.bool;
+  }
+  return Types.any;
 }
 
 /**

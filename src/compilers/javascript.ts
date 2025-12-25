@@ -223,6 +223,38 @@ for (const conditionType of [Types.bool, Types.any]) {
   });
 }
 
+// String functions
+jsLib.register('length', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.length`);
+jsLib.register('upper', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.toUpperCase()`);
+jsLib.register('lower', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.toLowerCase()`);
+jsLib.register('trim', [Types.string], (args, ctx) => `${ctx.emit(args[0])}.trim()`);
+jsLib.register('startsWith', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.startsWith(${ctx.emit(args[1])})`);
+jsLib.register('endsWith', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.endsWith(${ctx.emit(args[1])})`);
+jsLib.register('contains', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.includes(${ctx.emit(args[1])})`);
+jsLib.register('substring', [Types.string, Types.int, Types.int], (args, ctx) => {
+  const s = ctx.emit(args[0]);
+  const start = ctx.emit(args[1]);
+  const len = ctx.emit(args[2]);
+  return `${s}.substring(${start}, ${start} + ${len})`;
+});
+jsLib.register('concat', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.concat(${ctx.emit(args[1])})`);
+jsLib.register('indexOf', [Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.indexOf(${ctx.emit(args[1])})`);
+jsLib.register('replace', [Types.string, Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.replace(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+jsLib.register('replaceAll', [Types.string, Types.string, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.replaceAll(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+jsLib.register('isEmpty', [Types.string], (args, ctx) =>
+  `(${ctx.emit(args[0])}.length === 0)`);
+jsLib.register('padStart', [Types.string, Types.int, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.padStart(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+jsLib.register('padEnd', [Types.string, Types.int, Types.string], (args, ctx) =>
+  `${ctx.emit(args[0])}.padEnd(${ctx.emit(args[1])}, ${ctx.emit(args[2])})`);
+
 // Fallback for unknown functions - use klang. namespace for runtime helpers
 jsLib.registerFallback((name, args, _argTypes, ctx) => {
   const emittedArgs = args.map(a => ctx.emit(a)).join(', ');
