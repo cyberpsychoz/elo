@@ -40,6 +40,7 @@
           <a href="#stdlib/stdlib-introspection" data-action="click->tabs#switch" data-tab="stdlib">Introspection</a>
         </div>
       </div>
+      <a href="#blog" data-tabs-target="tab" data-action="click->tabs#switch" data-tab="blog">Blog</a>
     </nav>
   </header>
 
@@ -184,7 +185,7 @@ inRange && passing;</pre>
         <p>
           K is an open-source project created with Claude Code
           <br>
-          <a href="https://github.com/klang-lang/klang" target="_blank">View on GitHub</a>
+          <a href="https://github.com/enspirit/k" target="_blank">View on GitHub</a>
         </p>
       </footer>
     </div>
@@ -668,7 +669,7 @@ in
         <p>
           K compiles to semantically equivalent code in JavaScript, Ruby, and SQL.
           <br>
-          <a href="https://github.com/klang-lang/klang" target="_blank">View on GitHub</a>
+          <a href="https://github.com/enspirit/k" target="_blank">View on GitHub</a>
         </p>
       </footer>
     </article>
@@ -912,10 +913,132 @@ in
         <p>
           K compiles to semantically equivalent code in JavaScript, Ruby, and SQL.
           <br>
-          <a href="https://github.com/klang-lang/klang" target="_blank">View on GitHub</a>
+          <a href="https://github.com/enspirit/k" target="_blank">View on GitHub</a>
         </p>
       </footer>
     </div>
+  </main>
+
+  <!-- Blog Panel -->
+  <main data-tabs-target="panel" data-panel="blog" class="blog-panel hidden">
+    <article class="blog-content">
+      <header class="blog-header">
+        <h1>Blog</h1>
+        <p class="blog-intro">Stories, insights, and lessons from building K</p>
+      </header>
+
+      <article class="blog-post" id="building-k-with-claude">
+        <header class="post-header">
+          <h2>Building K: A Human-AI Collaboration Story</h2>
+          <div class="post-meta">
+            <time datetime="2024-12-25">December 25, 2024</time>
+            <span class="post-author">By Bernard Lambeau & Claude</span>
+          </div>
+        </header>
+
+        <div class="post-content">
+          <p class="lead">
+            K was built in a single day through an intense collaboration between a human developer and Claude Code. Here's what we learned about making AI pair programming actually work.
+          </p>
+
+          <h3>The Starting Point</h3>
+          <p>
+            It began with a nearly empty directory: just a README with an idea. Bernard had a clear vision—a small expression language that could compile to Ruby, JavaScript, and SQL—but no code. The first prompt was simple:
+          </p>
+          <blockquote>
+            "Read README. I want to invent a small language that compiles to Ruby, Javascript and SQL. Let's start with arithmetic expressions involving scalars and (open) variables."
+          </blockquote>
+          <p>
+            From there, we built incrementally: first arithmetic, then booleans, then temporal types with ISO 8601 durations, then a type system, a standard library, conditionals, lambdas, objects, and finally this website you're reading.
+          </p>
+
+          <h3>What Worked: The Task File Pattern</h3>
+          <p>
+            The most effective pattern we discovered was the <strong>task file</strong>. Before each significant change, Bernard would write a short markdown file describing:
+          </p>
+          <ul>
+            <li><strong>The problem to solve</strong> — what's wrong or missing</li>
+            <li><strong>The idea</strong> — a rough direction, not a specification</li>
+            <li><strong>Post-implementation discussion</strong> — follow-up refinements after seeing results</li>
+          </ul>
+          <p>
+            This structure let Claude understand not just <em>what</em> to build, but <em>why</em>. When Claude understood the underlying goal, it could make better design decisions and propose alternatives.
+          </p>
+
+          <h3>Vision vs. Execution</h3>
+          <p>
+            A clear division of labor emerged naturally:
+          </p>
+          <ul>
+            <li><strong>Bernard</strong> provided the vision, domain expertise (NoCode tools, existing libraries like Finitio and Bmg), design principles (simple, portable, safe), and course corrections</li>
+            <li><strong>Claude</strong> handled implementation details, proposed architectural solutions, wrote the code, and maintained test coverage</li>
+          </ul>
+          <p>
+            <strong>Here's the remarkable part: Bernard didn't write a single line of code.</strong> Not one. He wrote specifications in markdown files, reviewed outputs, and provided feedback—but never touched the TypeScript, never adjusted a compiler, never fixed a failing test himself. When something wasn't right, he described what was wrong and let Claude fix it. It worked.
+          </p>
+          <p>
+            When Bernard asked "What should be our next step?", Claude could analyze the codebase and propose pragmatic priorities. When Claude proposed something overly complex, Bernard would push back: "Let's keep it simple."
+          </p>
+
+          <h3>The Power of Constraints</h3>
+          <p>
+            K's design principles—simple, well-designed, portable, safe—weren't just marketing. They were active constraints that guided every decision:
+          </p>
+          <ul>
+            <li>Should we add pattern matching? <em>Too complex for NoCode users.</em></li>
+            <li>Should lambdas compile to SQL? <em>SQL doesn't support them—skip it.</em></li>
+            <li>Should we distinguish <code>==</code> from <code>eql</code>? <em>No—one equality operator that just works.</em></li>
+          </ul>
+          <p>
+            These constraints made decisions easier. When in doubt, we chose the simpler path.
+          </p>
+
+          <h3>Test-Driven Confidence</h3>
+          <p>
+            From the start, we established three levels of testing:
+          </p>
+          <ul>
+            <li><strong>Unit tests</strong> — for parser, AST, and compiler components</li>
+            <li><strong>Integration tests</strong> — verifying compiled output matches expectations</li>
+            <li><strong>Acceptance tests</strong> — actually running generated code in Ruby, Node.js, and PostgreSQL</li>
+          </ul>
+          <p>
+            The acceptance tests were crucial. They caught subtle semantic differences between languages and ensured that <code>TODAY + P30D</code> meant exactly the same thing in JavaScript, Ruby, and SQL.
+          </p>
+
+          <h3>Iterative Refinement</h3>
+          <p>
+            Nothing was right the first time. The prelude (runtime helpers) was rewritten twice. The stdlib abstraction evolved from hardcoded patterns to a general dispatch mechanism. The website went through multiple layout iterations.
+          </p>
+          <p>
+            Each task file built on previous work. Task #19 ("Prelude Revisited") explicitly referenced problems discovered in earlier tasks. This iterative approach—ship something, learn from it, improve—worked far better than trying to design everything upfront.
+          </p>
+
+          <h3>What We'd Do Again</h3>
+          <ul>
+            <li><strong>Start with acceptance tests</strong> — they define what "correct" means across platforms</li>
+            <li><strong>Write task files</strong> — they provide context and preserve decisions</li>
+            <li><strong>Keep the human in the loop</strong> — AI proposes, human disposes</li>
+            <li><strong>Embrace constraints</strong> — "simple" is a feature, not a limitation</li>
+            <li><strong>Build incrementally</strong> — each feature in a working state before the next</li>
+          </ul>
+
+          <h3>The Result</h3>
+          <p>
+            In roughly 24 hours of collaboration, we built a complete expression language with a parser, type system, three compilers, a standard library, a CLI tool, and a documentation website. Not bad for a day's work.
+          </p>
+          <p>
+            K isn't just a demonstration that AI can write code. It's a demonstration that <strong>humans and AI can build together</strong>—each contributing what they do best.
+          </p>
+        </div>
+
+        <footer class="post-footer">
+          <p>
+            The complete history of our collaboration is preserved in <a href="https://github.com/enspirit/k/tree/main/.claude/tasks" target="_blank">the task files on GitHub</a>.
+          </p>
+        </footer>
+      </article>
+    </article>
   </main>
 
   <script type="module" src="dist/bundle.js"></script>
