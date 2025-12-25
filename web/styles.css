@@ -905,15 +905,55 @@ select:focus {
 
 /* Stdlib Panel */
 .stdlib-panel {
-  display: block;
+  display: flex;
   overflow-y: auto;
   background: var(--bg-primary);
 }
 
+/* Stdlib Table of Contents Sidebar */
+.stdlib-toc {
+  width: 200px;
+  flex-shrink: 0;
+  padding: 2rem 1rem;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: fit-content;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.stdlib-toc nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stdlib-toc nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  transition: all 0.15s ease;
+}
+
+.stdlib-toc nav a:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stdlib-toc nav a.active {
+  color: var(--accent);
+  background: rgba(99, 102, 241, 0.1);
+}
+
 .stdlib-content {
+  flex: 1;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  min-width: 0;
 }
 
 .stdlib-header {
@@ -1103,7 +1143,8 @@ select:focus {
   }
 
   /* Hide TOC on mobile - burger menu is used instead */
-  .doc-toc {
+  .doc-toc,
+  .stdlib-toc {
     display: none;
   }
 
