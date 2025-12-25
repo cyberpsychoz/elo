@@ -95,23 +95,13 @@ for (const [fn, method] of Object.entries(periodBoundaryMap)) {
 }
 
 // Ruby uses native operators for all types due to operator overloading
-// Register all arithmetic operations including with any type
-const numericAndAny = [Types.int, Types.float, Types.any];
-for (const leftType of numericAndAny) {
-  for (const rightType of numericAndAny) {
-    rubyLib.register('add', [leftType, rightType], simpleBinaryOp('+'));
-    rubyLib.register('sub', [leftType, rightType], simpleBinaryOp('-'));
-    rubyLib.register('mul', [leftType, rightType], simpleBinaryOp('*'));
-    rubyLib.register('div', [leftType, rightType], simpleBinaryOp('/'));
-    rubyLib.register('mod', [leftType, rightType], simpleBinaryOp('%'));
-    rubyLib.register('pow', [leftType, rightType], simpleBinaryOp('**'));
-  }
-}
-
-// String concatenation (including with any)
-rubyLib.register('add', [Types.string, Types.string], simpleBinaryOp('+'));
-rubyLib.register('add', [Types.string, Types.any], simpleBinaryOp('+'));
-rubyLib.register('add', [Types.any, Types.string], simpleBinaryOp('+'));
+// Using any,any registration - type generalization handles all concrete type combinations
+rubyLib.register('add', [Types.any, Types.any], simpleBinaryOp('+'));
+rubyLib.register('sub', [Types.any, Types.any], simpleBinaryOp('-'));
+rubyLib.register('mul', [Types.any, Types.any], simpleBinaryOp('*'));
+rubyLib.register('div', [Types.any, Types.any], simpleBinaryOp('/'));
+rubyLib.register('mod', [Types.any, Types.any], simpleBinaryOp('%'));
+rubyLib.register('pow', [Types.any, Types.any], simpleBinaryOp('**'));
 
 // Temporal arithmetic - Ruby's operator overloading handles this
 // Special case: today() + duration('P1D') -> Date.today + 1 (for TOMORROW)
@@ -127,10 +117,8 @@ rubyLib.register('add', [Types.date, Types.duration], (args, ctx) => {
   return `${left} + ${right}`;
 });
 
-rubyLib.register('add', [Types.datetime, Types.duration], simpleBinaryOp('+'));
-rubyLib.register('add', [Types.duration, Types.date], simpleBinaryOp('+'));
-rubyLib.register('add', [Types.duration, Types.datetime], simpleBinaryOp('+'));
-rubyLib.register('add', [Types.duration, Types.duration], simpleBinaryOp('+'));
+// Other temporal additions (datetime+duration, duration+*, duration+duration)
+// are covered by the any,any registration since they use the same operator
 
 // Special case: today() - duration('P1D') -> Date.today - 1 (for YESTERDAY)
 rubyLib.register('sub', [Types.date, Types.duration], (args, ctx) => {
@@ -145,60 +133,22 @@ rubyLib.register('sub', [Types.date, Types.duration], (args, ctx) => {
   return `${left} - ${right}`;
 });
 
-rubyLib.register('sub', [Types.datetime, Types.duration], simpleBinaryOp('-'));
+// datetime - duration uses the same operator, covered by any,any registration
 
-// Duration scaling
-rubyLib.register('mul', [Types.int, Types.duration], simpleBinaryOp('*'));
-rubyLib.register('mul', [Types.float, Types.duration], simpleBinaryOp('*'));
-rubyLib.register('mul', [Types.duration, Types.int], simpleBinaryOp('*'));
-rubyLib.register('mul', [Types.duration, Types.float], simpleBinaryOp('*'));
-rubyLib.register('div', [Types.duration, Types.int], simpleBinaryOp('/'));
-rubyLib.register('div', [Types.duration, Types.float], simpleBinaryOp('/'));
+// Comparison operators - Ruby's operator overloading handles all types
+// Type generalization will match any concrete type combination
+rubyLib.register('lt', [Types.any, Types.any], simpleBinaryOp('<'));
+rubyLib.register('gt', [Types.any, Types.any], simpleBinaryOp('>'));
+rubyLib.register('lte', [Types.any, Types.any], simpleBinaryOp('<='));
+rubyLib.register('gte', [Types.any, Types.any], simpleBinaryOp('>='));
+rubyLib.register('eq', [Types.any, Types.any], simpleBinaryOp('=='));
+rubyLib.register('neq', [Types.any, Types.any], simpleBinaryOp('!='));
 
-// Comparison and logical operators - Ruby's operator overloading handles all types including any
-const allTypes = [Types.int, Types.float, Types.string, Types.bool, Types.date, Types.datetime, Types.any];
-for (const leftType of allTypes) {
-  for (const rightType of allTypes) {
-    rubyLib.register('lt', [leftType, rightType], simpleBinaryOp('<'));
-    rubyLib.register('gt', [leftType, rightType], simpleBinaryOp('>'));
-    rubyLib.register('lte', [leftType, rightType], simpleBinaryOp('<='));
-    rubyLib.register('gte', [leftType, rightType], simpleBinaryOp('>='));
-    rubyLib.register('eq', [leftType, rightType], simpleBinaryOp('=='));
-    rubyLib.register('neq', [leftType, rightType], simpleBinaryOp('!='));
-  }
-}
+// Logical operators
+rubyLib.register('and', [Types.any, Types.any], simpleBinaryOp('&&'));
+rubyLib.register('or', [Types.any, Types.any], simpleBinaryOp('||'));
 
-// Logical operators - always native, including with any type
-for (const leftType of [Types.bool, Types.any]) {
-  for (const rightType of [Types.bool, Types.any]) {
-    rubyLib.register('and', [leftType, rightType], simpleBinaryOp('&&'));
-    rubyLib.register('or', [leftType, rightType], simpleBinaryOp('||'));
-  }
-}
-
-// Unary operators
-for (const t of [Types.int, Types.float]) {
-  rubyLib.register('neg', [t], (args, ctx) => {
-    const operand = ctx.emit(args[0]);
-    if (isNativeBinaryOp(args[0])) return `-(${operand})`;
-    return `-${operand}`;
-  });
-  rubyLib.register('pos', [t], (args, ctx) => {
-    const operand = ctx.emit(args[0]);
-    if (isNativeBinaryOp(args[0])) return `+(${operand})`;
-    return `+${operand}`;
-  });
-}
-
-for (const t of [Types.bool, Types.any]) {
-  rubyLib.register('not', [t], (args, ctx) => {
-    const operand = ctx.emit(args[0]);
-    if (isNativeBinaryOp(args[0])) return `!(${operand})`;
-    return `!${operand}`;
-  });
-}
-
-// Unary neg/pos for any type (unknown variables)
+// Unary operators - type generalization handles int, float, and any
 rubyLib.register('neg', [Types.any], (args, ctx) => {
   const operand = ctx.emit(args[0]);
   if (isNativeBinaryOp(args[0])) return `-(${operand})`;
@@ -209,19 +159,22 @@ rubyLib.register('pos', [Types.any], (args, ctx) => {
   if (isNativeBinaryOp(args[0])) return `+(${operand})`;
   return `+${operand}`;
 });
+rubyLib.register('not', [Types.any], (args, ctx) => {
+  const operand = ctx.emit(args[0]);
+  if (isNativeBinaryOp(args[0])) return `!(${operand})`;
+  return `!${operand}`;
+});
 
-// Assert function - accept both bool and any (for dynamic expressions)
-for (const conditionType of [Types.bool, Types.any]) {
-  rubyLib.register('assert', [conditionType], (args, ctx) => {
-    const condition = ctx.emit(args[0]);
-    return `(raise "Assertion failed" unless ${condition}; true)`;
-  });
-  rubyLib.register('assert', [conditionType, Types.string], (args, ctx) => {
-    const condition = ctx.emit(args[0]);
-    const message = ctx.emit(args[1]);
-    return `(raise ${message} unless ${condition}; true)`;
-  });
-}
+// Assert function - type generalization handles bool and any
+rubyLib.register('assert', [Types.any], (args, ctx) => {
+  const condition = ctx.emit(args[0]);
+  return `(raise "Assertion failed" unless ${condition}; true)`;
+});
+rubyLib.register('assert', [Types.any, Types.string], (args, ctx) => {
+  const condition = ctx.emit(args[0]);
+  const message = ctx.emit(args[1]);
+  return `(raise ${message} unless ${condition}; true)`;
+});
 
 // Fallback for unknown functions
 rubyLib.registerFallback((name, args, _argTypes, ctx) => {

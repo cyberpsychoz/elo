@@ -107,23 +107,13 @@ for (const [fn, { truncate, end }] of Object.entries(periodBoundarySQL)) {
   });
 }
 
-// Numeric arithmetic - native SQL operators, including with any type
-const numericAndAny = [Types.int, Types.float, Types.any];
-for (const leftType of numericAndAny) {
-  for (const rightType of numericAndAny) {
-    sqlLib.register('add', [leftType, rightType], sqlBinaryOp('+'));
-    sqlLib.register('sub', [leftType, rightType], sqlBinaryOp('-'));
-    sqlLib.register('mul', [leftType, rightType], sqlBinaryOp('*'));
-    sqlLib.register('div', [leftType, rightType], sqlBinaryOp('/'));
-    sqlLib.register('mod', [leftType, rightType], sqlBinaryOp('%'));
-    sqlLib.register('pow', [leftType, rightType], fnCall('POWER'));
-  }
-}
-
-// String concatenation (including with any)
-sqlLib.register('add', [Types.string, Types.string], sqlBinaryOp('+'));
-sqlLib.register('add', [Types.string, Types.any], sqlBinaryOp('+'));
-sqlLib.register('add', [Types.any, Types.string], sqlBinaryOp('+'));
+// SQL uses native operators for all types - type generalization handles all combinations
+sqlLib.register('add', [Types.any, Types.any], sqlBinaryOp('+'));
+sqlLib.register('sub', [Types.any, Types.any], sqlBinaryOp('-'));
+sqlLib.register('mul', [Types.any, Types.any], sqlBinaryOp('*'));
+sqlLib.register('div', [Types.any, Types.any], sqlBinaryOp('/'));
+sqlLib.register('mod', [Types.any, Types.any], sqlBinaryOp('%'));
+sqlLib.register('pow', [Types.any, Types.any], fnCall('POWER'));
 
 // Temporal arithmetic
 // Special case: today() + duration('P1D') -> CURRENT_DATE + INTERVAL '1 day' (for TOMORROW)
@@ -139,10 +129,7 @@ sqlLib.register('add', [Types.date, Types.duration], (args, ctx) => {
   return `${left} + ${right}`;
 });
 
-sqlLib.register('add', [Types.datetime, Types.duration], sqlBinaryOp('+'));
-sqlLib.register('add', [Types.duration, Types.date], sqlBinaryOp('+'));
-sqlLib.register('add', [Types.duration, Types.datetime], sqlBinaryOp('+'));
-sqlLib.register('add', [Types.duration, Types.duration], sqlBinaryOp('+'));
+// Other temporal additions are covered by any,any registration
 
 // Special case: today() - duration('P1D') -> CURRENT_DATE - INTERVAL '1 day' (for YESTERDAY)
 sqlLib.register('sub', [Types.date, Types.duration], (args, ctx) => {
@@ -157,60 +144,21 @@ sqlLib.register('sub', [Types.date, Types.duration], (args, ctx) => {
   return `${left} - ${right}`;
 });
 
-sqlLib.register('sub', [Types.datetime, Types.duration], sqlBinaryOp('-'));
+// Other temporal subtractions and duration scaling are covered by any,any registrations
 
-// Duration scaling
-sqlLib.register('mul', [Types.int, Types.duration], sqlBinaryOp('*'));
-sqlLib.register('mul', [Types.float, Types.duration], sqlBinaryOp('*'));
-sqlLib.register('mul', [Types.duration, Types.int], sqlBinaryOp('*'));
-sqlLib.register('mul', [Types.duration, Types.float], sqlBinaryOp('*'));
-sqlLib.register('div', [Types.duration, Types.int], sqlBinaryOp('/'));
-sqlLib.register('div', [Types.duration, Types.float], sqlBinaryOp('/'));
+// Comparison operators - SQL handles all types, type generalization applies
+sqlLib.register('lt', [Types.any, Types.any], sqlBinaryOp('<'));
+sqlLib.register('gt', [Types.any, Types.any], sqlBinaryOp('>'));
+sqlLib.register('lte', [Types.any, Types.any], sqlBinaryOp('<='));
+sqlLib.register('gte', [Types.any, Types.any], sqlBinaryOp('>='));
+sqlLib.register('eq', [Types.any, Types.any], sqlBinaryOp('='));
+sqlLib.register('neq', [Types.any, Types.any], sqlBinaryOp('<>'));
 
-// Comparison and logical operators - SQL handles all types including any
-const allTypes = [Types.int, Types.float, Types.string, Types.bool, Types.date, Types.datetime, Types.any];
-for (const leftType of allTypes) {
-  for (const rightType of allTypes) {
-    sqlLib.register('lt', [leftType, rightType], sqlBinaryOp('<'));
-    sqlLib.register('gt', [leftType, rightType], sqlBinaryOp('>'));
-    sqlLib.register('lte', [leftType, rightType], sqlBinaryOp('<='));
-    sqlLib.register('gte', [leftType, rightType], sqlBinaryOp('>='));
-    sqlLib.register('eq', [leftType, rightType], sqlBinaryOp('='));
-    sqlLib.register('neq', [leftType, rightType], sqlBinaryOp('<>'));
-  }
-}
+// Logical operators
+sqlLib.register('and', [Types.any, Types.any], sqlBinaryOp('AND'));
+sqlLib.register('or', [Types.any, Types.any], sqlBinaryOp('OR'));
 
-// Logical operators - always native SQL operators, including with any type
-for (const leftType of [Types.bool, Types.any]) {
-  for (const rightType of [Types.bool, Types.any]) {
-    sqlLib.register('and', [leftType, rightType], sqlBinaryOp('AND'));
-    sqlLib.register('or', [leftType, rightType], sqlBinaryOp('OR'));
-  }
-}
-
-// Unary operators
-for (const t of [Types.int, Types.float]) {
-  sqlLib.register('neg', [t], (args, ctx) => {
-    const operand = ctx.emit(args[0]);
-    if (isNativeBinaryOp(args[0])) return `-(${operand})`;
-    return `-${operand}`;
-  });
-  sqlLib.register('pos', [t], (args, ctx) => {
-    const operand = ctx.emit(args[0]);
-    if (isNativeBinaryOp(args[0])) return `+(${operand})`;
-    return `+${operand}`;
-  });
-}
-
-for (const t of [Types.bool, Types.any]) {
-  sqlLib.register('not', [t], (args, ctx) => {
-    const operand = ctx.emit(args[0]);
-    if (isNativeBinaryOp(args[0])) return `NOT (${operand})`;
-    return `NOT ${operand}`;
-  });
-}
-
-// Unary neg/pos for any type (unknown variables)
+// Unary operators - type generalization handles int, float, and any
 sqlLib.register('neg', [Types.any], (args, ctx) => {
   const operand = ctx.emit(args[0]);
   if (isNativeBinaryOp(args[0])) return `-(${operand})`;
@@ -221,18 +169,21 @@ sqlLib.register('pos', [Types.any], (args, ctx) => {
   if (isNativeBinaryOp(args[0])) return `+(${operand})`;
   return `+${operand}`;
 });
+sqlLib.register('not', [Types.any], (args, ctx) => {
+  const operand = ctx.emit(args[0]);
+  if (isNativeBinaryOp(args[0])) return `NOT (${operand})`;
+  return `NOT ${operand}`;
+});
 
-// Assert function - accept both bool and any (for dynamic expressions)
-for (const conditionType of [Types.bool, Types.any]) {
-  sqlLib.register('assert', [conditionType], (args, ctx) => {
-    const condition = ctx.emit(args[0]);
-    return `CASE WHEN ${condition} THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END`;
-  });
-  sqlLib.register('assert', [conditionType, Types.string], (args, ctx) => {
-    const condition = ctx.emit(args[0]);
-    return `CASE WHEN ${condition} THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END`;
-  });
-}
+// Assert function - type generalization handles bool and any
+sqlLib.register('assert', [Types.any], (args, ctx) => {
+  const condition = ctx.emit(args[0]);
+  return `CASE WHEN ${condition} THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END`;
+});
+sqlLib.register('assert', [Types.any, Types.string], (args, ctx) => {
+  const condition = ctx.emit(args[0]);
+  return `CASE WHEN ${condition} THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END`;
+});
 
 // Fallback for unknown functions - uppercase for SQL
 sqlLib.registerFallback((name, args, _argTypes, ctx) => {

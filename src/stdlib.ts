@@ -6,7 +6,7 @@
  * that are looked up by function name and argument types.
  */
 
-import { KlangType, Types, typeName } from './types';
+import { KlangType, Types, typeName, typeEquals } from './types';
 import { IRExpr } from './ir';
 
 /**
@@ -24,6 +24,43 @@ export interface FunctionSignature {
 export function signatureKey(name: string, argTypes: KlangType[]): string {
   const typeNames = argTypes.map(typeName).join(',');
   return typeNames ? `${name}:${typeNames}` : name;
+}
+
+/**
+ * Generate all generalizations of argument types by progressively replacing
+ * concrete types with 'any'. Returns type arrays in order from most specific
+ * to most general.
+ *
+ * For [int, float]: returns [int,float], [any,float], [int,any], [any,any]
+ * Types that are already 'any' don't generate additional combinations.
+ */
+export function typeGeneralizations(argTypes: KlangType[]): KlangType[][] {
+  if (argTypes.length === 0) return [[]];
+
+  // Find indices of non-any types
+  const concreteIndices: number[] = [];
+  for (let i = 0; i < argTypes.length; i++) {
+    if (!typeEquals(argTypes[i], Types.any)) {
+      concreteIndices.push(i);
+    }
+  }
+
+  // Generate all subsets of concrete indices to replace with 'any'
+  // Start with empty subset (most specific) to full subset (most general)
+  const result: KlangType[][] = [];
+  const numSubsets = 1 << concreteIndices.length;
+
+  for (let mask = 0; mask < numSubsets; mask++) {
+    const generalized = [...argTypes];
+    for (let i = 0; i < concreteIndices.length; i++) {
+      if (mask & (1 << i)) {
+        generalized[concreteIndices[i]] = Types.any;
+      }
+    }
+    result.push(generalized);
+  }
+
+  return result;
 }
 
 /**
@@ -64,11 +101,18 @@ export class StdLib<T> {
   }
 
   /**
-   * Look up an implementation by signature
+   * Look up an implementation by signature.
+   * Tries progressively more general type signatures before giving up.
+   * For example, for add(int, float), tries:
+   *   add(int, float) -> add(any, float) -> add(int, any) -> add(any, any)
    */
   lookup(name: string, argTypes: KlangType[]): FunctionEmitter<T> | undefined {
-    const key = signatureKey(name, argTypes);
-    return this.implementations.get(key);
+    for (const generalized of typeGeneralizations(argTypes)) {
+      const key = signatureKey(name, generalized);
+      const impl = this.implementations.get(key);
+      if (impl) return impl;
+    }
+    return undefined;
   }
 
   /**

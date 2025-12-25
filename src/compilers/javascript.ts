@@ -117,7 +117,8 @@ for (const [fn, method] of Object.entries(periodBoundaryMap)) {
   jsLib.register(fn, [Types.datetime], (args, ctx) => `${ctx.emit(args[0])}.${method}`);
 }
 
-// Numeric arithmetic - native JS operators
+// Numeric arithmetic - native JS operators only for known numeric types
+// Unknown types fall through to klang.* fallback
 for (const leftType of [Types.int, Types.float]) {
   for (const rightType of [Types.int, Types.float]) {
     jsLib.register('add', [leftType, rightType], simpleBinaryOp('+'));
@@ -166,42 +167,30 @@ jsLib.register('div', [Types.duration, Types.int], (args, ctx) =>
 jsLib.register('div', [Types.duration, Types.float], (args, ctx) =>
   `dayjs.duration(${ctx.emit(args[0])}.asMilliseconds() / ${ctx.emit(args[1])})`);
 
-// Comparison operators - registered for specific types, with 'any' catch-all for runtime
-const allBasicTypes = [Types.int, Types.float, Types.string, Types.bool, Types.date, Types.datetime, Types.any];
-for (const leftType of allBasicTypes) {
-  for (const rightType of allBasicTypes) {
-    // Date equality uses valueOf comparison for exact match
-    if ((leftType === Types.date || leftType === Types.datetime) &&
-        (rightType === Types.date || rightType === Types.datetime)) {
-      jsLib.register('eq', [leftType, rightType], (args, ctx) =>
-        `+${ctx.emit(args[0])} === +${ctx.emit(args[1])}`);
-      jsLib.register('neq', [leftType, rightType], (args, ctx) =>
-        `+${ctx.emit(args[0])} !== +${ctx.emit(args[1])}`);
-      jsLib.register('lt', [leftType, rightType], simpleBinaryOp('<'));
-      jsLib.register('gt', [leftType, rightType], simpleBinaryOp('>'));
-      jsLib.register('lte', [leftType, rightType], simpleBinaryOp('<='));
-      jsLib.register('gte', [leftType, rightType], simpleBinaryOp('>='));
-    } else {
-      // All other comparisons use native JS operators
-      jsLib.register('lt', [leftType, rightType], simpleBinaryOp('<'));
-      jsLib.register('gt', [leftType, rightType], simpleBinaryOp('>'));
-      jsLib.register('lte', [leftType, rightType], simpleBinaryOp('<='));
-      jsLib.register('gte', [leftType, rightType], simpleBinaryOp('>='));
-      jsLib.register('eq', [leftType, rightType], simpleBinaryOp('=='));
-      jsLib.register('neq', [leftType, rightType], simpleBinaryOp('!='));
-    }
+// Comparison operators - type generalization handles most combinations
+// Date/datetime equality needs special valueOf comparison (using +)
+const temporalTypes = [Types.date, Types.datetime];
+for (const leftType of temporalTypes) {
+  for (const rightType of temporalTypes) {
+    jsLib.register('eq', [leftType, rightType], (args, ctx) =>
+      `+${ctx.emit(args[0])} === +${ctx.emit(args[1])}`);
+    jsLib.register('neq', [leftType, rightType], (args, ctx) =>
+      `+${ctx.emit(args[0])} !== +${ctx.emit(args[1])}`);
   }
 }
+// All other comparisons use native JS operators
+jsLib.register('lt', [Types.any, Types.any], simpleBinaryOp('<'));
+jsLib.register('gt', [Types.any, Types.any], simpleBinaryOp('>'));
+jsLib.register('lte', [Types.any, Types.any], simpleBinaryOp('<='));
+jsLib.register('gte', [Types.any, Types.any], simpleBinaryOp('>='));
+jsLib.register('eq', [Types.any, Types.any], simpleBinaryOp('=='));
+jsLib.register('neq', [Types.any, Types.any], simpleBinaryOp('!='));
 
-// Logical operators - always native, including with any type
-for (const leftType of [Types.bool, Types.any]) {
-  for (const rightType of [Types.bool, Types.any]) {
-    jsLib.register('and', [leftType, rightType], simpleBinaryOp('&&'));
-    jsLib.register('or', [leftType, rightType], simpleBinaryOp('||'));
-  }
-}
+// Logical operators
+jsLib.register('and', [Types.any, Types.any], simpleBinaryOp('&&'));
+jsLib.register('or', [Types.any, Types.any], simpleBinaryOp('||'));
 
-// Unary operators
+// Unary operators - only for known types, unknown falls through to klang.* fallback
 for (const t of [Types.int, Types.float]) {
   jsLib.register('neg', [t], (args, ctx) => {
     const operand = ctx.emit(args[0]);

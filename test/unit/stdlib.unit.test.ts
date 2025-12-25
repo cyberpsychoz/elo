@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import {
   StdLib,
   signatureKey,
+  typeGeneralizations,
   simpleBinaryOp,
   binaryOp,
   unaryOp,
@@ -38,6 +39,51 @@ describe('signatureKey', () => {
   it('should create key for temporal types', () => {
     assert.strictEqual(signatureKey('add', [Types.date, Types.duration]), 'add:date,duration');
     assert.strictEqual(signatureKey('sub', [Types.datetime, Types.duration]), 'sub:datetime,duration');
+  });
+});
+
+describe('typeGeneralizations', () => {
+  it('should return empty array only for empty input', () => {
+    const result = typeGeneralizations([]);
+    assert.deepStrictEqual(result, [[]]);
+  });
+
+  it('should return all generalizations for unary type', () => {
+    const result = typeGeneralizations([Types.int]);
+    assert.strictEqual(result.length, 2);
+    assert.deepStrictEqual(result[0], [Types.int]);
+    assert.deepStrictEqual(result[1], [Types.any]);
+  });
+
+  it('should return all generalizations for binary types', () => {
+    const result = typeGeneralizations([Types.int, Types.float]);
+    assert.strictEqual(result.length, 4);
+    assert.deepStrictEqual(result[0], [Types.int, Types.float]);
+    assert.deepStrictEqual(result[1], [Types.any, Types.float]);
+    assert.deepStrictEqual(result[2], [Types.int, Types.any]);
+    assert.deepStrictEqual(result[3], [Types.any, Types.any]);
+  });
+
+  it('should not duplicate when types already include any', () => {
+    const result = typeGeneralizations([Types.int, Types.any]);
+    assert.strictEqual(result.length, 2);
+    assert.deepStrictEqual(result[0], [Types.int, Types.any]);
+    assert.deepStrictEqual(result[1], [Types.any, Types.any]);
+  });
+
+  it('should return single element for all-any types', () => {
+    const result = typeGeneralizations([Types.any, Types.any]);
+    assert.strictEqual(result.length, 1);
+    assert.deepStrictEqual(result[0], [Types.any, Types.any]);
+  });
+
+  it('should handle ternary types', () => {
+    const result = typeGeneralizations([Types.int, Types.float, Types.bool]);
+    // 2^3 = 8 combinations
+    assert.strictEqual(result.length, 8);
+    // First should be all concrete, last should be all any
+    assert.deepStrictEqual(result[0], [Types.int, Types.float, Types.bool]);
+    assert.deepStrictEqual(result[7], [Types.any, Types.any, Types.any]);
   });
 });
 
@@ -94,6 +140,69 @@ describe('StdLib', () => {
       assert.ok(lib.lookup('add', [Types.int, Types.int]));
       assert.ok(lib.lookup('add', [Types.float, Types.float]));
       assert.ok(lib.lookup('sub', [Types.int, Types.int]));
+    });
+
+    it('should fall back to any,any when registered', () => {
+      const lib = new StdLib<string>();
+      const anyAnyEmitter = () => 'any+any';
+      lib.register('add', [Types.any, Types.any], anyAnyEmitter);
+
+      // Looking up with concrete types should find the any,any registration
+      assert.strictEqual(lib.lookup('add', [Types.int, Types.int]), anyAnyEmitter);
+      assert.strictEqual(lib.lookup('add', [Types.float, Types.string]), anyAnyEmitter);
+      assert.strictEqual(lib.lookup('add', [Types.date, Types.duration]), anyAnyEmitter);
+    });
+
+    it('should prefer specific over generalized registration', () => {
+      const lib = new StdLib<string>();
+      const intIntEmitter = () => 'int+int';
+      const anyAnyEmitter = () => 'any+any';
+      lib.register('add', [Types.int, Types.int], intIntEmitter);
+      lib.register('add', [Types.any, Types.any], anyAnyEmitter);
+
+      // int,int should use specific implementation
+      assert.strictEqual(lib.lookup('add', [Types.int, Types.int]), intIntEmitter);
+      // float,float should use any,any fallback
+      assert.strictEqual(lib.lookup('add', [Types.float, Types.float]), anyAnyEmitter);
+    });
+
+    it('should support partial generalization (any,T)', () => {
+      const lib = new StdLib<string>();
+      const anyIntEmitter = () => 'any+int';
+      lib.register('add', [Types.any, Types.int], anyIntEmitter);
+
+      // float,int should match any,int
+      assert.strictEqual(lib.lookup('add', [Types.float, Types.int]), anyIntEmitter);
+      // date,int should match any,int
+      assert.strictEqual(lib.lookup('add', [Types.date, Types.int]), anyIntEmitter);
+      // int,float should NOT match (right type is wrong)
+      assert.strictEqual(lib.lookup('add', [Types.int, Types.float]), undefined);
+    });
+
+    it('should support partial generalization (T,any)', () => {
+      const lib = new StdLib<string>();
+      const intAnyEmitter = () => 'int+any';
+      lib.register('add', [Types.int, Types.any], intAnyEmitter);
+
+      // int,float should match int,any
+      assert.strictEqual(lib.lookup('add', [Types.int, Types.float]), intAnyEmitter);
+      // int,date should match int,any
+      assert.strictEqual(lib.lookup('add', [Types.int, Types.date]), intAnyEmitter);
+      // float,int should NOT match (left type is wrong)
+      assert.strictEqual(lib.lookup('add', [Types.float, Types.int]), undefined);
+    });
+
+    it('should try generalizations in correct order', () => {
+      const lib = new StdLib<string>();
+      const intAnyEmitter = () => 'int+any';
+      const anyAnyEmitter = () => 'any+any';
+      lib.register('add', [Types.int, Types.any], intAnyEmitter);
+      lib.register('add', [Types.any, Types.any], anyAnyEmitter);
+
+      // int,float should prefer int,any over any,any
+      assert.strictEqual(lib.lookup('add', [Types.int, Types.float]), intAnyEmitter);
+      // float,int should use any,any (no match for any,int or float,any)
+      assert.strictEqual(lib.lookup('add', [Types.float, Types.int]), anyAnyEmitter);
     });
   });
 
