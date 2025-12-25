@@ -3,12 +3,13 @@
  * This is the single source of truth for preludes used by both CLI and web.
  */
 
+import { KLANG_ARITHMETIC_HELPERS } from '../runtime';
+
 export type Target = 'javascript' | 'ruby' | 'sql';
 export type Mode = 'production' | 'testable';
 
-const preludes: Record<Target, Record<Mode, string>> = {
-  javascript: {
-    production: `const dayjs = require('dayjs');
+const javascriptPreludes: Record<Mode, string> = {
+  production: `const dayjs = require('dayjs');
 const duration = require('dayjs/plugin/duration');
 const isoWeek = require('dayjs/plugin/isoWeek');
 const quarterOfYear = require('dayjs/plugin/quarterOfYear');
@@ -19,30 +20,10 @@ dayjs.extend(quarterOfYear);
 // Klang runtime helpers
 // All arithmetic is routed through these for extensibility and correctness
 const klang = {
-  add(left, right) {
-    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.add(right);
-    if (dayjs.isDuration(left) && dayjs.isDayjs(right)) return right.add(left);
-    return left + right;
-  },
-  subtract(left, right) {
-    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.subtract(right);
-    return left - right;
-  },
-  multiply(left, right) {
-    return left * right;
-  },
-  divide(left, right) {
-    return left / right;
-  },
-  modulo(left, right) {
-    return left % right;
-  },
-  power(left, right) {
-    return Math.pow(left, right);
-  }
+${KLANG_ARITHMETIC_HELPERS}
 };`,
 
-    testable: `// Dayjs with plugins for temporal operations
+  testable: `// Dayjs with plugins for temporal operations
 const _dayjs = require('dayjs');
 const duration = require('dayjs/plugin/duration');
 const isoWeek = require('dayjs/plugin/isoWeek');
@@ -86,40 +67,15 @@ const klang = {
   },
 
   // Runtime helpers - all arithmetic routed through these for extensibility
-  add(left, right) {
-    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.add(right);
-    if (dayjs.isDuration(left) && dayjs.isDayjs(right)) return right.add(left);
-    return left + right;
-  },
-
-  subtract(left, right) {
-    if (dayjs.isDayjs(left) && dayjs.isDuration(right)) return left.subtract(right);
-    return left - right;
-  },
-
-  multiply(left, right) {
-    return left * right;
-  },
-
-  divide(left, right) {
-    return left / right;
-  },
-
-  modulo(left, right) {
-    return left % right;
-  },
-
-  power(left, right) {
-    return Math.pow(left, right);
-  }
+${KLANG_ARITHMETIC_HELPERS}
 };`
-  },
+};
 
-  ruby: {
-    production: `require 'date'
+const rubyPreludes: Record<Mode, string> = {
+  production: `require 'date'
 require 'active_support/all'`,
 
-    testable: `require 'date'
+  testable: `require 'date'
 require 'active_support/all'
 
 # Klang module for testable temporal expressions
@@ -175,13 +131,13 @@ if ENV['KLANG_NOW'] && !ENV['KLANG_NOW'].empty?
     end
   end
 end`
-  },
+};
 
-  sql: {
-    production: `-- No prelude needed for production SQL mode
+const sqlPreludes: Record<Mode, string> = {
+  production: `-- No prelude needed for production SQL mode
 -- All temporal expressions use native PostgreSQL functions`,
 
-    testable: `-- SQL prelude for Klang
+  testable: `-- SQL prelude for Klang
 -- These functions provide time injection for testable SQL compilation mode.
 -- Set klang.now via: SET klang.now = '2025-12-01T12:00:00';
 -- Clear with: RESET klang.now;
@@ -209,7 +165,12 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql;`
-  }
+};
+
+const preludes: Record<Target, Record<Mode, string>> = {
+  javascript: javascriptPreludes,
+  ruby: rubyPreludes,
+  sql: sqlPreludes
 };
 
 /**
