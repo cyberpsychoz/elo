@@ -1,13 +1,21 @@
-# What is Klang?
+# What is K ?
 
 [![CI](https://github.com/enspirit/k/actions/workflows/ci.yml/badge.svg)](https://github.com/enspirit/k/actions/workflows/ci.yml)
 
-A small expression language that compiles/translates to Ruby, Javascript and PostgreSQL.
+A simple, well-designed, portable and safe data expression language that
+compiles/translates to Ruby, Javascript and PostgreSQL.
 
-## Aim
+## Why ?
 
-Having small purely functional expressions expressed in a user-friendly language,
-that can be evaluated in different environments.
+No-Code tools like Klaro Cards generally require an expression language for user
+to manipulate data easily. This language must be :
+
+- simple, because No-Code tools are used by non-tech people
+- portable, because they are implemented in various frontend/backend/db technologies
+- safe, because end-users writing code yield serious security issues
+- well-designed, because there are too many ill-designed programming languages already
+
+See also the Related work section below.
 
 ## Current Features
 
@@ -121,39 +129,64 @@ klang/
 
 For detailed architecture documentation, see [CLAUDE.md](CLAUDE.md).
 
-## String Standard Library
+## Related work
 
-Klang includes a comprehensive string standard library with consistent behavior across all targets:
+Enspirit's previous research work includes a lot of places where such expressions
+are used, calling for a shared solution for the future.
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `length(s)` | String length | `length('hello')` → `5` |
-| `upper(s)` | Convert to uppercase | `upper('hello')` → `'HELLO'` |
-| `lower(s)` | Convert to lowercase | `lower('HELLO')` → `'hello'` |
-| `trim(s)` | Remove leading/trailing whitespace | `trim('  hi  ')` → `'hi'` |
-| `startsWith(s, prefix)` | Check if starts with prefix | `startsWith('hello', 'he')` → `true` |
-| `endsWith(s, suffix)` | Check if ends with suffix | `endsWith('hello', 'lo')` → `true` |
-| `contains(s, sub)` | Check if contains substring | `contains('hello', 'ell')` → `true` |
-| `substring(s, start, len)` | Extract substring (0-based) | `substring('hello', 1, 3)` → `'ell'` |
-| `concat(s1, s2)` | Concatenate strings | `concat('hello', ' world')` → `'hello world'` |
-| `indexOf(s, sub)` | Find index of substring (-1 if not found) | `indexOf('hello', 'l')` → `2` |
-| `replace(s, search, repl)` | Replace first occurrence | `replace('abab', 'ab', 'x')` → `'xab'` |
-| `replaceAll(s, search, repl)` | Replace all occurrences | `replaceAll('abab', 'ab', 'x')` → `'xx'` |
-| `isEmpty(s)` | Check if empty string | `isEmpty('')` → `true` |
-| `padStart(s, len, pad)` | Pad start to length | `padStart('42', 5, '0')` → `'00042'` |
-| `padEnd(s, len, pad)` | Pad end to length | `padEnd('hi', 5, '.')` → `'hi...'` |
+In many cases, observe that we require compiling expressions that amount to a
+single function evaluating on a context object, sometimes a scalar (Finitio),
+sometimes a current Tuple (Bmg), sometimes json data received from an API
+(Webspicy), or a current Card (Klaro Cards, similar to Bmg's Tuple).
 
-## Roadmap
+### Finitio
 
-Future enhancements could include:
-- **Conditional expressions**: Ternary operator (`condition ? then : else`) or if-then-else syntax
-- **More stdlib functions**: Math functions (e.g., `abs(x)`, `round(price, 2)`), date formatting
-- **Array/list literals**: Support for arrays and collection operations
-- **Null handling**: Null literals and null-safe operations
-- **Type system**: Optional static type checking and type inference
-- **Optimization**: Constant folding, expression simplification, dead code elimination
-- **Additional targets**: Python, Go, Rust code generation
-- **Timezone support**: Explicit timezone handling for datetime operations
+The Finitio data validation language supports subtypes by constraints such as:
+
+```finitio
+PositiveInt = Int( i | i > 0 )
+```
+
+Currently, the constraint expression is written in the host language (js or ruby)
+and would require a portable expression language to go further.
+
+See https://finitio.io, https://github.com/enspirit/finitio-rb, https://github.com/enspirit/finitio.js
+
+### Bmg
+
+The Bmg relational algebra requires expressions for the `restrict` and `extend`
+operators inspired by **Tutorial D**. We currently rely on ruby code in some cases,
+but that prevents compiling relational expressions to SQL :
+
+```ruby
+r.restrict(->(t){ t[:budget] >= 120 })
+r.extend(:upcased => ->(t) { t[:name].upcase })
+```
+
+See https://www.relational-algebra.dev/, https://github.com/enspirit/bmg
+
+### Webspicy
+
+The Webspicy test framework requires a better expression language for data assertions.
+We currently rely on an hardcoded expression language that is very limited:
+
+```
+assert:
+- isEmpty
+- size(10)
+```
+
+See https://github.com/enspirit/webspicy
+
+### Klaro Cards
+
+The Klaro Cards No-Code tool uses various data expressions here and there :
+
+- Date ranges for Date/time dimensions : `SOW ... SOW+P1W`
+- Computed dimensions : `_.budget * 1.21`
+- Summary functions : `min(_.budget)`
+
+See https://klaro.cards
 
 ## Contributing
 

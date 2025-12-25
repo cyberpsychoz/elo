@@ -11,6 +11,12 @@ Klang is a small expression language that compiles to three target languages:
 
 The compiler translates Klang expressions into semantically equivalent code in each target language.
 
+## Design principles
+
+Following the vision, design and implementation choices MUST target a language that stays simple, well-designed,
+portable and safe, in that order. We SHOULD always restrict K's powerfullness if a wanted feature leads to a
+violation of those principles.
+
 ## Architecture
 
 KLang currently has the following components :
