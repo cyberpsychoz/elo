@@ -1,3 +1,3 @@
-((x) => klang.add(x, dayjs.duration('P1D')))(dayjs().startOf('day'))
-((d) => klang.add(dayjs().startOf('day'), d))(dayjs.duration('P1D'))
-((x) => ((d) => klang.add(x, d))(dayjs.duration('P1D')))(dayjs().startOf('day'))
+((x) => x.add(dayjs.duration('P1D')))(dayjs().startOf('day'))
+((d) => dayjs().startOf('day').add(d))(dayjs.duration('P1D'))
+((x) => ((d) => x.add(d))(dayjs.duration('P1D')))(dayjs().startOf('day'))

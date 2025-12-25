@@ -119,9 +119,10 @@ describe('Temporal - Date Arithmetic', () => {
       compileToRuby(ast),
       "Date.parse('2024-01-15') + ActiveSupport::Duration.parse('P1D')"
     );
+    // JavaScript uses type-aware dayjs.add() method
     assert.strictEqual(
       compileToJavaScript(ast),
-      "klang.add(dayjs('2024-01-15'), dayjs.duration('P1D'))"
+      "dayjs('2024-01-15').add(dayjs.duration('P1D'))"
     );
     assert.strictEqual(
       compileToSQL(ast),
@@ -242,12 +243,14 @@ describe('Temporal - Temporal Keywords', () => {
 
   it('should compile TOMORROW to JavaScript', () => {
     const ast = parse('TOMORROW');
-    assert.strictEqual(compileToJavaScript(ast), "dayjs().startOf('day').add(1, 'day')");
+    // IR transforms TOMORROW to today() + P1D, emitted as dayjs method chain
+    assert.strictEqual(compileToJavaScript(ast), "dayjs().startOf('day').add(dayjs.duration('P1D'))");
   });
 
   it('should compile YESTERDAY to JavaScript', () => {
     const ast = parse('YESTERDAY');
-    assert.strictEqual(compileToJavaScript(ast), "dayjs().startOf('day').subtract(1, 'day')");
+    // IR transforms YESTERDAY to today() - P1D, emitted as dayjs method chain
+    assert.strictEqual(compileToJavaScript(ast), "dayjs().startOf('day').subtract(dayjs.duration('P1D'))");
   });
 
   it('should compile NOW to Ruby', () => {

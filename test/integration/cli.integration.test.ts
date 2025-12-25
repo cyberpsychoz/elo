@@ -31,7 +31,8 @@ function kcWithError(args: string): { stdout: string; stderr: string; exitCode: 
 describe('CLI - Basic compilation', () => {
   it('should compile expression to JavaScript by default', () => {
     const result = kc('-e "2 + 3"');
-    assert.strictEqual(result, 'klang.add(2, 3)');
+    // Type inference enables native JS for known int types
+    assert.strictEqual(result, '2 + 3');
   });
 
   it('should compile expression to Ruby', () => {
@@ -46,12 +47,14 @@ describe('CLI - Basic compilation', () => {
 
   it('should handle complex expressions', () => {
     const result = kc('-e "2 + 3 * 4"');
-    assert.strictEqual(result, 'klang.add(2, klang.multiply(3, 4))');
+    // Type inference enables native JS for known int types
+    assert.strictEqual(result, '2 + 3 * 4');
   });
 
   it('should handle power operator in JavaScript', () => {
     const result = kc('-e "2 ^ 3" -t js');
-    assert.strictEqual(result, 'klang.power(2, 3)');
+    // Type inference uses Math.pow for known numeric types
+    assert.strictEqual(result, 'Math.pow(2, 3)');
   });
 
   it('should handle power operator in Ruby', () => {
@@ -128,7 +131,8 @@ describe('CLI - File input', () => {
 
     try {
       const result = kc(`${inputFile}`);
-      assert.strictEqual(result, 'klang.add(2, klang.multiply(3, 4))');
+      // Type inference enables native JS for known int types
+      assert.strictEqual(result, '2 + 3 * 4');
     } finally {
       unlinkSync(inputFile);
     }
@@ -159,7 +163,8 @@ describe('CLI - File output', () => {
 
       const { readFileSync } = require('fs');
       const content = readFileSync(outputFile, 'utf-8').trim();
-      assert.strictEqual(content, 'klang.add(2, 3)');
+      // Type inference enables native JS for known int types
+      assert.strictEqual(content, '2 + 3');
     } finally {
       try { unlinkSync(outputFile); } catch {}
     }
@@ -209,7 +214,8 @@ describe('CLI - Error handling', () => {
 describe('CLI - Long options', () => {
   it('should accept --expression', () => {
     const result = kc('--expression "2 + 3"');
-    assert.strictEqual(result, 'klang.add(2, 3)');
+    // Type inference enables native JS for known int types
+    assert.strictEqual(result, '2 + 3');
   });
 
   it('should accept --target', () => {
