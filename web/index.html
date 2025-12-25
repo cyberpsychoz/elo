@@ -213,7 +213,7 @@ result;</pre>
   </main>
 
   <!-- Doc Panel -->
-  <main data-tabs-target="panel" data-panel="doc" class="doc-panel hidden" data-controller="doc">
+  <main data-tabs-target="panel" data-panel="doc" class="doc-panel hidden" data-controller="doc stdlib-search">
     <nav class="doc-toc">
       <div class="toc-title">Language</div>
       <ul>
@@ -231,6 +231,14 @@ result;</pre>
         <li><a href="#stdlib-temporal">Temporal Functions</a></li>
         <li><a href="#stdlib-string">String Functions</a></li>
       </ul>
+      <div class="toc-search">
+        <input
+          type="text"
+          placeholder="Search stdlib..."
+          data-stdlib-search-target="input"
+          data-action="input->stdlib-search#filter"
+        />
+      </div>
     </nav>
     <article class="doc-content">
       <h1>The K Language</h1>
@@ -468,7 +476,7 @@ in
       </section>
 
       <!-- Standard Library -->
-      <section class="doc-section stdlib-section" id="stdlib-numeric" data-controller="stdlib-search">
+      <section class="doc-section stdlib-section" id="stdlib-numeric">
         <h2>Numeric Functions</h2>
         <p>K provides common mathematical functions for numeric operations.</p>
 
@@ -503,7 +511,7 @@ in
         </div>
       </section>
 
-      <section class="doc-section stdlib-section" id="stdlib-temporal" data-controller="stdlib-search">
+      <section class="doc-section stdlib-section" id="stdlib-temporal">
         <h2>Temporal Functions</h2>
         <p>K provides functions to extract components from dates and datetimes.</p>
 
@@ -545,18 +553,9 @@ in
         </div>
       </section>
 
-      <section class="doc-section stdlib-section" id="stdlib-string" data-controller="stdlib-search">
+      <section class="doc-section stdlib-section" id="stdlib-string">
         <h2>String Functions</h2>
         <p>K provides a comprehensive set of string manipulation functions.</p>
-
-        <div class="stdlib-search">
-          <input
-            type="text"
-            placeholder="Search functions..."
-            data-stdlib-search-target="input"
-            data-action="input->stdlib-search#filter"
-          />
-        </div>
 
         <div class="stdlib-grid" data-stdlib-search-target="grid">
           <div class="stdlib-fn" data-action="click->doc#tryExample">

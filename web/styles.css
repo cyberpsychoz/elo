@@ -263,8 +263,8 @@ select:focus {
 .doc-toc {
   display: flex;
   flex-direction: column;
-  width: 180px;
-  min-width: 180px;
+  width: 220px;
+  min-width: 220px;
   padding: 2rem 1.5rem;
   position: sticky;
   top: 0;
@@ -764,6 +764,34 @@ select:focus {
 /* Additional TOC title styling */
 .doc-toc .toc-title:not(:first-child) {
   margin-top: 1.5rem;
+}
+
+/* TOC Search */
+.toc-search {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.toc-search input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-family: var(--font-sans);
+}
+
+.toc-search input::placeholder {
+  color: var(--text-secondary);
+}
+
+.toc-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
 /* Standard Library Section */
