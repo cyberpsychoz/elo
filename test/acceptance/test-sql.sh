@@ -18,13 +18,15 @@ PGPASSWORD="${PGPASSWORD:-klang}"
 PGDATABASE="${PGDATABASE:-klang}"
 export PGPASSWORD
 
-# Files that require variables - skip for local testing
-SKIP_FILES=("member-access" "variables")
+# Files that require variables - cannot be executed standalone
+SKIP_REQUIRE_VARS=("member-access" "variables")
 
 should_skip() {
     local file=$1
-    for skip in "${SKIP_FILES[@]}"; do
-        if [[ $(basename "$file") == "$skip"* ]]; then
+    local basename=$(basename "$file")
+    for skip in "${SKIP_REQUIRE_VARS[@]}"; do
+        if [[ "$basename" == "$skip"* ]]; then
+            echo "  ⊘ $basename (skipped - requires variables)"
             return 0
         fi
     done
@@ -40,7 +42,6 @@ fi
 
 for file in "$TEST_DIR"/*.expected.sql; do
     if should_skip "$file"; then
-        echo "  ⊘ $(basename "$file") (skipped)"
         ((SKIPPED++)) || true
         continue
     fi

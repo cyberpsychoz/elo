@@ -13,14 +13,15 @@ SKIPPED=0
 # Get prelude using kc --prelude-only
 PRELUDE=$($KC --prelude-only -t ruby)
 
-# Files that require variables or produce non-executable code
-# Note: "lambda" contains raw lambda expressions, "lambda-invocation" is executable
-SKIP_FILES=("member-access" "variables" "lambda.expected")
+# Files that require variables - cannot be executed standalone
+SKIP_FILES=("member-access" "variables")
 
 should_skip() {
     local file=$1
+    local basename=$(basename "$file")
     for skip in "${SKIP_FILES[@]}"; do
-        if [[ $(basename "$file") == "$skip"* ]]; then
+        if [[ "$basename" == "$skip"* ]]; then
+            echo "  ⊘ $basename (skipped - requires variables)"
             return 0
         fi
     done
@@ -29,7 +30,6 @@ should_skip() {
 
 for file in "$TEST_DIR"/*.expected.ruby; do
     if should_skip "$file"; then
-        echo "  ⊘ $(basename "$file") (skipped - requires variables)"
         ((SKIPPED++)) || true
         continue
     fi
