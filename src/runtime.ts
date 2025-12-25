@@ -49,12 +49,12 @@ export const JS_HELPERS: Record<string, string> = {
 }`,
   kPos: `function kPos(v) { return +v; }`,
   kTypeOf: `function kTypeOf(v) {
-  if (dayjs.isDuration(v)) return 'duration';
-  if (dayjs.isDayjs(v)) return 'datetime';
-  if (typeof v === 'number') return Number.isInteger(v) ? 'int' : 'float';
-  if (typeof v === 'boolean') return 'bool';
-  if (typeof v === 'string') return 'string';
-  if (typeof v === 'function') return 'fn';
-  return 'object';
+  if (dayjs.isDuration(v)) return 'Duration';
+  if (dayjs.isDayjs(v)) return 'DateTime';
+  if (typeof v === 'number') return Number.isInteger(v) ? 'Int' : 'Float';
+  if (typeof v === 'boolean') return 'Bool';
+  if (typeof v === 'string') return 'String';
+  if (typeof v === 'function') return 'Fn';
+  return 'Object';
 }`,
 };

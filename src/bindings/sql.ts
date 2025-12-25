@@ -209,19 +209,19 @@ export function createSQLBinding(): StdLib<string> {
   sqlLib.register('typeOf', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
     return `CASE pg_typeof(${v})::text ` +
-      `WHEN 'integer' THEN 'int' ` +
-      `WHEN 'bigint' THEN 'int' ` +
-      `WHEN 'double precision' THEN 'float' ` +
-      `WHEN 'numeric' THEN 'float' ` +
-      `WHEN 'boolean' THEN 'bool' ` +
-      `WHEN 'text' THEN 'string' ` +
-      `WHEN 'character varying' THEN 'string' ` +
-      `WHEN 'unknown' THEN 'string' ` +
-      `WHEN 'interval' THEN 'duration' ` +
-      `WHEN 'date' THEN 'datetime' ` +
-      `WHEN 'timestamp without time zone' THEN 'datetime' ` +
-      `WHEN 'timestamp with time zone' THEN 'datetime' ` +
-      `ELSE 'object' END`;
+      `WHEN 'integer' THEN 'Int' ` +
+      `WHEN 'bigint' THEN 'Int' ` +
+      `WHEN 'double precision' THEN 'Float' ` +
+      `WHEN 'numeric' THEN 'Float' ` +
+      `WHEN 'boolean' THEN 'Bool' ` +
+      `WHEN 'text' THEN 'String' ` +
+      `WHEN 'character varying' THEN 'String' ` +
+      `WHEN 'unknown' THEN 'String' ` +
+      `WHEN 'interval' THEN 'Duration' ` +
+      `WHEN 'date' THEN 'DateTime' ` +
+      `WHEN 'timestamp without time zone' THEN 'DateTime' ` +
+      `WHEN 'timestamp with time zone' THEN 'DateTime' ` +
+      `ELSE 'Object' END`;
   });
 
   // Fallback for unknown functions - uppercase for SQL

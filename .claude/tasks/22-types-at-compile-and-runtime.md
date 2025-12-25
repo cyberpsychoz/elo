@@ -27,3 +27,7 @@ by writing one or two acceptance tests before moving to the implementation.
 
 * Document typeOf in web. Also add additional acceptance tests that prove that various date(time) arithmetic expressions return an
 value of the expected type
+
+* I'd prefer have time names returned by typeOf be Capitalized, e.g. Int, Float, Date, etc.
+
+* Also, Type Names section of the website should be in language reference, not in stdlib.

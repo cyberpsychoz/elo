@@ -211,7 +211,7 @@ export function createRubyBinding(): StdLib<string> {
   // Type introspection
   rubyLib.register('typeOf', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when ActiveSupport::Duration; 'duration' when Date, DateTime, Time; 'datetime' when Integer; 'int' when Float; 'float' when TrueClass, FalseClass; 'bool' when String; 'string' when Proc; 'fn' else 'object' end }).call(${v})`;
+    return `(->(v) { case v when ActiveSupport::Duration; 'Duration' when Date, DateTime, Time; 'DateTime' when Integer; 'Int' when Float; 'Float' when TrueClass, FalseClass; 'Bool' when String; 'String' when Proc; 'Fn' else 'Object' end }).call(${v})`;
   });
 
   // Fallback for unknown functions
