@@ -544,6 +544,19 @@ inRange && passing;</pre>
           <pre class="example-code">'42' |> padStart(5, '0')</pre>
           <p class="example-desc">Additional arguments follow the piped value: <code>x |&gt; f(a, b)</code> becomes <code>f(x, a, b)</code>.</p>
         </div>
+
+        <h3>Alternative Operator</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Fallback Chain</div>
+          <pre class="example-code">indexOf('hello', 'x') | indexOf('hello', 'l') | -1</pre>
+          <p class="example-desc">The <code>|</code> operator returns the first defined value (non-NoVal). Useful for providing defaults when operations may fail.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Default</div>
+          <pre class="example-code">indexOf('test', 'z') | 0</pre>
+          <p class="example-desc">If <code>indexOf</code> returns NoVal (not found), use <code>0</code> as the default.</p>
+        </div>
       </section>
 
       <section class="doc-section" id="variables">
@@ -700,6 +713,12 @@ inRange && passing;</pre>
           <div class="example-header">Assert with Let</div>
           <pre class="example-code">let price = 100, tax = 0.2 in assert(price * (1 + tax) == 120)</pre>
           <p class="example-desc">Combine assertions with local variables for readable tests.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Fail with Message</div>
+          <pre class="example-code">indexOf('hello', 'x') | fail('character not found')</pre>
+          <p class="example-desc">Use <code>fail(message)</code> to throw an error with a custom message. Often used as the last alternative in a <code>|</code> chain.</p>
         </div>
       </section>
 
