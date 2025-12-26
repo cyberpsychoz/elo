@@ -194,6 +194,30 @@ export function createTypeDefs(): TypeDefs {
   // Note: not(any) returns any to match old behavior (unknown operand = unknown result)
 
   // ============================================
+  // Numeric functions
+  // ============================================
+  defs.register('abs', [Types.int], Types.int);
+  defs.register('abs', [Types.float], Types.float);
+  defs.register('round', [Types.int], Types.int);
+  defs.register('round', [Types.float], Types.int);
+  defs.register('floor', [Types.int], Types.int);
+  defs.register('floor', [Types.float], Types.int);
+  defs.register('ceil', [Types.int], Types.int);
+  defs.register('ceil', [Types.float], Types.int);
+
+  // ============================================
+  // Temporal component extraction (-> int)
+  // ============================================
+  defs.register('year', [Types.date], Types.int);
+  defs.register('year', [Types.datetime], Types.int);
+  defs.register('month', [Types.date], Types.int);
+  defs.register('month', [Types.datetime], Types.int);
+  defs.register('day', [Types.date], Types.int);
+  defs.register('day', [Types.datetime], Types.int);
+  defs.register('hour', [Types.datetime], Types.int);
+  defs.register('minute', [Types.datetime], Types.int);
+
+  // ============================================
   // String functions
   // ============================================
   defs.register('length', [Types.string], Types.int);
