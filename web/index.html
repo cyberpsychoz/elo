@@ -682,6 +682,8 @@ inRange && passing;</pre>
         </div>
 
         <p class="note"><strong>Note:</strong> Lambdas and predicates compile to JavaScript and Ruby only. SQL does not support function expressions.</p>
+
+        <p class="note"><strong>Note:</strong> Recursive function calls are not allowed. A lambda cannot call itself—this keeps Elo simple and safe for No-Code contexts.</p>
       </section>
 
       <section class="doc-section" id="assertions">

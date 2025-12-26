@@ -14,6 +14,7 @@ import {
   functionCall,
   memberAccess,
   letExpr,
+  lambda,
 } from '../../src/ast';
 import { Types } from '../../src/types';
 import { inferType } from '../../src/ir';
@@ -637,5 +638,42 @@ describe('transform - complex expressions', () => {
       )
     );
     assert.strictEqual(inferType(ir), Types.date);
+  });
+});
+
+describe('transform - recursion detection', () => {
+  it('rejects direct recursive lambda call', () => {
+    // let f = fn(x ~> f(x)) in f(1) should fail
+    assert.throws(
+      () => transform(
+        letExpr(
+          [{ name: 'f', value: lambda(['x'], functionCall('f', [variable('x')])) }],
+          functionCall('f', [literal(1)])
+        )
+      ),
+      /Recursive function calls are not allowed: 'f' cannot call itself/
+    );
+  });
+
+  it('allows non-recursive lambda', () => {
+    // let f = fn(x ~> x + 1) in f(1) should work
+    const ir = transform(
+      letExpr(
+        [{ name: 'f', value: lambda(['x'], binary('+', variable('x'), literal(1))) }],
+        functionCall('f', [literal(1)])
+      )
+    );
+    assert.strictEqual(ir.type, 'let');
+  });
+
+  it('allows calling a different function', () => {
+    // let f = fn(x ~> g(x)) in f(1) should work (g is stdlib)
+    const ir = transform(
+      letExpr(
+        [{ name: 'f', value: lambda(['x'], functionCall('abs', [variable('x')])) }],
+        functionCall('f', [literal(1)])
+      )
+    );
+    assert.strictEqual(ir.type, 'let');
   });
 });

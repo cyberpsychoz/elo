@@ -39,9 +39,14 @@ import { eloTypeDefs } from './typedefs';
 export type TypeEnv = Map<string, EloType>;
 
 /**
+ * Set of function names currently being defined (to detect recursion)
+ */
+type DefiningSet = Set<string>;
+
+/**
  * Transform an AST expression into IR
  */
-export function transform(expr: Expr, env: TypeEnv = new Map()): IRExpr {
+export function transform(expr: Expr, env: TypeEnv = new Map(), defining: DefiningSet = new Set()): IRExpr {
   switch (expr.type) {
     case 'literal':
       return transformLiteral(expr.value);
@@ -62,41 +67,41 @@ export function transform(expr: Expr, env: TypeEnv = new Map()): IRExpr {
       return irVariable(expr.name, env.get(expr.name) ?? Types.any);
 
     case 'binary':
-      return transformBinaryOp(expr.operator, expr.left, expr.right, env);
+      return transformBinaryOp(expr.operator, expr.left, expr.right, env, defining);
 
     case 'unary':
-      return transformUnaryOp(expr.operator, expr.operand, env);
+      return transformUnaryOp(expr.operator, expr.operand, env, defining);
 
     case 'temporal_keyword':
       return transformTemporalKeyword(expr.keyword);
 
     case 'function_call':
-      return transformFunctionCall(expr.name, expr.args, env);
+      return transformFunctionCall(expr.name, expr.args, env, defining);
 
     case 'member_access':
-      return irMemberAccess(transform(expr.object, env), expr.property);
+      return irMemberAccess(transform(expr.object, env, defining), expr.property);
 
     case 'let':
-      return transformLet(expr.bindings, expr.body, env);
+      return transformLet(expr.bindings, expr.body, env, defining);
 
     case 'if':
       return irIf(
-        transform(expr.condition, env),
-        transform(expr.then, env),
-        transform(expr.else, env)
+        transform(expr.condition, env, defining),
+        transform(expr.then, env, defining),
+        transform(expr.else, env, defining)
       );
 
     case 'lambda':
-      return transformLambda(expr.params, expr.body, env);
+      return transformLambda(expr.params, expr.body, env, defining);
 
     case 'predicate':
-      return transformPredicate(expr.params, expr.body, env);
+      return transformPredicate(expr.params, expr.body, env, defining);
 
     case 'object':
       return irObject(
         expr.properties.map((prop) => ({
           key: prop.key,
-          value: transform(prop.value, env),
+          value: transform(prop.value, env, defining),
         }))
       );
   }
@@ -123,10 +128,11 @@ function transformBinaryOp(
   operator: string,
   left: Expr,
   right: Expr,
-  env: TypeEnv
+  env: TypeEnv,
+  defining: DefiningSet
 ): IRExpr {
-  const leftIR = transform(left, env);
-  const rightIR = transform(right, env);
+  const leftIR = transform(left, env, defining);
+  const rightIR = transform(right, env, defining);
   const leftType = inferType(leftIR);
   const rightType = inferType(rightIR);
 
@@ -142,8 +148,8 @@ function transformBinaryOp(
 /**
  * Transform a unary operator into a typed function call
  */
-function transformUnaryOp(operator: string, operand: Expr, env: TypeEnv): IRExpr {
-  const operandIR = transform(operand, env);
+function transformUnaryOp(operator: string, operand: Expr, env: TypeEnv, defining: DefiningSet): IRExpr {
+  const operandIR = transform(operand, env, defining);
   const operandType = inferType(operandIR);
 
   const fn = unaryOpNameMap[operator];
@@ -216,8 +222,13 @@ function transformTemporalKeyword(keyword: string): IRExpr {
  * If the function name is a variable in the environment (i.e., a lambda),
  * we emit an 'apply' node. Otherwise, we emit a 'call' to the stdlib.
  */
-function transformFunctionCall(name: string, args: Expr[], env: TypeEnv): IRExpr {
-  const argsIR = args.map((arg) => transform(arg, env));
+function transformFunctionCall(name: string, args: Expr[], env: TypeEnv, defining: DefiningSet): IRExpr {
+  // Check for recursive call
+  if (defining.has(name)) {
+    throw new Error(`Recursive function calls are not allowed: '${name}' cannot call itself`);
+  }
+
+  const argsIR = args.map((arg) => transform(arg, env, defining));
   const argTypes = argsIR.map(inferType);
 
   // Check if the name is a variable holding a lambda
@@ -239,25 +250,31 @@ function transformFunctionCall(name: string, args: Expr[], env: TypeEnv): IRExpr
 function transformLet(
   bindings: Array<{ name: string; value: Expr }>,
   body: Expr,
-  env: TypeEnv
+  env: TypeEnv,
+  defining: DefiningSet
 ): IRExpr {
   // Build a new environment with the bindings
   const newEnv = new Map(env);
   const irBindings = bindings.map((binding) => {
-    const valueIR = transform(binding.value, newEnv);
+    // If the value is a lambda or predicate, add the binding name to the defining set
+    // to detect recursive calls within the lambda body
+    const isLambdaLike = binding.value.type === 'lambda' || binding.value.type === 'predicate';
+    const newDefining = isLambdaLike ? new Set([...defining, binding.name]) : defining;
+
+    const valueIR = transform(binding.value, newEnv, newDefining);
     const valueType = inferType(valueIR);
     newEnv.set(binding.name, valueType);
     return { name: binding.name, value: valueIR };
   });
 
-  const bodyIR = transform(body, newEnv);
+  const bodyIR = transform(body, newEnv, defining);
   return irLet(irBindings, bodyIR);
 }
 
 /**
  * Transform a lambda expression
  */
-function transformLambda(params: string[], body: Expr, env: TypeEnv): IRExpr {
+function transformLambda(params: string[], body: Expr, env: TypeEnv, defining: DefiningSet): IRExpr {
   // Build a new environment with params as 'any' type
   const newEnv = new Map(env);
   const irParams = params.map((name) => {
@@ -265,7 +282,7 @@ function transformLambda(params: string[], body: Expr, env: TypeEnv): IRExpr {
     return { name, inferredType: Types.any };
   });
 
-  const bodyIR = transform(body, newEnv);
+  const bodyIR = transform(body, newEnv, defining);
   const resultType = inferType(bodyIR);
   return irLambda(irParams, bodyIR, resultType);
 }
@@ -273,7 +290,7 @@ function transformLambda(params: string[], body: Expr, env: TypeEnv): IRExpr {
 /**
  * Transform a predicate expression
  */
-function transformPredicate(params: string[], body: Expr, env: TypeEnv): IRExpr {
+function transformPredicate(params: string[], body: Expr, env: TypeEnv, defining: DefiningSet): IRExpr {
   // Build a new environment with params as 'any' type
   const newEnv = new Map(env);
   const irParams = params.map((name) => {
@@ -281,7 +298,7 @@ function transformPredicate(params: string[], body: Expr, env: TypeEnv): IRExpr 
     return { name, inferredType: Types.any };
   });
 
-  const bodyIR = transform(body, newEnv);
+  const bodyIR = transform(body, newEnv, defining);
   return irPredicate(irParams, bodyIR);
 }
 
