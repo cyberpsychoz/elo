@@ -1756,10 +1756,51 @@ body.light-theme .js-badge {
   margin-bottom: 2rem;
 }
 
+/* Accordion: hide content and footer by default */
+.blog-post .post-content,
+.blog-post .post-footer {
+  display: none;
+}
+
+.blog-post.open .post-content,
+.blog-post.open .post-footer {
+  display: block;
+}
+
 .post-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  cursor: pointer;
+  position: relative;
+  padding-right: 2rem;
+}
+
+/* Show border and margin when open */
+.blog-post.open .post-header {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
+}
+
+/* Accordion indicator */
+.post-header::after {
+  content: '+';
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.blog-post.open .post-header::after {
+  content: '−';
+}
+
+.post-header:hover {
+  opacity: 0.8;
 }
 
 .post-header h2 {

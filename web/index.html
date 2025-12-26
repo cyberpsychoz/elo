@@ -195,7 +195,7 @@ inRange && passing;</pre>
         <h2>Who's Behind Elo?</h2>
         <p>
           Created by <strong>Bernard Lambeau</strong> at <a href="https://enspirit.dev" target="_blank">Enspirit</a>,
-          building on 20 years of language design experience with projects like
+          building on 25 years of software engineering &amp; language design experience with projects like
           <a href="https://finitio.io" target="_blank">Finitio</a>,
           <a href="https://www.relational-algebra.dev" target="_blank">Bmg</a>, and
           <a href="https://klaro.cards" target="_blank">Klaro Cards</a>.
@@ -1300,15 +1300,15 @@ echo "2 + 3 * 4" | eloc -</pre>
   </main>
 
   <!-- Blog Panel -->
-  <main data-tabs-target="panel" data-panel="blog" class="blog-panel hidden">
+  <main data-tabs-target="panel" data-panel="blog" class="blog-panel hidden" data-controller="blog">
     <article class="blog-content">
       <header class="blog-header">
         <h1>Blog</h1>
         <p class="blog-intro">Stories, insights, and lessons from building Elo</p>
       </header>
 
-      <article class="blog-post" id="day-two-refinement">
-        <header class="post-header">
+      <article class="blog-post" id="day-two-refinement" data-blog-target="post">
+        <header class="post-header" data-action="click->blog#toggle">
           <h2>Day Two: The Art of Refinement</h2>
           <div class="post-meta">
             <time datetime="2024-12-26">December 26, 2024</time>
@@ -1318,7 +1318,7 @@ echo "2 + 3 * 4" | eloc -</pre>
 
         <div class="post-content">
           <p class="lead">
-            Day one was about building something from nothing. Day two was different—it was about making something good become something elegant. Here's what we learned about the refinement phase of human-AI collaboration.
+            Day one was about building something from nothing. Day two was different—it was about refinement, rebranding, and preparing Elo for the world. From debugging generated code to creating an About page with GitHub Sponsors, here's what the second day of human-AI collaboration looked like.
           </p>
 
           <h3>The Morning Revelation</h3>
@@ -1418,6 +1418,34 @@ Date&lt;iso8601&gt;(jsonValue)     // Explicit contract</code></pre>
             None of this is glamorous. But it's what makes a tool usable. A compiler that can't read from a pipe is a compiler you can't integrate into shell scripts.
           </p>
 
+          <h3>From K to Elo: The Rebranding</h3>
+          <p>
+            The language started as "K"—a terrible name, already taken by a famous array language. Day two brought a complete rebranding:
+          </p>
+          <ul>
+            <li><strong>New name:</strong> Elo (named after Elodie—a reminder that life is more than code)</li>
+            <li><strong>New extension:</strong> <code>.elo</code> files instead of <code>.k</code></li>
+            <li><strong>New CLI:</strong> <code>eloc</code> (the Elo compiler)</li>
+            <li><strong>Domain check:</strong> elo-lang.org available, @enspirit/elo on npm</li>
+          </ul>
+          <p>
+            Naming matters. A language with an unusable name is a language that won't spread.
+          </p>
+
+          <h3>Building the About Page</h3>
+          <p>
+            If Elo is useful to others, they should know who built it and how to support the work. We created a complete About section:
+          </p>
+          <ul>
+            <li><strong>Who's behind Elo:</strong> Bernard's background, Enspirit, 25 years of software engineering &amp; language design</li>
+            <li><strong>Related work:</strong> Finitio, Bmg, Webspicy, Klaro Cards—showing the ecosystem</li>
+            <li><strong>Support options:</strong> Hire Enspirit, use Klaro Cards, GitHub Sponsors</li>
+            <li><strong>The dedication:</strong> A tribute section reminding us that music competes with code</li>
+          </ul>
+          <p>
+            Open source isn't just code. It's building trust, showing credentials, and creating paths for sustainability.
+          </p>
+
           <h3>Lessons from Day Two</h3>
           <p>
             The dynamics shifted from day one. Less exploration, more refinement:
@@ -1446,8 +1474,8 @@ Date&lt;iso8601&gt;(jsonValue)     // Explicit contract</code></pre>
         </footer>
       </article>
 
-      <article class="blog-post" id="building-k-with-claude">
-        <header class="post-header">
+      <article class="blog-post" id="building-k-with-claude" data-blog-target="post">
+        <header class="post-header" data-action="click->blog#toggle">
           <h2>Building Elo: A Human-AI Collaboration Story</h2>
           <div class="post-meta">
             <time datetime="2024-12-25">December 25, 2024</time>
@@ -1585,7 +1613,7 @@ Date&lt;iso8601&gt;(jsonValue)     // Explicit contract</code></pre>
           a Belgian software company specializing in data-driven solutions and No-Code tools.
         </p>
         <p>
-          With over 20 years of experience in programming language design and implementation, Bernard has built several
+          With over 25 years of experience in software engineering, programming language design, and implementation, Bernard has built several
           open-source projects including <a href="https://finitio.io" target="_blank">Finitio</a> (a data validation language),
           <a href="https://www.relational-algebra.dev" target="_blank">Bmg</a> (a relational algebra library), and
           <a href="https://klaro.cards" target="_blank">Klaro Cards</a> (a No-Code platform for data management).
