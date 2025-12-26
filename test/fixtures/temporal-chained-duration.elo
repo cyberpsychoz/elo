@@ -1,1 +1,1 @@
-TODAY + P1M + PT12H
+assert(typeOf(TODAY + P1M + PT12H) == 'DateTime')

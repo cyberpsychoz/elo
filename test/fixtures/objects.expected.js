@@ -1,5 +1,5 @@
-({}).budget
-({budget: 1500}).budget
-({name: "Alice", age: 30}).name
-({name: "Alice", age: 30}).age
-((obj) => obj.x)(({x: 10}))
+(function() { function kIsVal(v) { return v !== null && v !== undefined; } return (function() { if (!(kIsVal(({}).budget) == false)) throw new Error("Assertion failed"); return true; })(); })()
+(function() { function kEq(l, r) { if (dayjs.isDuration(l) && dayjs.isDuration(r)) return l.asMilliseconds() === r.asMilliseconds(); if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return l.valueOf() === r.valueOf(); return l == r; } return (function() { if (!(kEq(({budget: 1500}).budget, 1500))) throw new Error("Assertion failed"); return true; })(); })()
+(function() { function kEq(l, r) { if (dayjs.isDuration(l) && dayjs.isDuration(r)) return l.asMilliseconds() === r.asMilliseconds(); if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return l.valueOf() === r.valueOf(); return l == r; } return (function() { if (!(kEq(({name: "Alice", age: 30}).name, "Alice"))) throw new Error("Assertion failed"); return true; })(); })()
+(function() { function kEq(l, r) { if (dayjs.isDuration(l) && dayjs.isDuration(r)) return l.asMilliseconds() === r.asMilliseconds(); if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return l.valueOf() === r.valueOf(); return l == r; } return (function() { if (!(kEq(({name: "Alice", age: 30}).age, 30))) throw new Error("Assertion failed"); return true; })(); })()
+(function() { function kEq(l, r) { if (dayjs.isDuration(l) && dayjs.isDuration(r)) return l.asMilliseconds() === r.asMilliseconds(); if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return l.valueOf() === r.valueOf(); return l == r; } return (function() { if (!(kEq(((obj) => obj.x)(({x: 10})), 10))) throw new Error("Assertion failed"); return true; })(); })()

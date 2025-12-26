@@ -1,1 +1,1 @@
-Date.today + ActiveSupport::Duration.parse('P1M') + ActiveSupport::Duration.parse('PT12H')
+(raise "Assertion failed" unless (->(v) { case v when NilClass; 'NoVal' when ActiveSupport::Duration; 'Duration' when Date, DateTime, Time; 'DateTime' when Integer; 'Int' when Float; 'Float' when TrueClass, FalseClass; 'Bool' when String; 'String' when Proc; 'Fn' else 'Object' end }).call(Date.today + ActiveSupport::Duration.parse('P1M') + ActiveSupport::Duration.parse('PT12H')) == "DateTime"; true)
