@@ -1301,6 +1301,145 @@ echo "2 + 3 * 4" | eloc -</pre>
         <p class="blog-intro">Stories, insights, and lessons from building Elo</p>
       </header>
 
+      <article class="blog-post" id="day-two-refinement">
+        <header class="post-header">
+          <h2>Day Two: The Art of Refinement</h2>
+          <div class="post-meta">
+            <time datetime="2024-12-26">December 26, 2024</time>
+            <span class="post-author">By Bernard Lambeau & Claude</span>
+          </div>
+        </header>
+
+        <div class="post-content">
+          <p class="lead">
+            Day one was about building something from nothing. Day two was different—it was about making something good become something elegant. Here's what we learned about the refinement phase of human-AI collaboration.
+          </p>
+
+          <h3>The Morning Revelation</h3>
+          <p>
+            We started day two by looking at what we'd built. The compiler worked. Tests passed. But something felt off about the generated code. Take this simple Elo expression:
+          </p>
+          <blockquote>
+            <code>let x = 1 in x + 1</code>
+          </blockquote>
+          <p>
+            The JavaScript output looked like this:
+          </p>
+          <pre><code>((x) => x + 1)(1)</code></pre>
+          <p>
+            Technically correct. But when debugging generated code, this IIFE-wrapped style is nearly impossible to follow. Bernard's task file was characteristically direct:
+          </p>
+          <blockquote>
+            "The current implementation relies on lambda calls. While semantically correct, it's extremely difficult to debug generated code by inspection. How can we fix that?"
+          </blockquote>
+          <p>
+            The new output? Clean, readable imperative code:
+          </p>
+          <pre><code>(function() { let x = 1; return x + 1; })()</code></pre>
+
+          <h3>Error Handling: A Finitio Inheritance</h3>
+          <p>
+            The biggest feature of day two was error handling—but not the usual try/catch kind. Elo needed something portable across Ruby, JavaScript, and SQL.
+          </p>
+          <p>
+            Bernard brought Finitio's influence: instead of exceptions, we designed an <strong>alternative operator</strong>. The <code>|</code> symbol means "try this, or else try that":
+          </p>
+          <pre><code>Date&lt;iso8601&gt;(input) | Date&lt;dmy&gt;(input) | fail("Invalid date")</code></pre>
+          <p>
+            This compiles to:
+          </p>
+          <ul>
+            <li><strong>JavaScript:</strong> A try/catch chain that falls through alternatives</li>
+            <li><strong>Ruby:</strong> begin/rescue blocks with fallback semantics</li>
+            <li><strong>SQL:</strong> <code>COALESCE()</code>—elegant and native</li>
+          </ul>
+          <p>
+            The design session was illuminating. We considered tagged NoVal values, exception accumulation, and various operator syntaxes. The final choice—<code>|</code> inspired by Finitio's union types—emerged from exploring how each target language handles optionality.
+          </p>
+
+          <h3>Type Selectors: Information Contracts Come to Elo</h3>
+          <p>
+            A long-planned feature finally landed: <strong>type selectors</strong>. In Finitio terms, these are "information contracts"—ways to coerce raw data into typed values:
+          </p>
+          <pre><code>Date("2024-12-26")           // String → Date
+Int("42")                    // String → Int
+Date&lt;iso8601&gt;(jsonValue)     // Explicit contract</code></pre>
+          <p>
+            The invariant is simple: <code>typeOf(Date(x)) == 'Date'</code>—always. If the conversion fails, it throws. This gives Elo a clean way to handle data from JSON APIs or user input, without dozens of parsing functions.
+          </p>
+
+          <h3>Syntactic Sugar: Small Things Matter</h3>
+          <p>
+            Several hours went into features that might seem trivial:
+          </p>
+          <ul>
+            <li><strong>Parameterless lambdas:</strong> <code>fn(~&gt; 42)</code> instead of requiring a dummy parameter</li>
+            <li><strong>Immediate invocation:</strong> <code>fn(~&gt; 42)()</code>—create and call in one expression</li>
+            <li><strong>Optional parentheses in pipes:</strong> <code>x |&gt; upcase</code> instead of <code>x |&gt; upcase()</code></li>
+          </ul>
+          <p>
+            These aren't core features. They're ergonomics. But ergonomics is what separates a language people use from one they merely tolerate. The pipe syntax in particular now reads like Elixir:
+          </p>
+          <pre><code>"hello" |> upcase |> reverse   // "OLLEH"</code></pre>
+
+          <h3>Self-Enforcing Quality</h3>
+          <p>
+            One pattern emerged that's worth highlighting: <strong>using tests to constrain the AI</strong>.
+          </p>
+          <p>
+            Bernard noticed that test files weren't always effective—Claude would sometimes write <code>.elo</code> fixture files with expressions but no assertions. The test would pass (the code compiled), but nothing was actually verified.
+          </p>
+          <p>
+            The solution? Add a meta-test:
+          </p>
+          <blockquote>
+            "Add an integration test that checks that all .elo files have an <code>assert</code> call on every line."
+          </blockquote>
+          <p>
+            Now the test suite enforces its own quality. Every fixture file must contain assertions, or CI fails. Claude learns this constraint implicitly by running the tests.
+          </p>
+
+          <h3>Polishing the Interface</h3>
+          <p>
+            Day two also focused on user-facing polish:
+          </p>
+          <ul>
+            <li>The CLI gained <strong>stdin support</strong>: <code>echo "2+3" | eloc -</code></li>
+            <li>Documentation expanded with a <strong>Command Line</strong> section</li>
+            <li>The README now covers the full <code>eloc</code> interface</li>
+          </ul>
+          <p>
+            None of this is glamorous. But it's what makes a tool usable. A compiler that can't read from a pipe is a compiler you can't integrate into shell scripts.
+          </p>
+
+          <h3>Lessons from Day Two</h3>
+          <p>
+            The dynamics shifted from day one. Less exploration, more refinement:
+          </p>
+          <ul>
+            <li><strong>Readability over cleverness</strong> — Clever lambda-based compilation was replaced with straightforward imperative code. Debugging wins over elegance.</li>
+            <li><strong>Design constraints from related work</strong> — Finitio's influence guided error handling and type selectors. Prior experience accelerates good design.</li>
+            <li><strong>Meta-tests enforce discipline</strong> — Tests that verify test quality create self-improving systems.</li>
+            <li><strong>Polish matters</strong> — Stdin support, CLI docs, pipe syntax—small improvements compound into a professional tool.</li>
+            <li><strong>The AI adapts to constraints</strong> — When the test suite rejects certain patterns (missing asserts), Claude learns to avoid them. Structure shapes behavior.</li>
+          </ul>
+
+          <h3>What Tomorrow Holds</h3>
+          <p>
+            Looking at our todo list, the future holds Finitio-like dressing features—using Elo's type selectors to parse structured data from JSON. The foundation is in place. The alternative operator handles failures. Type selectors do the parsing.
+          </p>
+          <p>
+            Day one was a sprint. Day two was a refinement. Day three? We'll see what ideas the morning brings.
+          </p>
+        </div>
+
+        <footer class="post-footer">
+          <p>
+            View today's task files: <a href="https://github.com/enspirit/elo/tree/main/.claude/tasks/done" target="_blank">Done tasks on GitHub</a>.
+          </p>
+        </footer>
+      </article>
+
       <article class="blog-post" id="building-k-with-claude">
         <header class="post-header">
           <h2>Building Elo: A Human-AI Collaboration Story</h2>
