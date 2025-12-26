@@ -33,6 +33,7 @@
           <span class="submenu-section">Tools</span>
           <a href="#doc/examples" data-action="click->tabs#switch" data-tab="doc">Examples</a>
           <a href="#doc/javascript-api" data-action="click->tabs#switch" data-tab="doc">JavaScript API</a>
+          <a href="#doc/command-line" data-action="click->tabs#switch" data-tab="doc">Command Line</a>
         </div>
       </div>
       <div class="nav-group">
@@ -293,6 +294,7 @@ inRange && passing;</pre>
         <span class="toc-section">Tools</span>
         <a href="#doc/examples" data-action="click->tabs#switch" data-tab="doc">Examples</a>
         <a href="#doc/javascript-api" data-action="click->tabs#switch" data-tab="doc">JavaScript API</a>
+        <a href="#doc/command-line" data-action="click->tabs#switch" data-tab="doc">Command Line</a>
       </nav>
     </aside>
     <article class="doc-content">
@@ -898,6 +900,70 @@ compileToSQL(ast);        // =&gt; "2 + 3 * 4"</pre>
             <tr>
               <td><code>compileToSQL(ast)</code></td>
               <td>Compiles an AST to PostgreSQL code string</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="doc-section" id="command-line">
+        <h2>Command Line</h2>
+        <p>Elo provides a CLI tool <code>eloc</code> for compiling expressions from the terminal.</p>
+
+        <h3>Installation</h3>
+        <pre class="code-js">npm install @enspirit/elo
+./node_modules/.bin/eloc --help</pre>
+
+        <h3>Usage</h3>
+        <pre class="code-js"># Compile expression to JavaScript (default)
+eloc -e "2 + 3 * 4"
+
+# Compile to Ruby
+eloc -e "2 + 3 * 4" -t ruby
+
+# Compile to SQL
+eloc -e "2 + 3 * 4" -t sql
+
+# Include runtime prelude
+eloc -e "NOW + PT2H" -t ruby -p
+
+# Compile from file
+eloc input.elo -t ruby
+
+# Compile from stdin
+echo "2 + 3 * 4" | eloc -</pre>
+
+        <h3>Options</h3>
+        <table class="type-table">
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>-e, --expression &lt;expr&gt;</code></td>
+              <td>Expression to compile</td>
+            </tr>
+            <tr>
+              <td><code>-t, --target &lt;lang&gt;</code></td>
+              <td>Target language: <code>js</code> (default), <code>ruby</code>, <code>sql</code></td>
+            </tr>
+            <tr>
+              <td><code>-p, --prelude</code></td>
+              <td>Include runtime library imports</td>
+            </tr>
+            <tr>
+              <td><code>--prelude-only</code></td>
+              <td>Output only the prelude (no expression)</td>
+            </tr>
+            <tr>
+              <td><code>-f, --file &lt;path&gt;</code></td>
+              <td>Output to file instead of stdout</td>
+            </tr>
+            <tr>
+              <td><code>-</code></td>
+              <td>Read from stdin</td>
             </tr>
           </tbody>
         </table>
