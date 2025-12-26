@@ -234,16 +234,37 @@ inRange && passing;</pre>
         <label class="checkbox-label">
           <input
             type="checkbox"
+            data-playground-target="pretty"
+            data-action="change->playground#compile"
+            checked
+          />
+          Pretty
+        </label>
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
             data-playground-target="prelude"
             data-action="change->playground#compile"
           />
           Prelude
         </label>
-        <button
-          data-playground-target="runButton"
-          data-action="click->playground#run"
-          class="run-button"
-        >Run</button>
+        <div class="button-group">
+          <button
+            data-playground-target="copyButton"
+            data-action="click->playground#copy"
+            class="secondary-button"
+          >Copy</button>
+          <button
+            data-playground-target="saveButton"
+            data-action="click->playground#save"
+            class="secondary-button"
+          >Save</button>
+          <button
+            data-playground-target="runButton"
+            data-action="click->playground#run"
+            class="run-button"
+          >Run</button>
+        </div>
       </div>
       <pre data-playground-target="output"></pre>
       <div class="result" data-playground-target="result"></div>

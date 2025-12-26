@@ -18,6 +18,7 @@ import { getPrelude, Target as PreludeTarget } from '../../src/preludes';
 import { elo } from '../codemirror/elo-language';
 import { eloDarkTheme, eloLightTheme } from '../codemirror/elo-theme';
 import { highlightJS, highlightRuby, highlightSQL } from '../highlighter';
+import { formatCode } from '../formatters';
 
 // Enable dayjs plugins
 dayjs.extend(duration);
@@ -31,18 +32,23 @@ dayjs.extend(utc);
 type TargetLanguage = 'ruby' | 'javascript' | 'sql';
 
 export default class PlaygroundController extends Controller {
-  static targets = ['editor', 'output', 'language', 'prelude', 'error', 'result', 'runButton'];
+  static targets = ['editor', 'output', 'language', 'pretty', 'prelude', 'error', 'result', 'copyButton', 'saveButton', 'runButton'];
 
   declare editorTarget: HTMLDivElement;
   declare outputTarget: HTMLPreElement;
   declare languageTarget: HTMLSelectElement;
+  declare prettyTarget: HTMLInputElement;
   declare preludeTarget: HTMLInputElement;
   declare errorTarget: HTMLDivElement;
   declare resultTarget: HTMLDivElement;
+  declare copyButtonTarget: HTMLButtonElement;
+  declare saveButtonTarget: HTMLButtonElement;
   declare runButtonTarget: HTMLButtonElement;
 
   private editorView: EditorView | null = null;
   private themeObserver: MutationObserver | null = null;
+  private compileVersion = 0;
+  private currentOutput = ''; // Raw output for copy/save
 
   connect() {
     this.initializeEditor();
@@ -118,9 +124,11 @@ export default class PlaygroundController extends Controller {
     }
   }
 
-  compile() {
+  async compile() {
+    const version = ++this.compileVersion;
     const input = this.getCode();
     const language = this.languageTarget.value as TargetLanguage;
+    const prettyPrint = this.prettyTarget.checked;
     const includePrelude = this.preludeTarget.checked;
 
     // Hide result when code changes
@@ -131,6 +139,7 @@ export default class PlaygroundController extends Controller {
 
     if (!input.trim()) {
       this.outputTarget.textContent = '';
+      this.currentOutput = '';
       this.hideError();
       return;
     }
@@ -139,19 +148,32 @@ export default class PlaygroundController extends Controller {
       const ast = parse(input);
       let output = this.compileToLanguage(ast, language);
 
+      // Format the output (pretty print) if enabled
+      const formattedOutput = prettyPrint ? await formatCode(output, language) : output;
+
+      // Check if this compilation is still current (race condition handling)
+      if (version !== this.compileVersion) return;
+
+      // Build final output with optional prelude
+      let finalOutput = formattedOutput;
       if (includePrelude) {
         const preludeTarget: PreludeTarget = language === 'javascript' ? 'javascript' : language as PreludeTarget;
         const prelude = getPrelude(preludeTarget);
         if (prelude) {
-          output = `${prelude}\n\n${output}`;
+          finalOutput = `${prelude}\n\n${formattedOutput}`;
         }
       }
 
+      // Store raw output for copy/save
+      this.currentOutput = finalOutput;
+
       // Apply syntax highlighting based on language
-      this.outputTarget.innerHTML = this.highlightOutput(output, language);
+      this.outputTarget.innerHTML = this.highlightOutput(finalOutput, language);
       this.hideError();
     } catch (error) {
+      if (version !== this.compileVersion) return;
       this.outputTarget.innerHTML = '';
+      this.currentOutput = '';
       this.showError(error instanceof Error ? error.message : String(error));
     }
   }
@@ -177,6 +199,48 @@ export default class PlaygroundController extends Controller {
       this.hideResult();
       this.showError(error instanceof Error ? error.message : String(error));
     }
+  }
+
+  async copy() {
+    if (!this.currentOutput) return;
+
+    try {
+      await navigator.clipboard.writeText(this.currentOutput);
+      // Brief visual feedback
+      const btn = this.copyButtonTarget;
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = original; }, 1000);
+    } catch (error) {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = this.currentOutput;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+  }
+
+  save() {
+    if (!this.currentOutput) return;
+
+    const language = this.languageTarget.value as TargetLanguage;
+    const extensions: Record<TargetLanguage, string> = {
+      javascript: 'js',
+      ruby: 'rb',
+      sql: 'sql'
+    };
+
+    const blob = new Blob([this.currentOutput], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `elo-output.${extensions[language]}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   private formatResult(value: any): string {
