@@ -67,6 +67,11 @@ function parseArgs(args: string[]): Options {
         process.exit(0);
         break;
 
+      case '-':
+        // Read from stdin
+        options.inputFile = '-';
+        break;
+
       default:
         // If it doesn't start with -, treat it as input file
         if (!arg.startsWith('-') && !options.inputFile && !options.expression) {
@@ -118,6 +123,10 @@ Examples:
 
   # Compile file to file
   eloc input.elo -t js -f output.js
+
+  # Compile from stdin
+  echo "2 + 3 * 4" | eloc -
+  cat input.elo | eloc - -t ruby
 `);
 }
 
@@ -170,15 +179,18 @@ function main() {
     sources = [options.expression];
   } else if (options.inputFile) {
     try {
-      const content = readFileSync(options.inputFile, 'utf-8');
+      // Use file descriptor 0 for stdin when input is '-'
+      const content = options.inputFile === '-'
+        ? readFileSync(0, 'utf-8')
+        : readFileSync(options.inputFile, 'utf-8');
       // Split into lines and filter out empty lines
       sources = content.split('\n').filter(line => line.trim() !== '');
     } catch (error) {
-      console.error(`Error reading file ${options.inputFile}: ${error}`);
+      console.error(`Error reading ${options.inputFile === '-' ? 'stdin' : `file ${options.inputFile}`}: ${error}`);
       process.exit(1);
     }
   } else {
-    console.error('Error: Must provide either -e <expression> or an input file');
+    console.error('Error: Must provide either -e <expression>, an input file, or - for stdin');
     printHelp();
     process.exit(1);
   }

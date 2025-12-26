@@ -89,6 +89,10 @@ Elo provides a CLI tool `eloc` for compiling expressions from the command line:
 
 # Compile to file
 ./bin/eloc -e "2 + 3" -t ruby -f output.rb
+
+# Compile from stdin
+echo "2 + 3 * 4" | ./bin/eloc -
+cat input.elo | ./bin/eloc - -t ruby
 ```
 
 Options:
