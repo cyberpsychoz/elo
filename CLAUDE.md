@@ -52,3 +52,15 @@ The tests are organized as follows :
 * `test/fixtures/*` are klang expression files and their expected compilation in the target languages
 * `test/integration/**/*.ts` check the compiler and cli, using fixtures
 * `test/acceptance/**/*.ts` check the actual execution of generated code, using fixtures
+
+## Tasks & agents
+
+The list of tasks can be found in `.claude/tasks/todo` and `.claude/tasks/done`.
+Done tasks provide history of my prompts. Todo tasks are the next envisionned
+steps.
+
+**CRITICAL**: You can always look the vision ahead in written todo tasks, but we
+NEVER implement anything else that the very next step (first todo tasks, by
+alphabetic order). Other tasks are informative and may help making future-proof
+design decisions. If it leads to unnecessary complexity, we just forget about
+them and act as if they were not written at all.
