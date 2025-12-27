@@ -8,3 +8,5 @@
 (function() { function kIsNull(v) { return v === null || v === undefined; } return (function() { if (!(kIsNull((a => a[a.length - 1] ?? null)([])) == true)) throw new Error("Assertion failed"); return true; })(); })()
 (function() { if (!(([].length === 0) == true)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(([1].length === 0) == false)) throw new Error("Assertion failed"); return true; })()
+(function() { function kIsNull(v) { return v === null || v === undefined; } return (function() { if (!(kIsNull([1, 2, 3][100] ?? null) == true)) throw new Error("Assertion failed"); return true; })(); })()
+(function() { function kIsNull(v) { return v === null || v === undefined; } return (function() { if (!(kIsNull([1, 2, 3][-1] ?? null) == true)) throw new Error("Assertion failed"); return true; })(); })()

@@ -8,3 +8,5 @@ assert(last([1, 2, 3]) == 3)
 assert(isNull(last([])) == true)
 assert(isEmpty([]) == true)
 assert(isEmpty([1]) == false)
+assert(isNull(at([1, 2, 3], 100)) == true)  # out of bounds
+assert(isNull(at([1, 2, 3], -1)) == true)   # negative index

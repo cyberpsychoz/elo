@@ -18,6 +18,7 @@
 (raise "Assertion failed" unless "hello"[0, 2] == "he"; true)
 (raise "Assertion failed" unless "hello"[1, 3] == "ell"; true)
 (raise "Assertion failed" unless "hello world"[6, 5] == "world"; true)
+(raise "Assertion failed" unless "hello"[2, 100] == "llo"; true)
 (raise "Assertion failed" unless "hello".concat(" world") == "hello world"; true)
 (raise "Assertion failed" unless "".concat("test") == "test"; true)
 (raise "Assertion failed" unless "hello world".index("world") == 6; true)

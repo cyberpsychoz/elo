@@ -18,6 +18,7 @@
 (function() { if (!("hello".substring(0, 0 + 2) == "he")) throw new Error("Assertion failed"); return true; })()
 (function() { if (!("hello".substring(1, 1 + 3) == "ell")) throw new Error("Assertion failed"); return true; })()
 (function() { if (!("hello world".substring(6, 6 + 5) == "world")) throw new Error("Assertion failed"); return true; })()
+(function() { if (!("hello".substring(2, 2 + 100) == "llo")) throw new Error("Assertion failed"); return true; })()
 (function() { if (!("hello".concat(" world") == "hello world")) throw new Error("Assertion failed"); return true; })()
 (function() { if (!("".concat("test") == "test")) throw new Error("Assertion failed"); return true; })()
 (function() { function kEq(l, r) { if (dayjs.isDuration(l) && dayjs.isDuration(r)) return l.asMilliseconds() === r.asMilliseconds(); if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return l.valueOf() === r.valueOf(); if (Array.isArray(l) && Array.isArray(r)) { if (l.length !== r.length) return false; for (let i = 0; i < l.length; i++) if (!kEq(l[i], r[i])) return false; return true; } return l == r; } return (function() { if (!(kEq((i => i === -1 ? null : i)("hello world".indexOf("world")), 6))) throw new Error("Assertion failed"); return true; })(); })()

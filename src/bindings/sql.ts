@@ -114,6 +114,18 @@ export function createSQLBinding(): StdLib<string> {
     return `${left} - ${right}`;
   });
 
+  // Date - Date returns an INTERVAL (PostgreSQL returns integer days, convert to interval)
+  sqlLib.register('sub', [Types.date, Types.date], (args, ctx) => {
+    const left = ctx.emitWithParens(args[0], '-', 'left');
+    const right = ctx.emitWithParens(args[1], '-', 'right');
+    return `(${left} - ${right}) * INTERVAL '1 day'`;
+  });
+  sqlLib.register('sub', [Types.datetime, Types.datetime], (args, ctx) => {
+    const left = ctx.emitWithParens(args[0], '-', 'left');
+    const right = ctx.emitWithParens(args[1], '-', 'right');
+    return `${left} - ${right}`;  // TIMESTAMP - TIMESTAMP already returns INTERVAL in PostgreSQL
+  });
+
   // Other temporal subtractions and duration scaling are covered by any,any registrations
 
   // Comparison operators - SQL handles all types, type generalization applies

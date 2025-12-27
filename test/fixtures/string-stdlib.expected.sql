@@ -18,6 +18,7 @@ CASE WHEN NOT (POSITION('xyz' IN 'hello world') > 0) THEN TRUE ELSE (SELECT pg_t
 CASE WHEN SUBSTRING('hello' FROM 0 + 1 FOR 2) = 'he' THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
 CASE WHEN SUBSTRING('hello' FROM 1 + 1 FOR 3) = 'ell' THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
 CASE WHEN SUBSTRING('hello world' FROM 6 + 1 FOR 5) = 'world' THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+CASE WHEN SUBSTRING('hello' FROM 2 + 1 FOR 100) = 'llo' THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
 CASE WHEN CONCAT('hello', ' world') = 'hello world' THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
 CASE WHEN CONCAT('', 'test') = 'test' THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
 CASE WHEN (NULLIF(POSITION('world' IN 'hello world'), 0) - 1) = 6 THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END

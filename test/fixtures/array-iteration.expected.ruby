@@ -8,3 +8,4 @@
 (raise "Assertion failed" unless ["a", "b", "c"].reduce("", &->(acc, x) { acc + x }) == "abc"; true)
 (raise "Assertion failed" unless [].map(&->(x) { x * 2 }) == []; true)
 (raise "Assertion failed" unless [].select(&->(x) { !!(x > 0) }) == []; true)
+(raise "Assertion failed" unless (x = 10; [1, 2, 3].map(&->(y) { x + y })) == [11, 12, 13]; true)

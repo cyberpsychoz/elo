@@ -19,6 +19,7 @@ export const JS_HELPERS: Record<string, string> = {
 }`,
   kSub: `function kSub(l, r) {
   if (dayjs.isDayjs(l) && dayjs.isDuration(r)) return l.subtract(r);
+  if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return dayjs.duration(l.valueOf() - r.valueOf());
   if (dayjs.isDuration(l) && dayjs.isDuration(r)) return dayjs.duration(l.asMilliseconds() - r.asMilliseconds());
   return l - r;
 }`,

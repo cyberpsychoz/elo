@@ -101,6 +101,18 @@ export function createRubyBinding(): StdLib<string> {
 
   // datetime - duration uses the same operator, covered by any,any registration
 
+  // Date - Date returns a Duration (Rational in Ruby, convert to days)
+  rubyLib.register('sub', [Types.date, Types.date], (args, ctx) => {
+    const left = ctx.emitWithParens(args[0], '-', 'left');
+    const right = ctx.emitWithParens(args[1], '-', 'right');
+    return `(${left} - ${right}).to_i.days`;
+  });
+  rubyLib.register('sub', [Types.datetime, Types.datetime], (args, ctx) => {
+    const left = ctx.emitWithParens(args[0], '-', 'left');
+    const right = ctx.emitWithParens(args[1], '-', 'right');
+    return `((${left} - ${right}) * 86400).to_i.seconds`;
+  });
+
   // Duration + Date/DateTime needs operand swap (Ruby doesn't support Duration + Date)
   rubyLib.register('add', [Types.duration, Types.date], (args, ctx) => {
     const left = ctx.emitWithParens(args[1], '+', 'left');
@@ -156,8 +168,9 @@ export function createRubyBinding(): StdLib<string> {
 
   // Array functions
   rubyLib.register('length', [Types.array], (args, ctx) => `${ctx.emit(args[0])}.length`);
+  // Use lambda to ensure nil for negative indices (Ruby's native [-1] returns last element)
   rubyLib.register('at', [Types.array, Types.int], (args, ctx) =>
-    `${ctx.emit(args[0])}[${ctx.emit(args[1])}]`);
+    `(->(a, i) { i >= 0 && i < a.length ? a[i] : nil }).call(${ctx.emit(args[0])}, ${ctx.emit(args[1])})`);
   rubyLib.register('first', [Types.array], (args, ctx) => `${ctx.emit(args[0])}.first`);
   rubyLib.register('last', [Types.array], (args, ctx) => `${ctx.emit(args[0])}.last`);
   rubyLib.register('isEmpty', [Types.array], (args, ctx) => `${ctx.emit(args[0])}.empty?`);
