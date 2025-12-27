@@ -199,6 +199,18 @@ export function createJavaScriptBinding(): StdLib<string> {
   jsLib.register('isEmpty', [Types.array], (args, ctx) =>
     `(${ctx.emit(args[0])}.length === 0)`);
 
+  // Array iteration functions
+  jsLib.register('map', [Types.array, Types.fn], (args, ctx) =>
+    `${ctx.emit(args[0])}.map(${ctx.emit(args[1])})`);
+  jsLib.register('filter', [Types.array, Types.fn], (args, ctx) =>
+    `${ctx.emit(args[0])}.filter(${ctx.emit(args[1])})`);
+  jsLib.register('reduce', [Types.array, Types.any, Types.fn], (args, ctx) =>
+    `${ctx.emit(args[0])}.reduce(${ctx.emit(args[2])}, ${ctx.emit(args[1])})`);
+  jsLib.register('any', [Types.array, Types.fn], (args, ctx) =>
+    `${ctx.emit(args[0])}.some(${ctx.emit(args[1])})`);
+  jsLib.register('all', [Types.array, Types.fn], (args, ctx) =>
+    `${ctx.emit(args[0])}.every(${ctx.emit(args[1])})`);
+
   // String functions (register for both string and any to support lambdas with unknown types)
   for (const t of [Types.string, Types.any]) {
     jsLib.register('length', [t], (args, ctx) => `${ctx.emit(args[0])}.length`);

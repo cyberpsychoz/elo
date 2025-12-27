@@ -1599,6 +1599,41 @@ echo "2 + 3 * 4" | eloc -</pre>
             <p class="fn-desc">Returns <code>true</code> if the array is empty (length 0).</p>
             <div class="fn-example"><code class="example-code">isEmpty([])</code><span class="fn-result">→ true</span></div>
           </div>
+
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">map</div>
+            <div class="fn-sig">(arr: Array, fn: Fn) → Array</div>
+            <p class="fn-desc">Returns a new array with the result of applying <code>fn</code> to each element. <em>JS/Ruby only.</em></p>
+            <div class="fn-example"><code class="example-code">map([1, 2, 3], fn(x ~> x * 2))</code><span class="fn-result">→ [2, 4, 6]</span></div>
+          </div>
+
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">filter</div>
+            <div class="fn-sig">(arr: Array, predicate: Fn) → Array</div>
+            <p class="fn-desc">Returns a new array with only elements where predicate returns <code>true</code>. <em>JS/Ruby only.</em></p>
+            <div class="fn-example"><code class="example-code">filter([1, 2, 3, 4], fn(x | x > 2))</code><span class="fn-result">→ [3, 4]</span></div>
+          </div>
+
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">reduce</div>
+            <div class="fn-sig">(arr: Array, initial: Any, fn: Fn) → Any</div>
+            <p class="fn-desc">Reduces the array to a single value by applying <code>fn(acc, element)</code> for each element. <em>JS/Ruby only.</em></p>
+            <div class="fn-example"><code class="example-code">reduce([1, 2, 3], 0, fn(acc, x ~> acc + x))</code><span class="fn-result">→ 6</span></div>
+          </div>
+
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">any</div>
+            <div class="fn-sig">(arr: Array, predicate: Fn) → Bool</div>
+            <p class="fn-desc">Returns <code>true</code> if at least one element satisfies the predicate. <em>JS/Ruby only.</em></p>
+            <div class="fn-example"><code class="example-code">any([1, 2, 3], fn(x | x > 2))</code><span class="fn-result">→ true</span></div>
+          </div>
+
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">all</div>
+            <div class="fn-sig">(arr: Array, predicate: Fn) → Bool</div>
+            <p class="fn-desc">Returns <code>true</code> if all elements satisfy the predicate. <em>JS/Ruby only.</em></p>
+            <div class="fn-example"><code class="example-code">all([1, 2, 3], fn(x | x > 0))</code><span class="fn-result">→ true</span></div>
+          </div>
         </div>
       </section>
 

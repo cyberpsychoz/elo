@@ -36,11 +36,21 @@ export const JS_HELPERS: Record<string, string> = {
   kEq: `function kEq(l, r) {
   if (dayjs.isDuration(l) && dayjs.isDuration(r)) return l.asMilliseconds() === r.asMilliseconds();
   if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return l.valueOf() === r.valueOf();
+  if (Array.isArray(l) && Array.isArray(r)) {
+    if (l.length !== r.length) return false;
+    for (let i = 0; i < l.length; i++) if (!kEq(l[i], r[i])) return false;
+    return true;
+  }
   return l == r;
 }`,
   kNeq: `function kNeq(l, r) {
   if (dayjs.isDuration(l) && dayjs.isDuration(r)) return l.asMilliseconds() !== r.asMilliseconds();
   if (dayjs.isDayjs(l) && dayjs.isDayjs(r)) return l.valueOf() !== r.valueOf();
+  if (Array.isArray(l) && Array.isArray(r)) {
+    if (l.length !== r.length) return true;
+    for (let i = 0; i < l.length; i++) if (!kEq(l[i], r[i])) return true;
+    return false;
+  }
   return l != r;
 }`,
   kNeg: `function kNeg(v) {
