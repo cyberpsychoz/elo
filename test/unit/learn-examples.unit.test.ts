@@ -52,7 +52,7 @@ describe('Learn Page Examples - Lesson 3: Booleans', () => {
 describe('Learn Page Examples - Lesson 4: Decisions', () => {
   it('should evaluate if expressions', () => {
     assert.strictEqual(compile("if 5 > 3 then 'yes' else 'no'", { runtime }), 'yes');
-    assert.strictEqual(compile("let age = 18 in if age >= 18 then 'Welcome!' else 'Sorry'", { runtime }), 'Welcome!');
+    assert.strictEqual(compile("if 10 > 100 then 'big' else 'small'", { runtime }), 'small');
   });
 });
 

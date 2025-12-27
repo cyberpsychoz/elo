@@ -418,7 +418,7 @@ select:focus {
 
 /* Table of Contents Sidebar */
 .doc-toc {
-  width: 200px;
+  width: 240px;
   flex-shrink: 0;
   padding: 2rem 1rem;
   border-right: 1px solid var(--border);
@@ -1439,7 +1439,7 @@ body.light-theme .js-badge {
 
 /* Stdlib Table of Contents Sidebar */
 .stdlib-toc {
-  width: 200px;
+  width: 240px;
   flex-shrink: 0;
   padding: 2rem 1rem;
   border-right: 1px solid var(--border);
@@ -2188,7 +2188,7 @@ body.light-theme .js-badge {
 
 /* Learn Table of Contents Sidebar */
 .learn-toc {
-  width: 200px;
+  width: 240px;
   flex-shrink: 0;
   padding: 2rem 1rem;
   border-right: 1px solid var(--border);
