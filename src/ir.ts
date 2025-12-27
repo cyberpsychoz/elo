@@ -24,6 +24,7 @@ export type IRExpr =
   | IRDateTimeLiteral
   | IRDurationLiteral
   | IRObjectLiteral
+  | IRArrayLiteral
   | IRVariable
   | IRCall
   | IRApply
@@ -111,6 +112,14 @@ export interface IRObjectProperty {
 export interface IRObjectLiteral {
   type: 'object_literal';
   properties: IRObjectProperty[];
+}
+
+/**
+ * Array literal: [expr, expr, ...]
+ */
+export interface IRArrayLiteral {
+  type: 'array_literal';
+  elements: IRExpr[];
 }
 
 /**
@@ -266,6 +275,10 @@ export function irObject(properties: IRObjectProperty[]): IRObjectLiteral {
   return { type: 'object_literal', properties };
 }
 
+export function irArray(elements: IRExpr[]): IRArrayLiteral {
+  return { type: 'array_literal', elements };
+}
+
 export function irVariable(name: string, inferredType: EloType = Types.any): IRVariable {
   return { type: 'variable', name, inferredType };
 }
@@ -325,6 +338,8 @@ export function inferType(ir: IRExpr): EloType {
       return Types.duration;
     case 'object_literal':
       return Types.object;
+    case 'array_literal':
+      return Types.array;
     case 'variable':
       return ir.inferredType;
     case 'call':

@@ -35,9 +35,13 @@ See also the Related work section below.
 - **Literals**:
   - Numbers: `42`, `3.14`
   - Booleans: `true`, `false`
+  - Strings: `'hello'`
+  - Null: `null`
   - Dates: `D2024-01-15`
   - DateTimes: `D2024-01-15T10:30:00Z`
   - Durations: `P1D`, `PT1H30M`, `P1Y2M3D` (ISO8601)
+  - Objects: `{name: 'Alice', age: 30}`
+  - Arrays: `[1, 2, 3]`, `['a', 'b']`, `[1, 'mixed', true, null]`
 - **Parentheses** for grouping
 - **Multi-target compilation**:
   - Ruby (using `**` for power, `&&`/`||`/`!` for boolean logic, `Date.parse()`, `DateTime.parse()`, `ActiveSupport::Duration.parse()`)

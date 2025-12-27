@@ -111,6 +111,11 @@ function emitRuby(ir: IRExpr): string {
       return `{${props}}`;
     }
 
+    case 'array_literal': {
+      const elements = ir.elements.map(e => emitRuby(e)).join(', ');
+      return `[${elements}]`;
+    }
+
     case 'variable':
       return ir.name;
 

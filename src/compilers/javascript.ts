@@ -145,6 +145,11 @@ function emitJS(ir: IRExpr, requiredHelpers?: Set<string>): string {
       return `({${props}})`;
     }
 
+    case 'array_literal': {
+      const elements = ir.elements.map(e => ctx.emit(e)).join(', ');
+      return `[${elements}]`;
+    }
+
     case 'variable':
       return ir.name;
 

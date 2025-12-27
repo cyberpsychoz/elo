@@ -2,7 +2,7 @@
  * AST node types for Elo expressions
  */
 
-export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | Predicate | ObjectLiteral | Alternative | Apply;
+export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | Predicate | ObjectLiteral | ArrayLiteral | Alternative | Apply;
 
 /**
  * Literal value (number or boolean)
@@ -288,6 +288,21 @@ export interface ObjectLiteral {
  */
 export function objectLiteral(properties: ObjectProperty[]): ObjectLiteral {
   return { type: 'object', properties };
+}
+
+/**
+ * Array literal: [expr, expr, ...]
+ */
+export interface ArrayLiteral {
+  type: 'array';
+  elements: Expr[];
+}
+
+/**
+ * Creates an array literal: [expr, expr, ...]
+ */
+export function arrayLiteral(elements: Expr[]): ArrayLiteral {
+  return { type: 'array', elements };
 }
 
 /**

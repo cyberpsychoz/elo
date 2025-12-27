@@ -1093,3 +1093,98 @@ describe('Parser - Depth Limits', () => {
     assert.strictEqual(ast.type, 'literal');
   });
 });
+
+describe('Parser - Array Literals', () => {
+  it('should parse empty array', () => {
+    const ast = parse('[]');
+    assert.deepStrictEqual(ast, {
+      type: 'array',
+      elements: []
+    });
+  });
+
+  it('should parse array with single element', () => {
+    const ast = parse('[1]');
+    assert.deepStrictEqual(ast, {
+      type: 'array',
+      elements: [{ type: 'literal', value: 1 }]
+    });
+  });
+
+  it('should parse array with multiple integers', () => {
+    const ast = parse('[1, 2, 3]');
+    assert.deepStrictEqual(ast, {
+      type: 'array',
+      elements: [
+        { type: 'literal', value: 1 },
+        { type: 'literal', value: 2 },
+        { type: 'literal', value: 3 }
+      ]
+    });
+  });
+
+  it('should parse array with strings', () => {
+    const ast = parse("['a', 'b', 'c']");
+    assert.deepStrictEqual(ast, {
+      type: 'array',
+      elements: [
+        { type: 'string', value: 'a' },
+        { type: 'string', value: 'b' },
+        { type: 'string', value: 'c' }
+      ]
+    });
+  });
+
+  it('should parse heterogeneous array', () => {
+    const ast = parse("[1, 'two', true, null]");
+    assert.deepStrictEqual(ast, {
+      type: 'array',
+      elements: [
+        { type: 'literal', value: 1 },
+        { type: 'string', value: 'two' },
+        { type: 'literal', value: true },
+        { type: 'null' }
+      ]
+    });
+  });
+
+  it('should parse nested arrays', () => {
+    const ast = parse('[[1, 2], [3, 4]]');
+    assert.deepStrictEqual(ast, {
+      type: 'array',
+      elements: [
+        { type: 'array', elements: [{ type: 'literal', value: 1 }, { type: 'literal', value: 2 }] },
+        { type: 'array', elements: [{ type: 'literal', value: 3 }, { type: 'literal', value: 4 }] }
+      ]
+    });
+  });
+
+  it('should parse array with expressions', () => {
+    const ast = parse('[1 + 2, 3 * 4]');
+    assert.strictEqual(ast.type, 'array');
+    if (ast.type === 'array') {
+      assert.strictEqual(ast.elements.length, 2);
+      assert.strictEqual(ast.elements[0].type, 'binary');
+      assert.strictEqual(ast.elements[1].type, 'binary');
+    }
+  });
+
+  it('should parse array in let binding', () => {
+    const ast = parse('let items = [1, 2, 3] in items');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.bindings[0].name, 'items');
+      assert.strictEqual(ast.bindings[0].value.type, 'array');
+    }
+  });
+
+  it('should parse array with object elements', () => {
+    const ast = parse('[{a: 1}, {b: 2}]');
+    assert.strictEqual(ast.type, 'array');
+    if (ast.type === 'array') {
+      assert.strictEqual(ast.elements.length, 2);
+      assert.strictEqual(ast.elements[0].type, 'object');
+      assert.strictEqual(ast.elements[1].type, 'object');
+    }
+  });
+});

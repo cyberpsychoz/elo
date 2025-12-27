@@ -21,6 +21,7 @@ import {
   irDateTime,
   irDuration,
   irObject,
+  irArray,
   irVariable,
   irCall,
   irApply,
@@ -144,6 +145,9 @@ function transformWithDepth(
           value: recurse(prop.value),
         }))
       );
+
+    case 'array':
+      return irArray(expr.elements.map((el) => recurse(el)));
 
     case 'alternative':
       return transformAlternative(expr.alternatives, env, defining, nextDepth, maxDepth);

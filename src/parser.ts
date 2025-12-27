@@ -1,4 +1,4 @@
-import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, predicate, LetBinding, objectLiteral, ObjectProperty, alternative, apply } from './ast';
+import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, predicate, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply } from './ast';
 
 /**
  * Token types
@@ -22,6 +22,8 @@ type TokenType =
   | 'RPAREN'
   | 'LBRACE'
   | 'RBRACE'
+  | 'LBRACKET'
+  | 'RBRACKET'
   | 'COMMA'
   | 'COLON'
   | 'DOT'
@@ -417,6 +419,8 @@ class Lexer {
       case ')': return { type: 'RPAREN', value: char, position: pos };
       case '{': return { type: 'LBRACE', value: char, position: pos };
       case '}': return { type: 'RBRACE', value: char, position: pos };
+      case '[': return { type: 'LBRACKET', value: char, position: pos };
+      case ']': return { type: 'RBRACKET', value: char, position: pos };
       case ',': return { type: 'COMMA', value: char, position: pos };
       case ':': return { type: 'COLON', value: char, position: pos };
       case '.':
@@ -606,6 +610,11 @@ export class Parser {
     // Handle object literals: {key: value, ...}
     if (token.type === 'LBRACE') {
       return this.objectParse();
+    }
+
+    // Handle array literals: [expr, expr, ...]
+    if (token.type === 'LBRACKET') {
+      return this.arrayParse();
     }
 
     throw new Error(`Unexpected token ${token.type} at position ${token.position}`);
@@ -1063,6 +1072,33 @@ export class Parser {
 
     this.eat('RBRACE');
     return objectLiteral(properties);
+  }
+
+  /**
+   * Parse array literal: [expr, expr, ...]
+   */
+  private arrayParse(): Expr {
+    this.eat('LBRACKET');
+
+    const elements: Expr[] = [];
+
+    // Handle empty array
+    if (this.currentToken.type === 'RBRACKET') {
+      this.eat('RBRACKET');
+      return arrayLiteral(elements);
+    }
+
+    // Parse first element
+    elements.push(this.expr());
+
+    // Parse additional elements
+    while (this.currentToken.type === 'COMMA') {
+      this.eat('COMMA');
+      elements.push(this.expr());
+    }
+
+    this.eat('RBRACKET');
+    return arrayLiteral(elements);
   }
 
   private expr(): Expr {

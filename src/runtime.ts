@@ -56,6 +56,7 @@ export const JS_HELPERS: Record<string, string> = {
   if (typeof v === 'boolean') return 'Bool';
   if (typeof v === 'string') return 'String';
   if (typeof v === 'function') return 'Fn';
+  if (Array.isArray(v)) return 'Array';
   return 'Object';
 }`,
   kIsNull: `function kIsNull(v) { return v === null || v === undefined; }`,

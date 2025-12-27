@@ -209,7 +209,9 @@ export function createSQLBinding(): StdLib<string> {
   // Type introspection - map PostgreSQL types to K type names
   sqlLib.register('typeOf', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `CASE WHEN ${v} IS NULL THEN 'Null' ELSE CASE pg_typeof(${v})::text ` +
+    return `CASE WHEN ${v} IS NULL THEN 'Null' ` +
+      `WHEN pg_typeof(${v})::text LIKE '%[]' THEN 'Array' ` +
+      `ELSE CASE pg_typeof(${v})::text ` +
       `WHEN 'integer' THEN 'Int' ` +
       `WHEN 'bigint' THEN 'Int' ` +
       `WHEN 'double precision' THEN 'Float' ` +

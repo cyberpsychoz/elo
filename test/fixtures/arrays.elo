@@ -1,0 +1,5 @@
+assert(typeOf([]) == 'Array')
+assert(typeOf([1, 2, 3]) == 'Array')
+assert(typeOf(['a', 'b']) == 'Array')
+assert(typeOf([1, 'two', true, null]) == 'Array')
+assert((let items = [1, 2, 3] in typeOf(items)) == 'Array')

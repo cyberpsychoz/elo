@@ -24,6 +24,7 @@
           <a href="#doc/types" data-action="click->tabs#switch" data-tab="doc">Types</a>
           <a href="#doc/literals" data-action="click->tabs#switch" data-tab="doc">Literals</a>
           <a href="#doc/objects" data-action="click->tabs#switch" data-tab="doc">Objects</a>
+          <a href="#doc/arrays" data-action="click->tabs#switch" data-tab="doc">Arrays</a>
           <a href="#doc/operators" data-action="click->tabs#switch" data-tab="doc">Operators</a>
           <a href="#doc/variables" data-action="click->tabs#switch" data-tab="doc">Variables</a>
           <a href="#doc/conditionals" data-action="click->tabs#switch" data-tab="doc">Conditionals</a>
@@ -588,6 +589,7 @@ inRange && passing;</pre>
         <a href="#doc/types" data-action="click->tabs#switch" data-tab="doc">Types</a>
         <a href="#doc/literals" data-action="click->tabs#switch" data-tab="doc">Literals</a>
         <a href="#doc/objects" data-action="click->tabs#switch" data-tab="doc">Objects</a>
+        <a href="#doc/arrays" data-action="click->tabs#switch" data-tab="doc">Arrays</a>
         <a href="#doc/operators" data-action="click->tabs#switch" data-tab="doc">Operators</a>
         <a href="#doc/variables" data-action="click->tabs#switch" data-tab="doc">Variables</a>
         <a href="#doc/conditionals" data-action="click->tabs#switch" data-tab="doc">Conditionals</a>
@@ -671,6 +673,11 @@ inRange && passing;</pre>
               <td><code>Object</code></td>
               <td>Key-value objects</td>
               <td><code>{name: 'Alice', age: 30}</code></td>
+            </tr>
+            <tr>
+              <td><code>Array</code></td>
+              <td>Ordered collections</td>
+              <td><code>[1, 2, 3]</code>, <code>['a', 'b']</code></td>
             </tr>
             <tr>
               <td><code>Fn</code></td>
@@ -798,6 +805,49 @@ inRange && passing;</pre>
         </div>
 
         <p class="note"><strong>Note:</strong> In SQL, objects compile to PostgreSQL JSONB using <code>jsonb_build_object()</code>.</p>
+      </section>
+
+      <section class="doc-section" id="arrays">
+        <h2>Array Literals</h2>
+        <p>Elo supports array literals containing any expression. Arrays are heterogeneous (can mix types) and compile to native arrays in each target language.</p>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Array</div>
+          <pre class="example-code">[1, 2, 3]</pre>
+          <p class="example-desc">Create an array with integer elements.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">String Array</div>
+          <pre class="example-code">['a', 'b', 'c']</pre>
+          <p class="example-desc">Arrays can contain strings.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Mixed Types</div>
+          <pre class="example-code">[1, 'two', true, null]</pre>
+          <p class="example-desc">Arrays can mix different types including null.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Empty Array</div>
+          <pre class="example-code">[]</pre>
+          <p class="example-desc">An empty array with no elements.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Array with Let</div>
+          <pre class="example-code">let items = [1, 2, 3] in typeOf(items)</pre>
+          <p class="example-desc">Bind an array to a variable. Use <code>typeOf()</code> to verify it's an Array.</p>
+        </div>
+
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Nested Arrays</div>
+          <pre class="example-code">[[1, 2], [3, 4]]</pre>
+          <p class="example-desc">Arrays can contain other arrays.</p>
+        </div>
+
+        <p class="note"><strong>Note:</strong> In SQL, arrays compile to PostgreSQL <code>ARRAY[...]</code> syntax.</p>
       </section>
 
       <section class="doc-section" id="operators">

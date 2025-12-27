@@ -114,6 +114,11 @@ function emitSQL(ir: IRExpr): string {
       return `jsonb_build_object(${args})`;
     }
 
+    case 'array_literal': {
+      const elements = ir.elements.map(e => emitSQL(e)).join(', ');
+      return `ARRAY[${elements}]`;
+    }
+
     case 'variable':
       return ir.name;
 
