@@ -45,6 +45,11 @@ body {
   flex-direction: column;
 }
 
+/* Scroll margin for anchor targets */
+[id] {
+  scroll-margin-top: 4rem;
+}
+
 /* Site Header */
 body > header {
   display: flex;
@@ -1726,8 +1731,12 @@ body.light-theme .js-badge {
 
 /* Blog responsive */
 @media (max-width: 768px) {
-  .blog-panel {
-    padding: 1rem;
+  .blog-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .blog-post-card {
+    padding: 1.25rem;
   }
 }
 
