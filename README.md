@@ -3,7 +3,7 @@
 [![CI](https://github.com/enspirit/elo/actions/workflows/ci.yml/badge.svg)](https://github.com/enspirit/elo/actions/workflows/ci.yml)
 
 A simple, well-designed, portable and safe data expression language that
-compiles/translates to Ruby, Javascript and PostgreSQL.
+compiles to Ruby, Javascript and PostgreSQL.
 
 **[Try Elo online](https://elo-lang.org/)** - Interactive playground and documentation
 
