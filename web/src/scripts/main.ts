@@ -2,6 +2,7 @@ import { Application } from '@hotwired/stimulus';
 import PlaygroundController from './controllers/playground_controller';
 import DocController from './controllers/doc_controller';
 import StdlibSearchController from './controllers/stdlib_search_controller';
+import LearnProgressController from './controllers/learn_progress_controller';
 import { highlightAll, highlightAllJS } from './highlighter';
 
 // Apply theme immediately to avoid flash
@@ -21,6 +22,7 @@ const application = Application.start();
 application.register('playground', PlaygroundController);
 application.register('doc', DocController);
 application.register('stdlib-search', StdlibSearchController);
+application.register('learn-progress', LearnProgressController);
 
 // Theme toggle functionality
 function initTheme() {
