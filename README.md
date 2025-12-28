@@ -33,6 +33,7 @@ See also the Related work section below.
 - **Alternative operator**: `|` for fallback chains (returns first defined value)
 - **Type selectors**: `Int()`, `Float()`, `Bool()`, `Date()`, `Datetime()`, `Duration()` for parsing strings to typed values
 - **Lambdas**: `fn(x ~> x * 2)` or `x ~> x * 2` (sugar) for anonymous functions, `fn(x | x > 0)` for predicates
+- **Input variable**: `_` for accessing external data passed to expressions
 - **Array iteration**: `map`, `filter`, `reduce`, `any`, `all` (JS/Ruby only)
 - **Literals**:
   - Numbers: `42`, `3.14`
@@ -99,11 +100,16 @@ Elo provides a CLI tool `eloc` for compiling expressions from the command line:
 # Compile from stdin
 echo "2 + 3 * 4" | ./bin/eloc -
 cat input.elo | ./bin/eloc - -t ruby
+
+# Compile and execute with input data (JS only)
+./bin/eloc -e "_.x + _.y" -i '{"x": 1, "y": 2}'
+# Outputs: 3
 ```
 
 Options:
 - `-e, --expression <expr>` - Expression to compile
 - `-t, --target <lang>` - Target language: `ruby`, `js` (default), `sql`
+- `-i, --input <data>` - JSON input data for `_` variable (or `@file` to read from file)
 - `-p, --prelude` - Include necessary library imports/requires
 - `--prelude-only` - Output only the prelude (no expression needed)
 - `-f, --file <path>` - Output to file instead of stdout

@@ -360,3 +360,65 @@ export function inferType(ir: IRExpr): EloType {
       return ir.resultType;
   }
 }
+
+/**
+ * Check if an IR expression uses the input variable `_` as a free variable.
+ * This is used to determine if the compiled output needs to be wrapped
+ * as a function taking `_` as a parameter.
+ */
+export function usesInput(ir: IRExpr, boundVars: Set<string> = new Set()): boolean {
+  switch (ir.type) {
+    case 'int_literal':
+    case 'float_literal':
+    case 'bool_literal':
+    case 'null_literal':
+    case 'string_literal':
+    case 'date_literal':
+    case 'datetime_literal':
+    case 'duration_literal':
+      return false;
+
+    case 'variable':
+      return ir.name === '_' && !boundVars.has('_');
+
+    case 'object_literal':
+      return ir.properties.some(p => usesInput(p.value, boundVars));
+
+    case 'array_literal':
+      return ir.elements.some(e => usesInput(e, boundVars));
+
+    case 'member_access':
+      return usesInput(ir.object, boundVars);
+
+    case 'call':
+      return ir.args.some(arg => usesInput(arg, boundVars));
+
+    case 'apply':
+      return usesInput(ir.fn, boundVars) || ir.args.some(arg => usesInput(arg, boundVars));
+
+    case 'let': {
+      // Check binding values with current bound vars
+      const bindingsUseInput = ir.bindings.some(b => usesInput(b.value, boundVars));
+      // Add bound names for body check
+      const newBound = new Set(boundVars);
+      ir.bindings.forEach(b => newBound.add(b.name));
+      return bindingsUseInput || usesInput(ir.body, newBound);
+    }
+
+    case 'if':
+      return usesInput(ir.condition, boundVars) ||
+             usesInput(ir.then, boundVars) ||
+             usesInput(ir.else, boundVars);
+
+    case 'lambda':
+    case 'predicate': {
+      // Lambda/predicate params shadow outer variables
+      const newBound = new Set(boundVars);
+      ir.params.forEach(p => newBound.add(p.name));
+      return usesInput(ir.body, newBound);
+    }
+
+    case 'alternative':
+      return ir.alternatives.some(alt => usesInput(alt, boundVars));
+  }
+}

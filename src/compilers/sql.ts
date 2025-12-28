@@ -1,5 +1,5 @@
 import { Expr } from '../ast';
-import { IRExpr, IRCall, inferType } from '../ir';
+import { IRExpr, IRCall, inferType, usesInput } from '../ir';
 import { transform } from '../transform';
 import { Types } from '../types';
 import { EmitContext } from '../stdlib';
@@ -9,7 +9,18 @@ import { createSQLBinding, isNativeBinaryOp, SQL_OP_MAP } from '../bindings/sql'
  * SQL compilation options
  */
 export interface SQLCompileOptions {
-  // Reserved for future options
+  /** If true, always mark as using input (even if _ is not used) */
+  asFunction?: boolean;
+}
+
+/**
+ * Result of SQL compilation
+ */
+export interface SQLCompileResult {
+  /** The generated SQL code */
+  code: string;
+  /** Whether the code uses the input parameter $1 */
+  usesInput: boolean;
 }
 
 /**
@@ -54,10 +65,25 @@ const sqlLib = createSQLBinding();
  * This compiler works in two phases:
  * 1. Transform AST to typed IR
  * 2. Emit SQL from IR
+ *
+ * If the expression uses `_` (input variable), it is compiled as `$1`
+ * (PostgreSQL parameter placeholder).
  */
 export function compileToSQL(expr: Expr, options?: SQLCompileOptions): string {
+  const result = compileToSQLWithMeta(expr, options);
+  return result.code;
+}
+
+/**
+ * Compiles Elo expressions to SQL with metadata about input usage.
+ * Use this when you need to know if the expression uses input parameter $1.
+ */
+export function compileToSQLWithMeta(expr: Expr, options?: SQLCompileOptions): SQLCompileResult {
   const ir = transform(expr);
-  return emitSQL(ir);
+  const needsInput = usesInput(ir) || options?.asFunction;
+  const code = emitSQL(ir);
+
+  return { code, usesInput: needsInput || false };
 }
 
 /**
@@ -120,7 +146,8 @@ function emitSQL(ir: IRExpr): string {
     }
 
     case 'variable':
-      return ir.name;
+      // Map _ to $1 (PostgreSQL parameter placeholder for input)
+      return ir.name === '_' ? '$1' : ir.name;
 
     case 'member_access': {
       const object = emitSQL(ir.object);

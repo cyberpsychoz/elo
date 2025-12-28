@@ -2,10 +2,13 @@
 
 import { readFileSync, writeFileSync } from 'fs';
 import { parse } from './parser';
-import { compileToRuby } from './compilers/ruby';
-import { compileToJavaScript } from './compilers/javascript';
-import { compileToSQL } from './compilers/sql';
+import { compileToRubyWithMeta } from './compilers/ruby';
+import { compileToJavaScriptWithMeta } from './compilers/javascript';
+import { compileToSQLWithMeta } from './compilers/sql';
 import { getPrelude, Target as PreludeTarget } from './preludes';
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+dayjs.extend(duration);
 
 type Target = 'ruby' | 'js' | 'sql';
 
@@ -21,6 +24,8 @@ interface Options {
   target: Target;
   prelude?: boolean;
   preludeOnly?: boolean;
+  /** JSON input data to pass as _ (can be JSON string or @file path) */
+  inputData?: string;
 }
 
 function parseArgs(args: string[]): Options {
@@ -61,6 +66,11 @@ function parseArgs(args: string[]): Options {
         options.preludeOnly = true;
         break;
 
+      case '-i':
+      case '--input':
+        options.inputData = args[++i];
+        break;
+
       case '-h':
       case '--help':
         printHelp();
@@ -97,6 +107,7 @@ Usage:
 Options:
   -e, --expression <expr>   Expression to compile (like ruby -e)
   -t, --target <lang>       Target language: ruby, js (default), sql
+  -i, --input <data>        JSON input data for _ variable (or @file to read from file)
   -p, --prelude             Include necessary library imports/requires
   --prelude-only            Output only the prelude (no expression needed)
   -f, --file <path>         Output to file instead of stdout
@@ -127,33 +138,76 @@ Examples:
   # Compile from stdin
   echo "2 + 3 * 4" | eloc -
   cat input.elo | eloc - -t ruby
+
+  # Compile and run with input data
+  eloc -e "_.x + _.y" -i '{"x": 1, "y": 2}'
 `);
 }
 
-function compile(source: string, target: Target, includePrelude: boolean = false): string {
+interface CompileResult {
+  code: string;
+  usesInput: boolean;
+}
+
+function compile(source: string, target: Target, includePrelude: boolean = false): CompileResult {
   const ast = parse(source);
 
-  let result: string;
+  let code: string;
+  let usesInput: boolean;
   switch (target) {
-    case 'ruby':
-      result = compileToRuby(ast);
+    case 'ruby': {
+      const result = compileToRubyWithMeta(ast);
+      code = result.code;
+      usesInput = result.usesInput;
       break;
-    case 'js':
-      result = compileToJavaScript(ast);
+    }
+    case 'js': {
+      const result = compileToJavaScriptWithMeta(ast);
+      code = result.code;
+      usesInput = result.usesInput;
       break;
-    case 'sql':
-      result = compileToSQL(ast);
+    }
+    case 'sql': {
+      const result = compileToSQLWithMeta(ast);
+      code = result.code;
+      usesInput = result.usesInput;
       break;
+    }
   }
 
   if (includePrelude) {
     const preludeContent = getPrelude(toPreludeTarget(target));
     if (preludeContent) {
-      result = `${preludeContent}\n\n${result}`;
+      code = `${preludeContent}\n\n${code}`;
     }
   }
 
-  return result;
+  return { code, usesInput };
+}
+
+/**
+ * Parse input data from CLI option (JSON string or @file path)
+ */
+function parseInputData(inputData: string): unknown {
+  let jsonString = inputData;
+
+  // If starts with @, read from file
+  if (inputData.startsWith('@')) {
+    const filePath = inputData.slice(1);
+    try {
+      jsonString = readFileSync(filePath, 'utf-8');
+    } catch (error) {
+      console.error(`Error reading input file ${filePath}: ${error}`);
+      process.exit(1);
+    }
+  }
+
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error(`Error parsing input JSON: ${error}`);
+    process.exit(1);
+  }
 }
 
 function main() {
@@ -196,9 +250,9 @@ function main() {
   }
 
   // Compile each expression
-  let outputs: string[];
+  let results: CompileResult[];
   try {
-    outputs = sources.map((source, index) => {
+    results = sources.map((source, index) => {
       try {
         return compile(source.trim(), options.target, index === 0 && options.prelude);
       } catch (error) {
@@ -210,7 +264,45 @@ function main() {
     process.exit(1);
   }
 
-  const output = outputs.join('\n');
+  // If input data is provided, execute the compiled code (JS only for now)
+  if (options.inputData) {
+    if (options.target !== 'js') {
+      console.error('Error: --input is only supported for JavaScript target (-t js)');
+      process.exit(1);
+    }
+
+    const inputValue = parseInputData(options.inputData);
+
+    // Execute each compiled expression
+    const outputs: string[] = [];
+    for (const result of results) {
+      try {
+        // Create function with dayjs in scope
+        const execFn = new Function('dayjs', `return ${result.code}`);
+        const fn = execFn(dayjs);
+        const output = result.usesInput ? fn(inputValue) : fn;
+        outputs.push(JSON.stringify(output));
+      } catch (error) {
+        console.error(`Execution error: ${error}`);
+        process.exit(1);
+      }
+    }
+
+    if (options.outputFile) {
+      try {
+        writeFileSync(options.outputFile, outputs.join('\n') + '\n', 'utf-8');
+        console.error(`Output written to ${options.outputFile}`);
+      } catch (error) {
+        console.error(`Error writing file ${options.outputFile}: ${error}`);
+        process.exit(1);
+      }
+    } else {
+      console.log(outputs.join('\n'));
+    }
+    return;
+  }
+
+  const output = results.map(r => r.code).join('\n');
 
   // Output the result
   if (options.outputFile) {

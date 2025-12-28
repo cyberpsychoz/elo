@@ -15,6 +15,7 @@ import Footer from '../components/Footer.astro';
         <a href="#arrays">Arrays</a>
         <a href="#operators">Operators</a>
         <a href="#variables">Variables</a>
+        <a href="#input">Input Data</a>
         <a href="#conditionals">Conditionals</a>
         <a href="#lambdas">Lambdas</a>
         <a href="#ranges">Ranges</a>
@@ -231,6 +232,28 @@ import Footer from '../components/Footer.astro';
           <pre class="example-code">let width = 5, height = 3 in width * height</pre>
           <p class="example-desc">Bind multiple variables separated by commas.</p>
         </div>
+      </section>
+
+      <section class="doc-section" id="input">
+        <h2>Input Data</h2>
+        <p>Every Elo program has access to external input via the special <code>_</code> variable.
+           When an expression uses <code>_</code>, the compiled output becomes a function that takes input data as a parameter.</p>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Input</div>
+          <pre class="example-code">_ * 2</pre>
+          <p class="example-desc">Doubles the input value.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Object Input</div>
+          <pre class="example-code">_.price * _.quantity</pre>
+          <p class="example-desc">Access properties of an input object.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Input with Transformation</div>
+          <pre class="example-code">_.budget * 1.21</pre>
+          <p class="example-desc">Apply VAT to a budget value from input.</p>
+        </div>
+        <p class="note"><strong>Note:</strong> When using the CLI with <code>-i</code>, provide JSON input: <code>eloc -e "_.x + _.y" -i '&#123;"x": 1, "y": 2&#125;'</code></p>
       </section>
 
       <section class="doc-section" id="conditionals">

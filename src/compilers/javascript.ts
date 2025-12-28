@@ -1,5 +1,5 @@
 import { Expr } from '../ast';
-import { IRExpr, IRCall } from '../ir';
+import { IRExpr, IRCall, usesInput } from '../ir';
 import { transform } from '../transform';
 import { EmitContext } from '../stdlib';
 import { createJavaScriptBinding, isNativeBinaryOp } from '../bindings/javascript';
@@ -9,7 +9,18 @@ import { JS_HELPERS } from '../runtime';
  * JavaScript compilation options
  */
 export interface JavaScriptCompileOptions {
-  // Reserved for future options
+  /** If true, always wrap output as a function (even if _ is not used) */
+  asFunction?: boolean;
+}
+
+/**
+ * Result of JavaScript compilation
+ */
+export interface JavaScriptCompileResult {
+  /** The generated JavaScript code */
+  code: string;
+  /** Whether the code uses the input variable _ */
+  usesInput: boolean;
 }
 
 /**
@@ -28,24 +39,45 @@ interface EmitResult {
  * 1. Transform AST to typed IR
  * 2. Emit JavaScript from IR (tracking required helpers)
  * 3. Wrap in IIFE with helper definitions if needed
+ *
+ * If the expression uses `_` (input variable), the output is a function
+ * that takes `_` as a parameter instead of an IIFE.
  */
 export function compileToJavaScript(expr: Expr, options?: JavaScriptCompileOptions): string {
+  const result = compileToJavaScriptWithMeta(expr, options);
+  return result.code;
+}
+
+/**
+ * Compiles Elo expressions to JavaScript with metadata about input usage.
+ * Use this when you need to know if the expression uses input.
+ */
+export function compileToJavaScriptWithMeta(expr: Expr, options?: JavaScriptCompileOptions): JavaScriptCompileResult {
   const ir = transform(expr);
+  const needsInput = usesInput(ir) || options?.asFunction;
   const result = emitJSWithHelpers(ir);
 
-  // If no helpers needed, return clean output
-  if (result.requiredHelpers.size === 0) {
-    return result.code;
+  // If no helpers needed and no input, return clean output
+  if (result.requiredHelpers.size === 0 && !needsInput) {
+    return { code: result.code, usesInput: false };
   }
 
-  // Wrap in IIFE with required helper definitions (sorted for deterministic output)
-  // Output is single-line for consistency with line-by-line fixture tests
+  // Build helper definitions (sorted for deterministic output)
   const helperDefs = Array.from(result.requiredHelpers)
     .sort()
     .map(name => JS_HELPERS[name].replace(/\n\s*/g, ' '))
     .join(' ');
 
-  return `(function() { ${helperDefs} return ${result.code}; })()`;
+  if (needsInput) {
+    // Wrap as a function taking _ as input parameter
+    if (result.requiredHelpers.size === 0) {
+      return { code: `(function(_) { return ${result.code}; })`, usesInput: true };
+    }
+    return { code: `(function(_) { ${helperDefs} return ${result.code}; })`, usesInput: true };
+  }
+
+  // Wrap in IIFE with required helper definitions
+  return { code: `(function() { ${helperDefs} return ${result.code}; })()`, usesInput: false };
 }
 
 /**

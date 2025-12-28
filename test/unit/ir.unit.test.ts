@@ -12,7 +12,13 @@ import {
   irCall,
   irLet,
   irMemberAccess,
+  irLambda,
+  irPredicate,
+  irAlternative,
+  irArray,
+  irObject,
   inferType,
+  usesInput,
 } from '../../src/ir';
 import { Types } from '../../src/types';
 
@@ -236,5 +242,108 @@ describe('inferType', () => {
   it('infers any from member access', () => {
     const node = irMemberAccess(irVariable('obj'), 'property');
     assert.deepStrictEqual(inferType(node), Types.any);
+  });
+});
+
+describe('usesInput', () => {
+  it('returns false for literals', () => {
+    assert.strictEqual(usesInput(irInt(42)), false);
+    assert.strictEqual(usesInput(irFloat(3.14)), false);
+    assert.strictEqual(usesInput(irBool(true)), false);
+    assert.strictEqual(usesInput(irString('hello')), false);
+    assert.strictEqual(usesInput(irDate('2024-01-15')), false);
+    assert.strictEqual(usesInput(irDateTime('2024-01-15T10:30:00')), false);
+    assert.strictEqual(usesInput(irDuration('P1D')), false);
+  });
+
+  it('returns false for regular variables', () => {
+    assert.strictEqual(usesInput(irVariable('x')), false);
+    assert.strictEqual(usesInput(irVariable('foo')), false);
+  });
+
+  it('returns true for _ variable', () => {
+    assert.strictEqual(usesInput(irVariable('_')), true);
+  });
+
+  it('returns true when _ is used in call arguments', () => {
+    const node = irCall('add', [irVariable('_'), irInt(1)], [Types.any, Types.int], Types.any);
+    assert.strictEqual(usesInput(node), true);
+  });
+
+  it('returns false when _ is not used in call arguments', () => {
+    const node = irCall('add', [irInt(1), irInt(2)], [Types.int, Types.int], Types.int);
+    assert.strictEqual(usesInput(node), false);
+  });
+
+  it('returns true when _ is used in member access', () => {
+    const node = irMemberAccess(irVariable('_'), 'property');
+    assert.strictEqual(usesInput(node), true);
+  });
+
+  it('returns false when _ is bound in let', () => {
+    // let _ = 5 in _ + 1 - here _ is shadowed
+    const node = irLet(
+      [{ name: '_', value: irInt(5) }],
+      irCall('add', [irVariable('_'), irInt(1)], [Types.int, Types.int], Types.int)
+    );
+    assert.strictEqual(usesInput(node), false);
+  });
+
+  it('returns true when _ is used in let binding value', () => {
+    // let x = _ * 2 in x + 1
+    const node = irLet(
+      [{ name: 'x', value: irCall('mul', [irVariable('_'), irInt(2)], [Types.any, Types.int], Types.any) }],
+      irCall('add', [irVariable('x'), irInt(1)], [Types.any, Types.int], Types.any)
+    );
+    assert.strictEqual(usesInput(node), true);
+  });
+
+  it('returns false when _ is shadowed by lambda param', () => {
+    // fn(_ ~> _ * 2) - the inner _ is the parameter, not input
+    const node = irLambda(
+      [{ name: '_', inferredType: Types.int }],
+      irCall('mul', [irVariable('_'), irInt(2)], [Types.int, Types.int], Types.int),
+      Types.int
+    );
+    assert.strictEqual(usesInput(node), false);
+  });
+
+  it('returns true when _ is used in lambda body but not as param', () => {
+    // fn(x ~> x + _) - uses outer _
+    const node = irLambda(
+      [{ name: 'x', inferredType: Types.int }],
+      irCall('add', [irVariable('x'), irVariable('_')], [Types.int, Types.any], Types.any),
+      Types.any
+    );
+    assert.strictEqual(usesInput(node), true);
+  });
+
+  it('returns false when _ is shadowed by predicate param', () => {
+    // fn(_ | _ > 0)
+    const node = irPredicate(
+      [{ name: '_', inferredType: Types.int }],
+      irCall('gt', [irVariable('_'), irInt(0)], [Types.int, Types.int], Types.bool)
+    );
+    assert.strictEqual(usesInput(node), false);
+  });
+
+  it('returns true when _ is used in array literal', () => {
+    const node = irArray([irInt(1), irVariable('_'), irInt(3)]);
+    assert.strictEqual(usesInput(node), true);
+  });
+
+  it('returns false when _ is not in array literal', () => {
+    const node = irArray([irInt(1), irInt(2), irInt(3)]);
+    assert.strictEqual(usesInput(node), false);
+  });
+
+  it('returns true when _ is used in object literal', () => {
+    const node = irObject([{ key: 'a', value: irVariable('_') }]);
+    assert.strictEqual(usesInput(node), true);
+  });
+
+  it('returns true when _ is used in alternative', () => {
+    const node = irAlternative([irVariable('x'), irVariable('_')], Types.any);
+    assert.strictEqual(usesInput(node), true);
   });
 });

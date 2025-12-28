@@ -1,5 +1,5 @@
 import { Expr } from '../ast';
-import { IRExpr, IRCall } from '../ir';
+import { IRExpr, IRCall, usesInput } from '../ir';
 import { transform } from '../transform';
 import { EmitContext } from '../stdlib';
 import { createRubyBinding, isNativeBinaryOp, RUBY_OP_MAP } from '../bindings/ruby';
@@ -8,7 +8,18 @@ import { createRubyBinding, isNativeBinaryOp, RUBY_OP_MAP } from '../bindings/ru
  * Ruby compilation options
  */
 export interface RubyCompileOptions {
-  // Reserved for future options
+  /** If true, always wrap output as a lambda (even if _ is not used) */
+  asFunction?: boolean;
+}
+
+/**
+ * Result of Ruby compilation
+ */
+export interface RubyCompileResult {
+  /** The generated Ruby code */
+  code: string;
+  /** Whether the code uses the input variable _ */
+  usesInput: boolean;
 }
 
 /**
@@ -59,10 +70,30 @@ const rubyLib = createRubyBinding();
  * This compiler works in two phases:
  * 1. Transform AST to typed IR
  * 2. Emit Ruby from IR
+ *
+ * If the expression uses `_` (input variable), the output is a lambda
+ * that takes `_` as a parameter.
  */
 export function compileToRuby(expr: Expr, options?: RubyCompileOptions): string {
+  const result = compileToRubyWithMeta(expr, options);
+  return result.code;
+}
+
+/**
+ * Compiles Elo expressions to Ruby with metadata about input usage.
+ * Use this when you need to know if the expression uses input.
+ */
+export function compileToRubyWithMeta(expr: Expr, options?: RubyCompileOptions): RubyCompileResult {
   const ir = transform(expr);
-  return emitRuby(ir);
+  const needsInput = usesInput(ir) || options?.asFunction;
+  const code = emitRuby(ir);
+
+  if (needsInput) {
+    // Wrap as a lambda taking _ as input parameter
+    return { code: `->(_) { ${code} }`, usesInput: true };
+  }
+
+  return { code, usesInput: false };
 }
 
 /**
