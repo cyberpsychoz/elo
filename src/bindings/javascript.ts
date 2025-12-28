@@ -268,14 +268,19 @@ export function createJavaScriptBinding(): StdLib<string> {
   }
 
   // Numeric functions
+  // For int, round/floor/ceil are identity operations (optimization)
+  // For float and any, use Math.x (which also works correctly for ints)
   jsLib.register('abs', [Types.int], fnCall('Math.abs'));
   jsLib.register('abs', [Types.float], fnCall('Math.abs'));
   jsLib.register('round', [Types.int], (args, ctx) => ctx.emit(args[0]));
   jsLib.register('round', [Types.float], fnCall('Math.round'));
+  jsLib.register('round', [Types.any], fnCall('Math.round')); // Safe for any numeric type
   jsLib.register('floor', [Types.int], (args, ctx) => ctx.emit(args[0]));
   jsLib.register('floor', [Types.float], fnCall('Math.floor'));
+  jsLib.register('floor', [Types.any], fnCall('Math.floor')); // Safe for any numeric type
   jsLib.register('ceil', [Types.int], (args, ctx) => ctx.emit(args[0]));
   jsLib.register('ceil', [Types.float], fnCall('Math.ceil'));
+  jsLib.register('ceil', [Types.any], fnCall('Math.ceil')); // Safe for any numeric type
 
   // Temporal extraction functions
   jsLib.register('year', [Types.date], (args, ctx) => `${ctx.emit(args[0])}.year()`);

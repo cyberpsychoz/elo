@@ -233,14 +233,19 @@ export function createRubyBinding(): StdLib<string> {
   }
 
   // Numeric functions (use rubyMethod to handle binary op precedence)
+  // For int, round/floor/ceil are identity operations (optimization)
+  // For float and any, use the method (which also works correctly for ints)
   rubyLib.register('abs', [Types.int], rubyMethod('abs'));
   rubyLib.register('abs', [Types.float], rubyMethod('abs'));
   rubyLib.register('round', [Types.int], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('round', [Types.float], rubyMethod('round'));
+  rubyLib.register('round', [Types.any], rubyMethod('round')); // Safe for any numeric type
   rubyLib.register('floor', [Types.int], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('floor', [Types.float], rubyMethod('floor'));
+  rubyLib.register('floor', [Types.any], rubyMethod('floor')); // Safe for any numeric type
   rubyLib.register('ceil', [Types.int], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('ceil', [Types.float], rubyMethod('ceil'));
+  rubyLib.register('ceil', [Types.any], rubyMethod('ceil')); // Safe for any numeric type
 
   // Temporal extraction functions
   rubyLib.register('year', [Types.date], (args, ctx) => `${ctx.emit(args[0])}.year`);

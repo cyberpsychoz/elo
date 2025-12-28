@@ -116,13 +116,37 @@ export class StdLib<T> {
    * Tries progressively more general type signatures before giving up.
    * For example, for add(int, float), tries:
    *   add(int, float) -> add(any, float) -> add(int, any) -> add(any, any)
+   *
+   * If any argument type is 'any' and no match is found through generalization,
+   * falls back to finding any implementation with matching name and arity.
+   * This allows functions like abs(any) to find abs(int) or abs(float).
    */
   lookup(name: string, argTypes: EloType[]): FunctionEmitter<T> | undefined {
+    // First try typeGeneralizations (concrete → any)
     for (const generalized of typeGeneralizations(argTypes)) {
       const key = signatureKey(name, generalized);
       const impl = this.implementations.get(key);
       if (impl) return impl;
     }
+
+    // If any argument type is 'any', try to find any implementation with matching arity
+    // This is the "type specialization" fallback for dynamically-typed contexts
+    if (argTypes.some(t => typeEquals(t, Types.any))) {
+      const arity = argTypes.length;
+      for (const [key, impl] of this.implementations) {
+        // Check if key matches: "name:type1,type2,..." or just "name" for nullary
+        const colonIdx = key.indexOf(':');
+        const keyName = colonIdx === -1 ? key : key.substring(0, colonIdx);
+        if (keyName !== name) continue;
+
+        // Check arity matches
+        const keyArity = colonIdx === -1 ? 0 : key.substring(colonIdx + 1).split(',').length;
+        if (keyArity === arity) {
+          return impl;
+        }
+      }
+    }
+
     return undefined;
   }
 
