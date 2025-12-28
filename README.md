@@ -45,6 +45,8 @@ See also the Related work section below.
   - Durations: `P1D`, `PT1H30M`, `P1Y2M3D` (ISO8601)
   - Objects: `{name: 'Alice', age: 30}`
   - Arrays: `[1, 2, 3]`, `['a', 'b']`, `[1, 'mixed', true, null]`
+  - DataPaths: `.x.y.z`, `.items.0.name` (for navigating data structures)
+- **Data navigation**: `fetch(data, .path)` for safe access with null handling
 - **Parentheses** for grouping
 - **Multi-target compilation**:
   - Ruby (using `**` for power, `&&`/`||`/`!` for boolean logic, `Date.parse()`, `DateTime.parse()`, `ActiveSupport::Duration.parse()`)

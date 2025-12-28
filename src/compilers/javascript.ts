@@ -256,5 +256,13 @@ function emitJS(ir: IRExpr, requiredHelpers?: Set<string>): string {
       });
       return alts.join(' ?? ');
     }
+
+    case 'datapath': {
+      // Compile datapath as an array of segments
+      const segments = ir.segments.map(s =>
+        typeof s === 'string' ? JSON.stringify(s) : s.toString()
+      );
+      return `[${segments.join(', ')}]`;
+    }
   }
 }

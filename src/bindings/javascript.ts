@@ -322,6 +322,9 @@ export function createJavaScriptBinding(): StdLib<string> {
   // Null handling
   jsLib.register('isNull', [Types.any], helperCall('kIsNull'));
 
+  // Data path navigation
+  jsLib.register('fetch', [Types.any, Types.fn], helperCall('kFetch'));
+
   // Error handling
   jsLib.register('fail', [Types.string], (args, ctx) => {
     const message = ctx.emit(args[0]);

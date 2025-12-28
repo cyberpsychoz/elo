@@ -1,4 +1,4 @@
-import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply } from './ast';
+import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply, dataPath } from './ast';
 
 /**
  * Token types
@@ -118,10 +118,23 @@ class Lexer {
 
   private readNumber(): string {
     let num = '';
+    let hasDot = false;
     while (this.current && /[0-9.]/.test(this.current)) {
       // Stop before consuming '.' if it's part of '..' or '...' range operator
       if (this.current === '.' && this.peek() === '.') {
         break;
+      }
+      // Only allow one decimal point, and only if followed by a digit
+      if (this.current === '.') {
+        if (hasDot) {
+          // Already have a decimal point, stop here
+          break;
+        }
+        // Check if the next char is a digit - if not, this dot starts a new token
+        if (!/[0-9]/.test(this.peek())) {
+          break;
+        }
+        hasDot = true;
       }
       num += this.current;
       this.advance();
@@ -656,6 +669,11 @@ export class Parser {
       return this.arrayParse();
     }
 
+    // Handle datapath literals: .x.y.z
+    if (token.type === 'DOT') {
+      return this.datapathParse();
+    }
+
     throw new Error(`Unexpected token ${token.type} at position ${token.position}`);
   }
 
@@ -1130,6 +1148,124 @@ export class Parser {
 
     this.eat('RBRACKET');
     return arrayLiteral(elements);
+  }
+
+  /**
+   * Parse datapath literal: .x.y.z or .items.0.name
+   * Grammar: '.' pathSegment ('.' pathSegment)*
+   * pathSegment: IDENTIFIER | NUMBER
+   *
+   * Note: The lexer may tokenize "0.1" as a single NUMBER token when parsing
+   * consecutive numeric segments. We handle this by splitting such tokens.
+   * The lexer also treats ".0" as a NUMBER token (decimal number starting with dot).
+   */
+  private datapathParse(): Expr {
+    this.eat('DOT');
+
+    const segments: (string | number)[] = [];
+
+    // Parse first segment (required) - could be IDENTIFIER or NUMBER
+    if (this.currentToken.type === 'IDENTIFIER') {
+      segments.push(this.currentToken.value);
+      this.eat('IDENTIFIER');
+    } else if (this.currentToken.type === 'NUMBER') {
+      // NUMBER token might contain multiple segments (e.g., "0.1" -> [0, 1])
+      const numSegments = this.parseNumericPathSegments();
+      if (numSegments === null || numSegments.length === 0) {
+        throw new Error(`Expected identifier or number after '.' at position ${this.currentToken.position}`);
+      }
+      segments.push(...numSegments);
+    } else {
+      throw new Error(`Expected identifier or number after '.' at position ${this.currentToken.position}`);
+    }
+
+    // Parse additional segments
+    this.parseAdditionalPathSegments(segments);
+
+    return dataPath(segments);
+  }
+
+  /**
+   * Parse additional path segments after the first one
+   */
+  private parseAdditionalPathSegments(segments: (string | number)[]): void {
+    while (true) {
+      // Get a fresh reference to avoid TypeScript control flow narrowing issues
+      const token = this.currentToken;
+      if (token.type === 'DOT') {
+        this.eat('DOT');
+        // After a DOT, we expect IDENTIFIER or NUMBER
+        const nextToken = this.currentToken;
+        if (nextToken.type === 'IDENTIFIER') {
+          segments.push(nextToken.value);
+          this.eat('IDENTIFIER');
+        } else if (nextToken.type === 'NUMBER') {
+          const numSegments = this.parseNumericPathSegments();
+          if (numSegments === null || numSegments.length === 0) {
+            throw new Error(`Expected identifier or number after '.' at position ${this.currentToken.position}`);
+          }
+          segments.push(...numSegments);
+        } else {
+          throw new Error(`Expected identifier or number after '.' at position ${this.currentToken.position}`);
+        }
+      } else if (token.type === 'NUMBER' && token.value.startsWith('.')) {
+        // Handle NUMBER tokens that start with "." (e.g., ".0" tokenized as decimal)
+        const numValue = token.value;
+        this.eat('NUMBER');
+        // Skip the leading dot and split on remaining dots
+        const withoutLeadingDot = numValue.substring(1);
+        const parts = withoutLeadingDot.split('.');
+        for (const part of parts) {
+          if (part.length > 0) {
+            segments.push(parseInt(part, 10));
+          }
+        }
+      } else {
+        break;
+      }
+    }
+  }
+
+  /**
+   * Check if current token is a NUMBER that starts with a dot (e.g., ".0")
+   * This happens when the lexer treats ".0" as a decimal number
+   */
+  private isDecimalNumberToken(): boolean {
+    return this.currentToken.type === 'NUMBER' && this.currentToken.value.startsWith('.');
+  }
+
+  /**
+   * Parse path segments from a NUMBER token.
+   * A NUMBER token like "0.1" in datapath context should become segments [0, 1].
+   * Returns the array of integer segments, or null if not a valid NUMBER.
+   */
+  private parseNumericPathSegments(): number[] | null {
+    if (this.currentToken.type !== 'NUMBER') {
+      return null;
+    }
+    const tokenValue = this.currentToken.value;
+    this.eat('NUMBER');
+
+    // Split on decimal points to get individual integer segments
+    const parts = tokenValue.split('.');
+    return parts.filter(p => p.length > 0).map(p => parseInt(p, 10));
+  }
+
+  /**
+   * Parse a single path segment: IDENTIFIER or integer NUMBER
+   * Returns null if current token is not a valid segment.
+   */
+  private parsePathSegment(): string | number | null {
+    if (this.currentToken.type === 'IDENTIFIER') {
+      const value = this.currentToken.value;
+      this.eat('IDENTIFIER');
+      return value;
+    } else if (this.currentToken.type === 'NUMBER') {
+      const value = parseInt(this.currentToken.value, 10);
+      this.eat('NUMBER');
+      return value;
+    }
+    return null;
   }
 
   private expr(): Expr {

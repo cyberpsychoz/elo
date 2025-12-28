@@ -254,6 +254,14 @@ export function createSQLBinding(): StdLib<string> {
   // Null handling
   sqlLib.register('isNull', [Types.any], (args, ctx) => `${ctx.emit(args[0])} IS NULL`);
 
+  // Data path navigation - uses PostgreSQL jsonb #> operator with text array path
+  sqlLib.register('fetch', [Types.any, Types.fn], (args, ctx) => {
+    const data = ctx.emit(args[0]);
+    const path = ctx.emit(args[1]);
+    // Convert path array to text array and use jsonb #> operator
+    return `(${data})::jsonb #> (${path})::text[]`;
+  });
+
   // Error handling - uses elo_fail() PL/pgSQL function that raises an exception
   sqlLib.register('fail', [Types.string], (args, ctx) => `elo_fail(${ctx.emit(args[0])})`);
 

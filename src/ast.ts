@@ -2,7 +2,7 @@
  * AST node types for Elo expressions
  */
 
-export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | ObjectLiteral | ArrayLiteral | Alternative | Apply;
+export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | ObjectLiteral | ArrayLiteral | Alternative | Apply | DataPath;
 
 /**
  * Literal value (number or boolean)
@@ -305,4 +305,24 @@ export function alternative(alternatives: Expr[]): Alternative {
     throw new Error('Alternative expression must have at least two alternatives');
   }
   return { type: 'alternative', alternatives };
+}
+
+/**
+ * DataPath literal: .x.y.z or .items.0.name
+ * A path for navigating data structures, inspired by JSONPath.
+ * Segments can be property names (strings) or array indices (numbers).
+ */
+export interface DataPath {
+  type: 'datapath';
+  segments: (string | number)[];
+}
+
+/**
+ * Creates a datapath literal: .x.y.z
+ */
+export function dataPath(segments: (string | number)[]): DataPath {
+  if (segments.length === 0) {
+    throw new Error('DataPath must have at least one segment');
+  }
+  return { type: 'datapath', segments };
 }

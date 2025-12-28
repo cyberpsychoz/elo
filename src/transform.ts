@@ -30,6 +30,7 @@ import {
   irIf,
   irLambda,
   irAlternative,
+  irDataPath,
   inferType,
 } from './ir';
 import { EloType, Types } from './types';
@@ -154,6 +155,9 @@ function transformWithDepth(
       const argTypes = argsIR.map(inferType);
       return irApply(fnIR, argsIR, argTypes, Types.any);
     }
+
+    case 'datapath':
+      return irDataPath(expr.segments);
   }
 }
 

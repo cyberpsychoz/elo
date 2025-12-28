@@ -32,7 +32,8 @@ export type IRExpr =
   | IRMemberAccess
   | IRIf
   | IRLambda
-  | IRAlternative;
+  | IRAlternative
+  | IRDataPath;
 
 /**
  * Integer literal
@@ -224,6 +225,16 @@ export interface IRAlternative {
 }
 
 /**
+ * DataPath literal: .x.y.z or .items.0.name
+ * A path for navigating data structures.
+ * Segments can be property names (strings) or array indices (numbers).
+ */
+export interface IRDataPath {
+  type: 'datapath';
+  segments: (string | number)[];
+}
+
+/**
  * Factory functions for creating IR nodes
  */
 
@@ -299,6 +310,10 @@ export function irAlternative(alternatives: IRExpr[], resultType: EloType): IRAl
   return { type: 'alternative', alternatives, resultType };
 }
 
+export function irDataPath(segments: (string | number)[]): IRDataPath {
+  return { type: 'datapath', segments };
+}
+
 /**
  * Infer the type of an IR expression
  */
@@ -340,6 +355,8 @@ export function inferType(ir: IRExpr): EloType {
       return Types.fn;
     case 'alternative':
       return ir.resultType;
+    case 'datapath':
+      return Types.fn;  // DataPath is a function that takes data and returns a value
   }
 }
 
@@ -401,5 +418,8 @@ export function usesInput(ir: IRExpr, boundVars: Set<string> = new Set()): boole
 
     case 'alternative':
       return ir.alternatives.some(alt => usesInput(alt, boundVars));
+
+    case 'datapath':
+      return false;  // DataPath is a pure value, doesn't reference variables
   }
 }

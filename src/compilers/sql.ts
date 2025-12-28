@@ -192,5 +192,13 @@ function emitSQL(ir: IRExpr): string {
       const alts = ir.alternatives.map(emitSQL).join(', ');
       return `COALESCE(${alts})`;
     }
+
+    case 'datapath': {
+      // Compile datapath as an array of path segments for use with fetch
+      const segments = ir.segments.map(s =>
+        typeof s === 'string' ? `'${s}'` : s.toString()
+      );
+      return `ARRAY[${segments.join(', ')}]`;
+    }
   }
 }

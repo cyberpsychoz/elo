@@ -1208,3 +1208,71 @@ describe('Parser - Array Literals', () => {
     }
   });
 });
+
+describe('Parser - DataPath Literals', () => {
+  it('should parse simple datapath with one segment', () => {
+    const ast = parse('.x');
+    assert.deepStrictEqual(ast, {
+      type: 'datapath',
+      segments: ['x']
+    });
+  });
+
+  it('should parse datapath with multiple segments', () => {
+    const ast = parse('.x.y.z');
+    assert.deepStrictEqual(ast, {
+      type: 'datapath',
+      segments: ['x', 'y', 'z']
+    });
+  });
+
+  it('should parse datapath with numeric segments', () => {
+    const ast = parse('.items.0.name');
+    assert.deepStrictEqual(ast, {
+      type: 'datapath',
+      segments: ['items', 0, 'name']
+    });
+  });
+
+  it('should parse datapath with only numeric segments', () => {
+    const ast = parse('.0.1.2');
+    assert.deepStrictEqual(ast, {
+      type: 'datapath',
+      segments: [0, 1, 2]
+    });
+  });
+
+  it('should parse datapath in function call', () => {
+    const ast = parse('fetch(data, .name)');
+    assert.strictEqual(ast.type, 'function_call');
+    if (ast.type === 'function_call') {
+      assert.strictEqual(ast.name, 'fetch');
+      assert.strictEqual(ast.args.length, 2);
+      assert.deepStrictEqual(ast.args[1], {
+        type: 'datapath',
+        segments: ['name']
+      });
+    }
+  });
+
+  it('should parse datapath in pipe expression', () => {
+    const ast = parse('x |> fetch(.a.b)');
+    assert.strictEqual(ast.type, 'function_call');
+    if (ast.type === 'function_call') {
+      assert.strictEqual(ast.name, 'fetch');
+      assert.strictEqual(ast.args.length, 2);
+      assert.deepStrictEqual(ast.args[1], {
+        type: 'datapath',
+        segments: ['a', 'b']
+      });
+    }
+  });
+
+  it('should throw error for datapath without segments', () => {
+    assert.throws(() => parse('. '), /Expected identifier or number/);
+  });
+
+  it('should throw error for datapath ending with dot', () => {
+    assert.throws(() => parse('.x.'), /Expected identifier or number/);
+  });
+});

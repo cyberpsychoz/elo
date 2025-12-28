@@ -66,6 +66,7 @@ import Footer from '../components/Footer.astro';
             <tr><td><code>Tuple</code></td><td>Key-value tuples</td><td><code>&#123;name: 'Alice', age: 30&#125;</code></td></tr>
             <tr><td><code>List</code></td><td>Ordered collections</td><td><code>[1, 2, 3]</code>, <code>['a', 'b']</code></td></tr>
             <tr><td><code>Function</code></td><td>Lambda functions</td><td><code>fn( x ~> x * 2 )</code></td></tr>
+            <tr><td><code>DataPath</code></td><td>Data structure paths</td><td><code>.name</code>, <code>.items.0</code></td></tr>
             <tr><td><code>Null</code></td><td>Null values</td><td><code>null</code></td></tr>
           </tbody>
         </table>
@@ -124,6 +125,22 @@ import Footer from '../components/Footer.astro';
           <div class="example-header">Time Durations</div>
           <pre class="example-code">PT2H30M</pre>
           <p class="example-desc">2 hours and 30 minutes. Use <code>PT</code> for time-only durations.</p>
+        </div>
+        <h3>Data Paths</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Path</div>
+          <pre class="example-code">.name</pre>
+          <p class="example-desc">A path for accessing the <code>name</code> property. Use with <code>fetch()</code>.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Nested Path</div>
+          <pre class="example-code">.user.address.city</pre>
+          <p class="example-desc">Navigate through nested objects.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Path with Array Index</div>
+          <pre class="example-code">.items.0.name</pre>
+          <p class="example-desc">Access array elements by index.</p>
         </div>
       </section>
 

@@ -1,0 +1,8 @@
+assert(fetch({name: 'Alice'}, .name) == 'Alice')
+assert(fetch({user: {name: 'Bob'}}, .user.name) == 'Bob')
+assert(fetch({items: [10, 20, 30]}, .items.0) == 10)
+assert(fetch({items: [10, 20, 30]}, .items.2) == 30)
+assert(fetch({list: [{id: 1}, {id: 2}]}, .list.0.id) == 1)
+assert(isNull(fetch({name: 'Alice'}, .missing)))
+assert(isNull(fetch({name: 'Alice'}, .name.child)))
+assert(isNull(fetch(null, .x)))

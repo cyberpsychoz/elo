@@ -71,6 +71,20 @@ export const JS_HELPERS: Record<string, string> = {
   return 'Tuple';
 }`,
   kIsNull: `function kIsNull(v) { return v === null || v === undefined; }`,
+  kFetch: `function kFetch(data, path) {
+  let current = data;
+  for (const segment of path) {
+    if (current === null || current === undefined) return null;
+    if (typeof segment === 'number') {
+      if (!Array.isArray(current)) return null;
+      current = current[segment];
+    } else {
+      if (typeof current !== 'object' || current === null) return null;
+      current = current[segment];
+    }
+  }
+  return current === undefined ? null : current;
+}`,
   // Type selectors
   kInt: `function kInt(v) {
   if (v === null || v === undefined) return null;

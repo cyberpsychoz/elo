@@ -208,5 +208,13 @@ function emitRuby(ir: IRExpr): string {
       parts.push(last);
       return `->() { ${parts.join('; ')} }.call`;
     }
+
+    case 'datapath': {
+      // Compile datapath as an array of segments (symbols for strings, integers for numbers)
+      const segments = ir.segments.map(s =>
+        typeof s === 'string' ? `:${s}` : s.toString()
+      );
+      return `[${segments.join(', ')}]`;
+    }
   }
 }
