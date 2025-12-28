@@ -234,7 +234,7 @@ import Footer from '../components/Footer.astro';
             <div class="fn-name">filter</div>
             <div class="fn-sig">(arr: Array, predicate: Fn) → Array</div>
             <p class="fn-desc">Returns elements where predicate returns <code>true</code>. <em>JS/Ruby only.</em></p>
-            <div class="fn-example"><code class="example-code">filter([1, 2, 3, 4], fn(x | x > 2))</code><span class="fn-result">→ [3, 4]</span></div>
+            <div class="fn-example"><code class="example-code">filter([1, 2, 3, 4], fn(x ~> x > 2))</code><span class="fn-result">→ [3, 4]</span></div>
           </div>
           <div class="stdlib-fn" data-action="click->doc#tryExample">
             <div class="fn-name">reduce</div>
@@ -246,13 +246,13 @@ import Footer from '../components/Footer.astro';
             <div class="fn-name">any</div>
             <div class="fn-sig">(arr: Array, predicate: Fn) → Bool</div>
             <p class="fn-desc">Returns <code>true</code> if any element satisfies predicate. <em>JS/Ruby only.</em></p>
-            <div class="fn-example"><code class="example-code">any([1, 2, 3], fn(x | x > 2))</code><span class="fn-result">→ true</span></div>
+            <div class="fn-example"><code class="example-code">any([1, 2, 3], fn(x ~> x > 2))</code><span class="fn-result">→ true</span></div>
           </div>
           <div class="stdlib-fn" data-action="click->doc#tryExample">
             <div class="fn-name">all</div>
             <div class="fn-sig">(arr: Array, predicate: Fn) → Bool</div>
             <p class="fn-desc">Returns <code>true</code> if all elements satisfy predicate. <em>JS/Ruby only.</em></p>
-            <div class="fn-example"><code class="example-code">all([1, 2, 3], fn(x | x > 0))</code><span class="fn-result">→ true</span></div>
+            <div class="fn-example"><code class="example-code">all([1, 2, 3], fn(x ~> x > 0))</code><span class="fn-result">→ true</span></div>
           </div>
         </div>
       </section>

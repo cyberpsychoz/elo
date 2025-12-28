@@ -102,7 +102,7 @@ in add(double(5), 3)`;
   it('map-filter: should evaluate correctly', () => {
     const code = `let numbers = [1, 2, 3, 4, 5] in {
   doubled: map(numbers, fn(x ~> x * 2)),
-  evens: filter(numbers, fn(x | x % 2 == 0)),
+  evens: filter(numbers, fn(x ~> x % 2 == 0)),
   sum: reduce(numbers, 0, fn(acc, x ~> acc + x))
 }`;
     const result = compile(code, { runtime }) as Record<string, unknown>;

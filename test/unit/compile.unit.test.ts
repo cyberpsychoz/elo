@@ -60,9 +60,9 @@ describe('compile - temporal lambdas', () => {
   });
 });
 
-describe('compile - predicates', () => {
-  it('compiles predicate', () => {
-    const fn = compile<(x: number) => boolean>('fn(x | x > 10)', { runtime });
+describe('compile - lambdas returning boolean', () => {
+  it('compiles lambda returning boolean', () => {
+    const fn = compile<(x: number) => boolean>('fn(x ~> x > 10)', { runtime });
     assert.strictEqual(fn(5), false);
     assert.strictEqual(fn(15), true);
   });

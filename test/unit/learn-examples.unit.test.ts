@@ -126,16 +126,16 @@ describe('Learn Page Examples - Lesson 11: Transforming Lists', () => {
   it('should evaluate map, filter, reduce examples', () => {
     assert.deepStrictEqual(compile('map([1, 2, 3], fn(x ~> x * 2))', { runtime }), [2, 4, 6]);
     assert.deepStrictEqual(compile("map(['hello', 'world'], fn(s ~> upper(s)))", { runtime }), ['HELLO', 'WORLD']);
-    assert.deepStrictEqual(compile('filter([1, 2, 3, 4, 5], fn(x | x > 2))', { runtime }), [3, 4, 5]);
+    assert.deepStrictEqual(compile('filter([1, 2, 3, 4, 5], fn(x ~> x > 2))', { runtime }), [3, 4, 5]);
     assert.strictEqual(compile('reduce([1, 2, 3, 4], 0, fn(sum, x ~> sum + x))', { runtime }), 10);
   });
 });
 
 describe('Learn Page Examples - Lesson 12: Checking Lists', () => {
   it('should evaluate any, all examples', () => {
-    assert.strictEqual(compile('any([1, 2, 3], fn(x | x > 2))', { runtime }), true);
-    assert.strictEqual(compile('all([1, 2, 3], fn(x | x > 0))', { runtime }), true);
-    assert.strictEqual(compile('let prices = [10, 25, 5, 30] in all(prices, fn(p | p < 100))', { runtime }), true);
+    assert.strictEqual(compile('any([1, 2, 3], fn(x ~> x > 2))', { runtime }), true);
+    assert.strictEqual(compile('all([1, 2, 3], fn(x ~> x > 0))', { runtime }), true);
+    assert.strictEqual(compile('let prices = [10, 25, 5, 30] in all(prices, fn(p ~> p < 100))', { runtime }), true);
   });
 });
 

@@ -32,7 +32,6 @@ export type IRExpr =
   | IRMemberAccess
   | IRIf
   | IRLambda
-  | IRPredicate
   | IRAlternative;
 
 /**
@@ -215,17 +214,6 @@ export interface IRLambda {
 }
 
 /**
- * Predicate expression: fn( params | body )
- * A predicate always returns a boolean.
- */
-export interface IRPredicate {
-  type: 'predicate';
-  params: IRLambdaParam[];
-  body: IRExpr;
-  // Result type is always boolean for predicates
-}
-
-/**
  * Alternative expression: a | b | c
  * Evaluates alternatives left-to-right, returns first non-null value.
  */
@@ -307,10 +295,6 @@ export function irLambda(params: IRLambdaParam[], body: IRExpr, resultType: EloT
   return { type: 'lambda', params, body, resultType };
 }
 
-export function irPredicate(params: IRLambdaParam[], body: IRExpr): IRPredicate {
-  return { type: 'predicate', params, body };
-}
-
 export function irAlternative(alternatives: IRExpr[], resultType: EloType): IRAlternative {
   return { type: 'alternative', alternatives, resultType };
 }
@@ -353,9 +337,7 @@ export function inferType(ir: IRExpr): EloType {
     case 'if':
       return inferType(ir.then);
     case 'lambda':
-      return Types.fn;  // Lambda is a function type
-    case 'predicate':
-      return Types.fn;  // Predicate is also a function type (that returns bool)
+      return Types.fn;
     case 'alternative':
       return ir.resultType;
   }
@@ -410,9 +392,8 @@ export function usesInput(ir: IRExpr, boundVars: Set<string> = new Set()): boole
              usesInput(ir.then, boundVars) ||
              usesInput(ir.else, boundVars);
 
-    case 'lambda':
-    case 'predicate': {
-      // Lambda/predicate params shadow outer variables
+    case 'lambda': {
+      // Lambda params shadow outer variables
       const newBound = new Set(boundVars);
       ir.params.forEach(p => newBound.add(p.name));
       return usesInput(ir.body, newBound);

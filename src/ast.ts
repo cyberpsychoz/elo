@@ -2,7 +2,7 @@
  * AST node types for Elo expressions
  */
 
-export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | Predicate | ObjectLiteral | ArrayLiteral | Alternative | Apply;
+export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | ObjectLiteral | ArrayLiteral | Alternative | Apply;
 
 /**
  * Literal value (number or boolean)
@@ -161,16 +161,6 @@ export interface Lambda {
 }
 
 /**
- * Predicate expression: fn( params | body )
- * A predicate is a special function that always returns a boolean.
- */
-export interface Predicate {
-  type: 'predicate';
-  params: string[];
-  body: Expr;
-}
-
-/**
  * Helper functions to create AST nodes
  */
 export function literal(value: number | boolean): Literal {
@@ -258,13 +248,6 @@ export function ifExpr(condition: Expr, thenBranch: Expr, elseBranch: Expr): IfE
  */
 export function lambda(params: string[], body: Expr): Lambda {
   return { type: 'lambda', params, body };
-}
-
-/**
- * Creates a predicate expression: fn( params | body )
- */
-export function predicate(params: string[], body: Expr): Predicate {
-  return { type: 'predicate', params, body };
 }
 
 /**

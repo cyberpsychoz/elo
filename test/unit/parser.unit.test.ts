@@ -942,76 +942,6 @@ describe('Parser - Lambda Sugar (single param)', () => {
   });
 });
 
-describe('Parser - Predicate Expressions', () => {
-  it('should parse simple predicate with one parameter', () => {
-    const ast = parse('fn( x | x )');
-    assert.strictEqual(ast.type, 'predicate');
-    if (ast.type === 'predicate') {
-      assert.deepStrictEqual(ast.params, ['x']);
-      assert.deepStrictEqual(ast.body, { type: 'variable', name: 'x' });
-    }
-  });
-
-  it('should parse predicate with comparison body', () => {
-    const ast = parse('fn( x | x > 0 )');
-    assert.strictEqual(ast.type, 'predicate');
-    if (ast.type === 'predicate') {
-      assert.deepStrictEqual(ast.params, ['x']);
-      assert.strictEqual(ast.body.type, 'binary');
-    }
-  });
-
-  it('should parse predicate with multiple parameters', () => {
-    const ast = parse('fn( x, y | x > y )');
-    assert.strictEqual(ast.type, 'predicate');
-    if (ast.type === 'predicate') {
-      assert.deepStrictEqual(ast.params, ['x', 'y']);
-      assert.strictEqual(ast.body.type, 'binary');
-    }
-  });
-
-  it('should parse predicate with logical operators', () => {
-    const ast = parse('fn( x | x > 0 && x < 100 )');
-    assert.strictEqual(ast.type, 'predicate');
-    if (ast.type === 'predicate') {
-      assert.deepStrictEqual(ast.params, ['x']);
-      assert.strictEqual(ast.body.type, 'binary');
-    }
-  });
-
-  it('should parse predicate with member access in body', () => {
-    const ast = parse('fn( _ | _.active )');
-    assert.strictEqual(ast.type, 'predicate');
-    if (ast.type === 'predicate') {
-      assert.deepStrictEqual(ast.params, ['_']);
-      assert.strictEqual(ast.body.type, 'member_access');
-    }
-  });
-
-  it('should distinguish predicate from lambda', () => {
-    const predAst = parse('fn( x | x > 0 )');
-    const lambdaAst = parse('fn( x ~> x * 2 )');
-
-    assert.strictEqual(predAst.type, 'predicate');
-    assert.strictEqual(lambdaAst.type, 'lambda');
-  });
-
-  it('should parse predicate invocation in let', () => {
-    const ast = parse('let isPositive = fn( x | x > 0 ) in isPositive(5)');
-    assert.strictEqual(ast.type, 'let');
-    if (ast.type === 'let') {
-      assert.strictEqual(ast.bindings[0].name, 'isPositive');
-      assert.strictEqual(ast.bindings[0].value.type, 'predicate');
-      assert.strictEqual(ast.body.type, 'function_call');
-    }
-  });
-
-  it('should reject uppercase parameter names in predicates', () => {
-    // Uppercase names are reserved for Types and Selectors
-    assert.throws(() => parse('fn( X | X > 0 )'), /Expected IDENTIFIER/);
-  });
-});
-
 describe('Parser - Pipe Operator', () => {
   it('should parse simple pipe: x |> f()', () => {
     const ast = parse("'hello' |> upper()");
@@ -1128,14 +1058,10 @@ describe('Parser - Pipe Operator', () => {
     }
   });
 
-  it('should not confuse |> with | (predicate) or || (or)', () => {
+  it('should not confuse |> with || (or)', () => {
     // |> is pipe
     const pipeAst = parse("'x' |> upper()");
     assert.strictEqual(pipeAst.type, 'function_call');
-
-    // | inside fn() is predicate
-    const predAst = parse('fn( x | x > 0 )');
-    assert.strictEqual(predAst.type, 'predicate');
 
     // || is or
     const orAst = parse('true || false');

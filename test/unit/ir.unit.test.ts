@@ -13,7 +13,6 @@ import {
   irLet,
   irMemberAccess,
   irLambda,
-  irPredicate,
   irAlternative,
   irArray,
   irObject,
@@ -318,11 +317,12 @@ describe('usesInput', () => {
     assert.strictEqual(usesInput(node), true);
   });
 
-  it('returns false when _ is shadowed by predicate param', () => {
-    // fn(_ | _ > 0)
-    const node = irPredicate(
+  it('returns false when _ is shadowed by lambda param', () => {
+    // fn(_ ~> _ > 0)
+    const node = irLambda(
       [{ name: '_', inferredType: Types.int }],
-      irCall('gt', [irVariable('_'), irInt(0)], [Types.int, Types.int], Types.bool)
+      irCall('gt', [irVariable('_'), irInt(0)], [Types.int, Types.int], Types.bool),
+      Types.bool
     );
     assert.strictEqual(usesInput(node), false);
   });

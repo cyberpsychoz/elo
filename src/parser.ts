@@ -1,4 +1,4 @@
-import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, predicate, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply } from './ast';
+import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply } from './ast';
 
 /**
  * Token types
@@ -1038,9 +1038,7 @@ export class Parser {
   }
 
   /**
-   * Parse lambda or predicate expression:
-   * - Lambda: fn( ~> body ) or fn( x ~> body ) or fn( x, y ~> body )
-   * - Predicate: fn( x | body ) or fn( x, y | body )
+   * Parse lambda expression: fn( ~> body ) or fn( x ~> body ) or fn( x, y ~> body )
    */
   private lambdaParse(): Expr {
     this.eat('FN');
@@ -1049,7 +1047,7 @@ export class Parser {
     const params: string[] = [];
 
     // Check for parameterless lambda: fn( ~> body )
-    if (this.currentToken.type !== 'ARROW' && this.currentToken.type !== 'PIPE') {
+    if (this.currentToken.type !== 'ARROW') {
       // Parse first parameter
       const firstName = this.currentToken.value;
       this.eat('IDENTIFIER');
@@ -1064,18 +1062,12 @@ export class Parser {
       }
     }
 
-    // Check if it's a predicate (|) or lambda (~>)
-    const isPredicate = this.currentToken.type === 'PIPE';
-    if (isPredicate) {
-      this.eat('PIPE');
-    } else {
-      this.eat('ARROW');
-    }
+    this.eat('ARROW');
 
     const body = this.expr();
     this.eat('RPAREN');
 
-    return isPredicate ? predicate(params, body) : lambda(params, body);
+    return lambda(params, body);
   }
 
   /**

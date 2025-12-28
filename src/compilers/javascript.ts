@@ -238,18 +238,11 @@ function emitJS(ir: IRExpr, requiredHelpers?: Set<string>): string {
       return `(${params}) => ${body}`;
     }
 
-    case 'predicate': {
-      const params = ir.params.map(p => p.name).join(', ');
-      const body = ctx.emit(ir.body);
-      // Use !! to ensure boolean return for predicates
-      return `(${params}) => !!(${body})`;
-    }
-
     case 'apply': {
       const fn = ctx.emit(ir.fn);
       const args = ir.args.map(a => ctx.emit(a)).join(', ');
-      // Wrap function in parens if it's a lambda or other complex expression
-      const needsParens = ir.fn.type === 'lambda' || ir.fn.type === 'predicate';
+      // Wrap function in parens if it's a lambda expression
+      const needsParens = ir.fn.type === 'lambda';
       const fnExpr = needsParens ? `(${fn})` : fn;
       return `${fnExpr}(${args})`;
     }

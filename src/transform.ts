@@ -29,7 +29,6 @@ import {
   irMemberAccess,
   irIf,
   irLambda,
-  irPredicate,
   irAlternative,
   inferType,
 } from './ir';
@@ -134,9 +133,6 @@ function transformWithDepth(
 
     case 'lambda':
       return transformLambda(expr.params, expr.body, env, defining, nextDepth, maxDepth);
-
-    case 'predicate':
-      return transformPredicate(expr.params, expr.body, env, defining, nextDepth, maxDepth);
 
     case 'object':
       return irObject(
@@ -328,10 +324,10 @@ function transformLet(
   // Build a new environment with the bindings
   const newEnv = new Map(env);
   const irBindings = bindings.map((binding) => {
-    // If the value is a lambda or predicate, add the binding name to the defining set
+    // If the value is a lambda, add the binding name to the defining set
     // to detect recursive calls within the lambda body
-    const isLambdaLike = binding.value.type === 'lambda' || binding.value.type === 'predicate';
-    const newDefining = isLambdaLike ? new Set([...defining, binding.name]) : defining;
+    const isLambda = binding.value.type === 'lambda';
+    const newDefining = isLambda ? new Set([...defining, binding.name]) : defining;
 
     const valueIR = transformWithDepth(binding.value, newEnv, newDefining, depth, maxDepth);
     const valueType = inferType(valueIR);
@@ -364,28 +360,6 @@ function transformLambda(
   const bodyIR = transformWithDepth(body, newEnv, defining, depth, maxDepth);
   const resultType = inferType(bodyIR);
   return irLambda(irParams, bodyIR, resultType);
-}
-
-/**
- * Transform a predicate expression
- */
-function transformPredicate(
-  params: string[],
-  body: Expr,
-  env: TypeEnv,
-  defining: DefiningSet,
-  depth: number,
-  maxDepth: number
-): IRExpr {
-  // Build a new environment with params as 'any' type
-  const newEnv = new Map(env);
-  const irParams = params.map((name) => {
-    newEnv.set(name, Types.any);
-    return { name, inferredType: Types.any };
-  });
-
-  const bodyIR = transformWithDepth(body, newEnv, defining, depth, maxDepth);
-  return irPredicate(irParams, bodyIR);
 }
 
 /**
