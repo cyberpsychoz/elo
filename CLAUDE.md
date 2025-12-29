@@ -70,3 +70,18 @@ NEVER implement anything else that the very next step (first todo tasks, by
 alphabetic order). Other tasks are informative and may help making future-proof
 design decisions. If it leads to unnecessary complexity, we just forget about
 them and act as if they were not written at all.
+
+When a tasks involves enhancing the Elo language (typically adding a new construct),
+a typical list of things to do is :
+
+- Add the construct in parser and add unit tests for it
+- Adapt the intermediary representation IR if needed, add unit tests if needed
+- Add acceptance tests (fixtures) that assert expected behavior(s)
+- Extend the compilers for the new construct, under acceptance tests
+- Document in README then in Learn, Reference, and Stdlib sections of the website.
+  Think about the relevant sections to adapt, to avoid end-user documentation bloat.
+- Re-run all the tests, since some consistency tests exist that check the documentation.
+- Commit and mark the task done.
+
+If you block on something and are in autonomous mode, adapt the task with your
+analysis and questions, move it to `analyzed` and move to the next task.
