@@ -10,205 +10,110 @@ const url = (path: string) => `${base}${path}`;
   <main class="learn-panel" data-controller="doc learn-progress">
     <aside class="learn-toc">
       <nav>
-        <span class="toc-section">Basics</span>
-        <a href="#lesson-1" data-learn-progress-target="tocLink"><span class="toc-check"></span>1. Playing with Numbers</a>
-        <a href="#lesson-2" data-learn-progress-target="tocLink"><span class="toc-check"></span>2. Words, Words, Words</a>
-        <a href="#lesson-3" data-learn-progress-target="tocLink"><span class="toc-check"></span>3. True or False?</a>
-        <a href="#lesson-4" data-learn-progress-target="tocLink"><span class="toc-check"></span>4. Making Decisions</a>
-        <a href="#lesson-5" data-learn-progress-target="tocLink"><span class="toc-check"></span>5. Naming Things</a>
-        <span class="toc-section">Intermediate</span>
-        <a href="#lesson-6" data-learn-progress-target="tocLink"><span class="toc-check"></span>6. Time Flies</a>
-        <a href="#lesson-7" data-learn-progress-target="tocLink"><span class="toc-check"></span>7. Bundling Data</a>
-        <a href="#lesson-8" data-learn-progress-target="tocLink"><span class="toc-check"></span>8. Input Data</a>
-        <a href="#lesson-9" data-learn-progress-target="tocLink"><span class="toc-check"></span>9. Lists of Things</a>
-        <a href="#lesson-10" data-learn-progress-target="tocLink"><span class="toc-check"></span>10. Building Blocks</a>
-        <a href="#lesson-11" data-learn-progress-target="tocLink"><span class="toc-check"></span>11. Piping It Through</a>
-        <span class="toc-section">Advanced</span>
-        <a href="#lesson-12" data-learn-progress-target="tocLink"><span class="toc-check"></span>12. Transforming Lists</a>
-        <a href="#lesson-13" data-learn-progress-target="tocLink"><span class="toc-check"></span>13. Checking Lists</a>
-        <a href="#lesson-14" data-learn-progress-target="tocLink"><span class="toc-check"></span>14. Handling Nulls</a>
-        <a href="#lesson-15" data-learn-progress-target="tocLink"><span class="toc-check"></span>15. Time Ranges</a>
-        <a href="#lesson-16" data-learn-progress-target="tocLink"><span class="toc-check"></span>16. Parsing Data</a>
+        <a href="#chapter-1" data-learn-progress-target="tocLink"><span class="toc-check"></span>1. Introduction</a>
+        <a href="#chapter-2" data-learn-progress-target="tocLink"><span class="toc-check"></span>2. Extended Arithmetics</a>
+        <a href="#chapter-3" data-learn-progress-target="tocLink"><span class="toc-check"></span>3. Data Structures</a>
+        <a href="#chapter-4" data-learn-progress-target="tocLink"><span class="toc-check"></span>4. Functions</a>
+        <a href="#chapter-5" data-learn-progress-target="tocLink"><span class="toc-check"></span>5. Program Structure</a>
+        <a href="#chapter-6" data-learn-progress-target="tocLink"><span class="toc-check"></span>6. Advanced Processing</a>
+        <a href="#chapter-7" data-learn-progress-target="tocLink"><span class="toc-check"></span>7. Input Data</a>
         <span class="toc-section">Next</span>
-        <a href="#lesson-next">What's Next?</a>
+        <a href="#chapter-next">What's Next?</a>
       </nav>
     </aside>
     <article class="learn-content">
       <header class="page-header">
         <h1>Learn Elo</h1>
         <p class="page-intro">
-          Programming doesn't have to be scary. Think of Elo like a powerful calculator: you write expressions,
-          and Elo gives you results. No complex programs—just math, text, dates, and logic.
-          Let's learn together, one step at a time.
+          Elo is an expression language that compiles to JavaScript, Ruby, and SQL.
+          Think of it as an extended calculator: you write expressions, Elo gives you results.
+          Let's explore what makes Elo special.
         </p>
       </header>
 
-      <section class="lesson" id="lesson-1" data-learn-progress-target="lesson">
+      <section class="lesson" id="chapter-1" data-learn-progress-target="lesson">
         <div class="lesson-header">
-          <h2>1. Playing with Numbers</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-1" data-learn-progress-target="toggleBtn">
+          <h2>1. Introduction</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-1" data-learn-progress-target="toggleBtn">
             <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
           </button>
         </div>
         <p>
-          Let's start with something familiar: math. Elo understands numbers and basic arithmetic.
-          No special syntax, no tricks—just write it like you'd write it on paper.
+          Here's a taste of what Elo can do. Don't worry if you don't understand everything yet—
+          that's what the next chapters are for!
         </p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let
+  signup = D2024-01-15,
+  trial = P30D
+in
+  TODAY > signup + trial</pre>
+        </div>
+        <p>
+          This checks if a 30-day trial has expired. Notice how naturally Elo handles dates and durations.
+        </p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">[10, 25, 5, 30] |> filter(x ~> x > 15) |> map(x ~> x * 1.21)</pre>
+        </div>
+        <p>
+          This filters a list to keep values above 15, then applies VAT to each. Data flows left to right.
+        </p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">_.email |> lower |> endsWith('@company.com')</pre>
+        </div>
+        <p>
+          This checks if an input email belongs to a company domain. The <code>_</code> is input data.
+        </p>
+        <p class="lesson-tip">
+          <strong>Write once, run anywhere:</strong> These expressions compile to JavaScript, Ruby, and SQL.
+          The same logic works in your browser, on your server, or in your database.
+        </p>
+      </section>
+
+      <section class="lesson" id="chapter-2" data-learn-progress-target="lesson">
+        <div class="lesson-header">
+          <h2>2. Extended Arithmetics</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-2" data-learn-progress-target="toggleBtn">
+            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
+          </button>
+        </div>
+        <p>
+          You know how calculators work with numbers. Elo extends this idea to other types.
+          The same operators (<code>+</code>, <code>-</code>, <code>*</code>) work on different kinds of data.
+        </p>
+
+        <h3>Numbers</h3>
+        <p>Just like a calculator:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">2 + 3 * 4</pre>
         </div>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">(2 + 3) * 4</pre>
+          <pre class="example-code">2 ^ 10</pre>
         </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">20 / 4 + 6 * 7</pre>
-        </div>
-      </section>
 
-      <section class="lesson" id="lesson-2" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>2. Words, Words, Words</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-2" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Text in Elo is called a <em>String</em>. Just wrap your words in quotes:
-        </p>
+        <h3>Booleans</h3>
+        <p>True/false values with <code>and</code>, <code>or</code>, <code>not</code>:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">'Hello, World!'</pre>
+          <pre class="example-code">5 > 3 and 10 <= 10</pre>
         </div>
-        <p>
-          Want to combine strings? Use the <code>+</code> operator (think of it as gluing words together):
-        </p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">not (1 == 2) or false</pre>
+        </div>
+
+        <h3>Strings</h3>
+        <p>Text with <code>+</code> for concatenation, <code>*</code> for repetition:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">'Hello, ' + 'World!'</pre>
         </div>
-        <p>
-          Need to repeat a string? Use the <code>*</code> operator:
-        </p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">'hi' * 3</pre>
+          <pre class="example-code">'ho! ' * 3</pre>
         </div>
-        <p>
-          Elo has handy functions to transform text:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">upper('hello')</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">trim('  spaces  ')</pre>
-        </div>
-        <p class="lesson-tip">
-          <strong>Keep it simple:</strong> Elo uses single quotes for all strings. No double quotes, no backticks—just one way to write text.
-          See more <a href={url('/stdlib#string')}>string functions</a> in the stdlib.
-        </p>
-      </section>
 
-      <section class="lesson" id="lesson-3" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>3. True or False?</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-3" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Computers love yes/no questions. In Elo, we have <code>true</code> and <code>false</code>:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">5 > 3</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">10 <= 10</pre>
-        </div>
-        <p>
-          You can combine conditions with <code>and</code>, <code>or</code>, and <code>not</code>:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">true and false</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">5 > 3 or 2 == 2</pre>
-        </div>
-        <p class="lesson-tip">
-          <strong>Real-world example:</strong> <code>age >= 18 and hasLicense</code> — Can this person drive?
-          See all <a href={url('/docs#operators')}>operators</a>.
-        </p>
-      </section>
-
-      <section class="lesson" id="lesson-4" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>4. Making Decisions</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-4" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Life is full of choices. Elo handles them with <code>if</code>/<code>then</code>/<code>else</code>:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">if 5 > 3 then 'yes' else 'no'</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">if 10 > 100 then 'big' else 'small'</pre>
-        </div>
-        <p>
-          Notice something? In Elo, <code>if</code> is an <em>expression</em>—it always produces a value.
-          There's no "do this, then do that." Everything is about computing a result.
-        </p>
-        <p class="lesson-tip">
-          <strong>Think spreadsheets:</strong> It's like Excel's <code>=IF(A1>10, "big", "small")</code>, but cleaner!
-        </p>
-      </section>
-
-      <section class="lesson" id="lesson-5" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>5. Naming Things</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-5" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Repeating yourself is boring. Give values a name with <code>let</code>:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let price = 100 in price * 1.21</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let name = 'World' in 'Hello, ' + name + '!'</pre>
-        </div>
-        <p>
-          You can name multiple things:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let width = 10, height = 5 in width * height</pre>
-        </div>
-        <p class="lesson-tip">
-          <strong>No surprises:</strong> In Elo, names don't change. Once <code>price</code> is 100, it's always 100.
-          No reassignments, no mutations, no bugs from unexpected changes. That's a feature, not a bug!
-          More on <a href={url('/docs#variables')}>variables</a>.
-        </p>
-      </section>
-
-      <section class="lesson" id="lesson-6" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>6. Time Flies</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-6" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Elo speaks dates and times fluently. Write them naturally:
-        </p>
+        <h3>Dates &amp; Durations</h3>
+        <p>Dates start with <code>D</code>, durations with <code>P</code> (ISO 8601):</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">D2024-12-25</pre>
         </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">TODAY</pre>
-        </div>
-        <p>
-          The magic happens with <em>durations</em>. Want to know what's 30 days from today?
-        </p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">TODAY + P30D</pre>
         </div>
@@ -216,314 +121,222 @@ const url = (path: string) => `${base}${path}`;
           <pre class="example-code">NOW + PT2H30M</pre>
         </div>
         <p>
-          Extract parts of dates:
+          You can subtract dates to get durations, and scale durations:
         </p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">year(TODAY)</pre>
+          <pre class="example-code">D2024-12-31 - D2024-01-01</pre>
         </div>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">month(TODAY)</pre>
+          <pre class="example-code">P1D * 7</pre>
         </div>
+
         <p class="lesson-tip">
-          <strong>Pro tip:</strong> <code>P1Y2M3D</code> means "1 year, 2 months, 3 days."
-          <code>PT</code> is for time: <code>PT1H30M</code> = 1 hour 30 minutes.
-          Explore all <a href={url('/stdlib#temporal')}>temporal functions</a>.
+          <strong>The pattern:</strong> Operators like <code>+</code>, <code>-</code>, <code>*</code> are not just for numbers.
+          Each type defines what these operations mean. See the <a href={url('/stdlib')}>stdlib</a> for all type-specific operations.
         </p>
       </section>
 
-      <section class="lesson" id="lesson-7" data-learn-progress-target="lesson">
+      <section class="lesson" id="chapter-3" data-learn-progress-target="lesson">
         <div class="lesson-header">
-          <h2>7. Bundling Data</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-7" data-learn-progress-target="toggleBtn">
+          <h2>3. Data Structures</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-3" data-learn-progress-target="toggleBtn">
             <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
           </button>
         </div>
         <p>
-          Real data comes in bundles. A person has a name, age, email. Elo uses <em>tuples</em>:
+          Real data comes in structures: records with fields, collections of items. Elo has two main structures.
         </p>
+
+        <h3>Tuples</h3>
+        <p>Named fields, like a record or JSON object:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">&#123; name: 'Alice', age: 30, city: 'Brussels' &#125;</pre>
         </div>
-        <p>
-          Access parts with a dot:
-        </p>
+        <p>Access fields with a dot:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let person = &#123; name: 'Alice', age: 30 &#125; in person.name</pre>
+          <pre class="example-code">&#123; name: 'Alice', age: 30 &#125;.name</pre>
         </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let person = &#123; name: 'Bob', age: 25 &#125; in person.age >= 18</pre>
-        </div>
-        <p class="lesson-tip">
-          <strong>Sounds familiar?</strong> If you've seen JSON, you've seen this.
-          Elo tuples work the same way. More on <a href={url('/docs#tuples')}>tuples</a>.
-        </p>
-      </section>
 
-      <section class="lesson" id="lesson-8" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>8. Input Data</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-8" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Real programs don't just compute with literals—they work with data from the outside world.
-          In Elo, external input is always available through the special <code>_</code> variable:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">_ * 2</pre>
-        </div>
-        <p>
-          When you use <code>_</code>, your expression becomes a function that takes input and produces output.
-          In the playground, you can provide input data in the bottom panel as JSON.
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">_.price * _.quantity</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">_.budget * 1.21</pre>
-        </div>
-        <p class="lesson-tip">
-          <strong>Think transformation:</strong> Every Elo expression with <code>_</code> is a data transformation.
-          Input flows in, gets computed, and a result flows out. Try it in the <a href={url('/playground')}>playground</a> with the "Input Data" example!
-        </p>
-      </section>
-
-      <section class="lesson" id="lesson-9" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>9. Lists of Things</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-9" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Sometimes you have multiple items: a list of prices, names, or dates.
-          Elo uses <em>lists</em> for this—just wrap items in square brackets:
-        </p>
+        <h3>Lists</h3>
+        <p>Ordered collections in square brackets:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">[1, 2, 3, 4, 5]</pre>
         </div>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">['apple', 'banana', 'cherry']</pre>
+          <pre class="example-code">['apple', 'banana'] + ['cherry']</pre>
         </div>
-        <p>
-          How many items? Use <code>length</code>:
-        </p>
+        <p>Get elements by position:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">length([1, 2, 3, 4, 5])</pre>
+          <pre class="example-code">first([10, 20, 30])</pre>
         </div>
-        <p>
-          Want to combine lists? Use the <code>+</code> operator:
-        </p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">[1, 2] + [3, 4]</pre>
+          <pre class="example-code">at([10, 20, 30], 1)</pre>
         </div>
-        <p>
-          Lists can hold any type—even mixed types or other lists:
-        </p>
+
+        <h3>Data Paths &amp; Fetch</h3>
+        <p>Navigate nested data safely with paths:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let fruits = ['apple', 'banana'] in length(fruits)</pre>
+          <pre class="example-code">let data = &#123; user: &#123; name: 'Alice' &#125; &#125; in fetch(data, .user.name)</pre>
         </div>
+        <p>Paths start with a dot. <code>fetch</code> returns <code>null</code> if any part is missing:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let data = &#123; user: null &#125; in fetch(data, .user.name) | 'Unknown'</pre>
+        </div>
+
         <p class="lesson-tip">
-          <strong>Think shopping lists:</strong> A list is just an ordered collection.
-          You'll learn how to transform and filter lists in the Advanced section!
-          See all <a href={url('/stdlib#lists')}>list functions</a>.
+          <strong>Think JSON:</strong> Tuples and lists work just like JSON objects and arrays.
+          Elo makes them first-class citizens with operators and safe navigation.
         </p>
       </section>
 
-      <section class="lesson" id="lesson-10" data-learn-progress-target="lesson">
+      <section class="lesson" id="chapter-4" data-learn-progress-target="lesson">
         <div class="lesson-header">
-          <h2>10. Building Blocks</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-10" data-learn-progress-target="toggleBtn">
+          <h2>4. Functions</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-4" data-learn-progress-target="toggleBtn">
             <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
           </button>
         </div>
         <p>
-          Functions are reusable recipes. Define them with <code>fn</code>:
+          Operators are great, but sometimes you need more. Elo has a standard library of functions,
+          and you can define your own.
         </p>
+
+        <h3>Standard Library</h3>
+        <p>Built-in functions for common operations:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let double = fn( x ~> x * 2 ) in double(5)</pre>
+          <pre class="example-code">upper('hello')</pre>
         </div>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let greet = fn( name ~> 'Hello, ' + name + '!' ) in greet('Elo')</pre>
+          <pre class="example-code">abs(-42)</pre>
         </div>
-        <p>
-          The arrow <code>~></code> means "takes this, produces that." Simple!
-        </p>
-        <p>
-          Functions can take multiple inputs:
-        </p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let add = fn( a, b ~> a + b ) in add(3, 4)</pre>
+          <pre class="example-code">year(TODAY)</pre>
         </div>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">length([1, 2, 3])</pre>
+        </div>
+
+        <h3>Lambdas</h3>
+        <p>Define your own functions with <code>fn</code>:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let double = fn(x ~> x * 2) in double(21)</pre>
+        </div>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let greet = fn(name ~> 'Hello, ' + name + '!') in greet('Elo')</pre>
+        </div>
+        <p>Functions can take multiple parameters:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let add = fn(a, b ~> a + b) in add(3, 4)</pre>
+        </div>
+
+        <h3>Sugar Syntax</h3>
+        <p>For single-parameter lambdas, you can skip <code>fn()</code>:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">map([1, 2, 3], x ~> x * 2)</pre>
+        </div>
+
         <p class="lesson-tip">
-          <strong>Read the arrow:</strong> <code>fn( x ~> x * 2 )</code> reads as "a function that takes x and produces x times 2."
-          More on <a href={url('/docs#lambdas')}>lambdas</a>.
+          <strong>Functions are values:</strong> You can pass functions to other functions, store them in variables,
+          and return them. This is key for list processing in Chapter 6.
+          Explore all <a href={url('/stdlib')}>stdlib functions</a>.
         </p>
       </section>
 
-      <section class="lesson" id="lesson-11" data-learn-progress-target="lesson">
+      <section class="lesson" id="chapter-5" data-learn-progress-target="lesson">
         <div class="lesson-header">
-          <h2>11. Piping It Through</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-11" data-learn-progress-target="toggleBtn">
+          <h2>5. Program Structure</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-5" data-learn-progress-target="toggleBtn">
             <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
           </button>
         </div>
         <p>
-          Sometimes you want to chain operations. The pipe operator <code>|></code> makes it readable:
+          Complex expressions need structure. Elo provides three key constructs.
         </p>
+
+        <h3>Let Bindings</h3>
+        <p>Name intermediate values to avoid repetition:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">upper(trim('  hello  '))</pre>
+          <pre class="example-code">let price = 100 in price * 1.21</pre>
         </div>
-        <p>
-          With pipes, the same code reads left-to-right:
-        </p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let width = 10, height = 5 in width * height</pre>
+        </div>
+        <p>Names don't change—once bound, a value stays the same. No surprises!</p>
+
+        <h3>Conditionals</h3>
+        <p>Choose between values with <code>if</code>/<code>then</code>/<code>else</code>:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">if 5 > 3 then 'yes' else 'no'</pre>
+        </div>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let age = 25 in if age >= 18 then 'adult' else 'minor'</pre>
+        </div>
+        <p>In Elo, <code>if</code> is an expression—it always produces a value.</p>
+
+        <h3>Pipe Operator</h3>
+        <p>Chain operations left-to-right with <code>|&gt;</code>:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">'  hello  ' |> trim |> upper</pre>
         </div>
-        <p>
-          It's like a conveyor belt: data flows from left to right, getting transformed at each step.
-        </p>
+        <p>Compare with nested calls:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">'  elo is fun  ' |> trim |> upper |> length</pre>
+          <pre class="example-code">upper(trim('  hello  '))</pre>
         </div>
+        <p>The pipe version reads naturally: take this, then do that, then that.</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">'42' |> Int |> fn(n ~> n * 2)</pre>
+        </div>
+
         <p class="lesson-tip">
-          <strong>Assembly line:</strong> Each step transforms the data and passes it to the next. No nested parentheses, just a clean flow.
+          <strong>Assembly line:</strong> Data flows through the pipe, getting transformed at each step.
+          Much cleaner than deeply nested parentheses!
         </p>
       </section>
 
-      <section class="lesson" id="lesson-12" data-learn-progress-target="lesson">
+      <section class="lesson" id="chapter-6" data-learn-progress-target="lesson">
         <div class="lesson-header">
-          <h2>12. Transforming Lists</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-12" data-learn-progress-target="toggleBtn">
+          <h2>6. Advanced Processing</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-6" data-learn-progress-target="toggleBtn">
             <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
           </button>
         </div>
         <p>
-          Now that you know lists and functions, let's combine them! The <code>map</code> function
-          applies a transformation to every item in a list:
+          Now we combine functions and lists for powerful data processing.
         </p>
+
+        <h3>Map, Filter, Reduce</h3>
+        <p><code>map</code> transforms each element:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">map([1, 2, 3], fn(x ~> x * 2))</pre>
+          <pre class="example-code">map([1, 2, 3], x ~> x * 2)</pre>
         </div>
+        <p><code>filter</code> keeps elements that match:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">map(['hello', 'world'], fn(s ~> upper(s)))</pre>
+          <pre class="example-code">filter([1, 2, 3, 4, 5], x ~> x > 2)</pre>
         </div>
-        <p>
-          Want only certain items? Use <code>filter</code> with a function that returns true/false:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">filter([1, 2, 3, 4, 5], fn(x ~> x > 2))</pre>
-        </div>
-        <p>
-          Need to combine all items into one value? That's <code>reduce</code>:
-        </p>
+        <p><code>reduce</code> combines all elements into one value:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">reduce([1, 2, 3, 4], 0, fn(sum, x ~> sum + x))</pre>
         </div>
-        <p class="lesson-tip">
-          <strong>The pattern:</strong> <code>map</code> transforms each item, <code>filter</code> keeps some items,
-          <code>reduce</code> combines all items into one.
-        </p>
-      </section>
+        <p>Chain them together:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">[1, 2, 3, 4, 5] |> filter(x ~> x > 2) |> map(x ~> x * 10)</pre>
+        </div>
 
-      <section class="lesson" id="lesson-13" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>13. Checking Lists</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-13" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Sometimes you just want to ask a question about a list. Does <em>any</em> item match?
-          Do <em>all</em> items match? Elo has functions for that:
-        </p>
+        <h3>Null Handling</h3>
+        <p>Missing data is represented by <code>null</code>. The <code>|</code> operator provides fallbacks:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">any([1, 2, 3], fn(x ~> x > 2))</pre>
+          <pre class="example-code">null | 'default'</pre>
         </div>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">all([1, 2, 3], fn(x ~> x > 0))</pre>
+          <pre class="example-code">indexOf('hello', 'x') | -1</pre>
         </div>
-        <p>
-          Real-world example: are all prices reasonable?
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let prices = [10, 25, 5, 30] in all(prices, fn(p ~> p < 100))</pre>
-        </div>
-      </section>
-
-      <section class="lesson" id="lesson-14" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>14. Handling Nulls</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-14" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Sometimes data is missing. Elo represents this with <code>null</code>:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">null</pre>
-        </div>
+        <p>Use <code>isNull</code> to check:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">isNull(null)</pre>
         </div>
-        <p>
-          The <code>|</code> operator provides a fallback when something is null:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">null | 'default value'</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">let x = null in x | 0</pre>
-        </div>
-        <p class="lesson-tip">
-          <strong>Safe defaults:</strong> The <code>|</code> operator is your friend when dealing with
-          optional data. It's like saying "use this, or if it's null, use that instead."
-        </p>
-      </section>
 
-      <section class="lesson" id="lesson-15" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>15. Time Ranges</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-15" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Remember dates from lesson 6? Let's check if a date falls within a range.
-          Elo has special keywords for common boundaries:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">TODAY in SOW .. EOW</pre>
-        </div>
-        <p>
-          <code>SOW</code> = Start of Week, <code>EOW</code> = End of Week. There are more:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">TODAY in SOM .. EOM</pre>
-        </div>
-        <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">TODAY in SOY .. EOY</pre>
-        </div>
-        <p class="lesson-tip">
-          <strong>Time boundaries:</strong> SOD/EOD (day), SOW/EOW (week), SOM/EOM (month),
-          SOQ/EOQ (quarter), SOY/EOY (year). Perfect for business logic!
-          Learn more about <a href={url('/docs#ranges')}>ranges</a>.
-        </p>
-      </section>
-
-      <section class="lesson" id="lesson-16" data-learn-progress-target="lesson">
-        <div class="lesson-header">
-          <h2>16. Parsing Data</h2>
-          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="lesson-16" data-learn-progress-target="toggleBtn">
-            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
-          </button>
-        </div>
-        <p>
-          Data often comes as text. Elo can parse strings into proper types using
-          <em>type selectors</em>:
-        </p>
+        <h3>Type Selectors</h3>
+        <p>Parse strings into typed values:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">Int('42')</pre>
         </div>
@@ -531,25 +344,69 @@ const url = (path: string) => `${base}${path}`;
           <pre class="example-code">Date('2024-12-25')</pre>
         </div>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">Duration('P1D')</pre>
-        </div>
-        <p>
-          What if parsing fails? Combine with the fallback operator:
-        </p>
-        <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">Int('not a number') | 0</pre>
         </div>
+
         <p class="lesson-tip">
-          <strong>Type safety:</strong> Type selectors convert text to proper typed values.
-          When combined with <code>|</code>, you get robust data parsing with fallbacks.
-          See all <a href={url('/stdlib#type-selectors')}>type selectors</a>.
+          <strong>Robust processing:</strong> Combine <code>|</code> with type selectors for safe parsing.
+          Invalid input returns <code>null</code>, which you catch with a fallback.
         </p>
       </section>
 
-      <section class="lesson" id="lesson-next">
+      <section class="lesson" id="chapter-7" data-learn-progress-target="lesson">
+        <div class="lesson-header">
+          <h2>7. Input Data</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-7" data-learn-progress-target="toggleBtn">
+            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
+          </button>
+        </div>
+        <p>
+          So far we've worked with literal values. Real programs process external data.
+          In Elo, input is accessed through the special <code>_</code> variable.
+        </p>
+
+        <h3>The Input Variable</h3>
+        <p>When you use <code>_</code>, your expression becomes a function:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">_ * 2</pre>
+        </div>
+        <p>Access fields of input data:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">_.price * _.quantity</pre>
+        </div>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">_.name |> upper</pre>
+        </div>
+
+        <h3>Data Transformation</h3>
+        <p>Elo expressions are data transformations: input flows in, result flows out.</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">_.items |> map(x ~> x.price) |> reduce(0, fn(sum, p ~> sum + p))</pre>
+        </div>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">if _.status == 'active' then _.budget * 1.1 else _.budget</pre>
+        </div>
+
+        <h3>Try It</h3>
+        <p>
+          In the <a href={url('/playground')}>playground</a>, enter input data as JSON in the bottom panel.
+          For example, with input <code>&#123;"price": 100, "quantity": 3&#125;</code>:
+        </p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">_.price * _.quantity</pre>
+        </div>
+
+        <p class="lesson-tip">
+          <strong>Think transformations:</strong> Every Elo expression with <code>_</code> is a reusable transformation.
+          The same expression works whether it runs in your browser (JS), server (Ruby), or database (SQL).
+        </p>
+      </section>
+
+      <section class="lesson" id="chapter-next">
         <h2>What's Next?</h2>
         <p>
-          Congratulations! You've completed all 16 lessons—from basic arithmetic to advanced list processing and data parsing.
+          You've learned the core of Elo: extended arithmetics on multiple types, data structures,
+          functions, program structure, list processing, and input handling.
         </p>
         <ul class="next-steps">
           <li>
@@ -562,11 +419,11 @@ const url = (path: string) => `${base}${path}`;
           </li>
           <li>
             <a href={url('/stdlib')}><strong>Explore the Stdlib</strong></a>
-            — Discover all built-in functions
+            — Discover all built-in operators and functions
           </li>
         </ul>
         <p class="lesson-closing">
-          Remember: Elo compiles to JavaScript, Ruby, and SQL. What you write once runs everywhere.
+          Remember: Elo compiles to JavaScript, Ruby, and SQL. Write once, run anywhere.
           <br>Happy coding!
         </p>
       </section>

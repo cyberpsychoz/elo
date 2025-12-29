@@ -48,3 +48,47 @@ What would be the 5 main chapters =
 
   We would finally cover the input data `_` concept and the notion of runtime
   that is supposed to provide it.
+
+## Analysis (Claude)
+
+### Current Structure (16 small lessons)
+
+**Basics:** Numbers → Strings → Booleans → Conditionals → Variables
+**Intermediate:** Temporal → Tuples → Input → Lists → Lambdas → Pipes
+**Advanced:** map → filter/any/all → Nulls → Time Ranges → Type Selectors
+
+### Proposed Structure (7 chapters)
+
+| # | Chapter | Content |
+|---|---------|---------|
+| 1 | Introduction | Hook with exciting example |
+| 2 | Extended Arithmetics | Numbers → Booleans → Strings → Dates → Durations |
+| 3 | Data Structures | Lists, Tuples, DataPaths, fetch() |
+| 4 | Functions | Stdlib examples, lambdas as values |
+| 5 | Program Structure | let, if/then/else, \|> pipe |
+| 6 | Advanced Processing | map/reduce, type selectors, null, \| |
+| 7 | Input Data | The `_` variable, runtime concept |
+
+### Comparison
+
+**Current:** Type-by-type introduction, 16 granular checkboxes
+**Proposed:** Concept-by-concept narrative, 7 meaty chapters
+
+### My Take
+
+The proposed structure tells a better *story*:
+1. "Look what Elo can do!" (excitement)
+2. "It's like a calculator, but for everything" (foundation)
+3. "Here's how to bundle data" (structures)
+4. "Functions extend what you can do" (power)
+5. "Structure complex expressions" (control)
+6. "Process collections" (real work)
+7. "Connect to the real world" (practical)
+
+The current 16-lesson approach is more "checkbox-y" but less memorable.
+
+### Questions
+
+1. Keep the progress tracking mechanism (checkboxes)?
+2. Each chapter = expandable section, or separate pages?
+3. Migrate existing content or rewrite from scratch?
