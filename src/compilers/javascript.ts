@@ -295,36 +295,63 @@ function emitTypeExprParser(
   typeExpr: import('../ir').IRTypeExpr,
   ctx: EmitContext<string>
 ): string {
-  if (typeExpr.kind === 'type_ref') {
-    // Map type name to parser helper
-    const parserMap: Record<string, string> = {
-      'Any': 'pAny',
-      'String': 'pString',
-      'Int': 'pInt',
-      'Bool': 'pBool',
-      'Boolean': 'pBool',
-      'Datetime': 'pDatetime',
-    };
-    const parserName = parserMap[typeExpr.name];
-    if (!parserName) {
-      throw new Error(`Unknown type in type definition: ${typeExpr.name}`);
+  switch (typeExpr.kind) {
+    case 'type_ref': {
+      // Map type name to parser helper
+      const parserMap: Record<string, string> = {
+        'Any': 'pAny',
+        'String': 'pString',
+        'Int': 'pInt',
+        'Bool': 'pBool',
+        'Boolean': 'pBool',
+        'Datetime': 'pDatetime',
+      };
+      const parserName = parserMap[typeExpr.name];
+      if (!parserName) {
+        throw new Error(`Unknown type in type definition: ${typeExpr.name}`);
+      }
+      ctx.requireHelper?.(parserName);
+      return parserName;
     }
-    ctx.requireHelper?.(parserName);
-    return parserName;
-  } else {
-    // Object schema: generate inline parser
-    ctx.requireHelper?.('pOk');
-    ctx.requireHelper?.('pFail');
-    const propParsers = typeExpr.properties.map(prop => {
-      const propParser = emitTypeExprParser(prop.typeExpr, ctx);
-      return { key: prop.key, parser: propParser };
-    });
 
-    // Generate object parser
-    const propChecks = propParsers.map(({ key, parser }) =>
-      `const _r_${key} = ${parser}(v.${key}, p + '.${key}'); if (!_r_${key}.success) return pFail(p, [_r_${key}]); _o.${key} = _r_${key}.value;`
-    ).join(' ');
+    case 'type_schema': {
+      // Object schema: generate inline parser
+      ctx.requireHelper?.('pOk');
+      ctx.requireHelper?.('pFail');
+      const propParsers = typeExpr.properties.map(prop => {
+        const propParser = emitTypeExprParser(prop.typeExpr, ctx);
+        return { key: prop.key, parser: propParser };
+      });
 
-    return `(v, p) => { if (typeof v !== 'object' || v === null) return pFail(p, []); const _o = {}; ${propChecks} return pOk(_o, p); }`;
+      // Generate object parser
+      const propChecks = propParsers.map(({ key, parser }) =>
+        `const _r_${key} = ${parser}(v.${key}, p + '.${key}'); if (!_r_${key}.success) return pFail(p, [_r_${key}]); _o.${key} = _r_${key}.value;`
+      ).join(' ');
+
+      return `(v, p) => { if (typeof v !== 'object' || v === null) return pFail(p, []); const _o = {}; ${propChecks} return pOk(_o, p); }`;
+    }
+
+    case 'subtype_constraint': {
+      // Subtype constraint: Int(i | i > 0)
+      // First parse with base type, then check constraint
+      ctx.requireHelper?.('pOk');
+      ctx.requireHelper?.('pFail');
+      const baseParser = emitTypeExprParser(typeExpr.baseType, ctx);
+      const constraintCode = ctx.emit(typeExpr.constraint);
+      const varName = typeExpr.variable;
+
+      return `(v, p) => { const _r = ${baseParser}(v, p); if (!_r.success) return _r; const ${varName} = _r.value; if (!(${constraintCode})) return pFail(p, []); return _r; }`;
+    }
+
+    case 'array_type': {
+      // Array type: [Int]
+      // Parse each element with the element type
+      ctx.requireHelper?.('pOk');
+      ctx.requireHelper?.('pFail');
+      const elemParser = emitTypeExprParser(typeExpr.elementType, ctx);
+
+      // Store element parser in variable to handle inline functions (like object schemas)
+      return `(v, p) => { if (!Array.isArray(v)) return pFail(p, []); const _el = ${elemParser}; const _a = []; for (let _i = 0; _i < v.length; _i++) { const _r = _el(v[_i], p + '[' + _i + ']'); if (!_r.success) return pFail(p, [_r]); _a.push(_r.value); } return pOk(_a, p); }`;
+    }
   }
 }

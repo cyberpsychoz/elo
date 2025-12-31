@@ -238,7 +238,7 @@ export interface IRDataPath {
 /**
  * IR type expression (used in type definitions)
  */
-export type IRTypeExpr = IRTypeRef | IRTypeSchema;
+export type IRTypeExpr = IRTypeRef | IRTypeSchema | IRSubtypeConstraint | IRArrayType;
 
 /**
  * Reference to a base type
@@ -254,6 +254,24 @@ export interface IRTypeRef {
 export interface IRTypeSchema {
   kind: 'type_schema';
   properties: IRTypeSchemaProperty[];
+}
+
+/**
+ * Subtype constraint: Int(i | i > 0)
+ */
+export interface IRSubtypeConstraint {
+  kind: 'subtype_constraint';
+  baseType: IRTypeExpr;
+  variable: string;
+  constraint: IRExpr;  // The constraint expression transformed to IR
+}
+
+/**
+ * Array type: [Int]
+ */
+export interface IRArrayType {
+  kind: 'array_type';
+  elementType: IRTypeExpr;
 }
 
 /**
@@ -360,6 +378,14 @@ export function irTypeRef(name: string): IRTypeRef {
 
 export function irTypeSchema(properties: IRTypeSchemaProperty[]): IRTypeSchema {
   return { kind: 'type_schema', properties };
+}
+
+export function irSubtypeConstraint(baseType: IRTypeExpr, variable: string, constraint: IRExpr): IRSubtypeConstraint {
+  return { kind: 'subtype_constraint', baseType, variable, constraint };
+}
+
+export function irArrayType(elementType: IRTypeExpr): IRArrayType {
+  return { kind: 'array_type', elementType };
 }
 
 export function irTypeDef(name: string, typeExpr: IRTypeExpr, body: IRExpr): IRTypeDef {

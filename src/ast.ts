@@ -331,7 +331,7 @@ export function dataPath(segments: (string | number)[]): DataPath {
  * Type expression for type definitions
  * Used in `let Person = { name: String, age: Int }` style declarations
  */
-export type TypeExpr = TypeRef | TypeSchema;
+export type TypeExpr = TypeRef | TypeSchema | SubtypeConstraint | ArrayType;
 
 /**
  * Reference to a base type: String, Int, Bool, Datetime, Any
@@ -347,6 +347,25 @@ export interface TypeRef {
 export interface TypeSchema {
   kind: 'type_schema';
   properties: TypeSchemaProperty[];
+}
+
+/**
+ * Subtype constraint: Int(i | i > 0)
+ * A base type with a predicate constraint
+ */
+export interface SubtypeConstraint {
+  kind: 'subtype_constraint';
+  baseType: TypeExpr;     // The base type (can be any type expr)
+  variable: string;       // 'i' in Int(i | i > 0)
+  constraint: Expr;       // The constraint expression: i > 0
+}
+
+/**
+ * Array type: [Int], [String], [{ name: String }]
+ */
+export interface ArrayType {
+  kind: 'array_type';
+  elementType: TypeExpr;
 }
 
 /**
@@ -388,4 +407,18 @@ export function typeSchema(properties: TypeSchemaProperty[]): TypeSchema {
  */
 export function typeDef(name: string, typeExpr: TypeExpr, body: Expr): TypeDef {
   return { type: 'typedef', name, typeExpr, body };
+}
+
+/**
+ * Creates a subtype constraint: Int(i | i > 0)
+ */
+export function subtypeConstraint(baseType: TypeExpr, variable: string, constraint: Expr): SubtypeConstraint {
+  return { kind: 'subtype_constraint', baseType, variable, constraint };
+}
+
+/**
+ * Creates an array type: [Int]
+ */
+export function arrayType(elementType: TypeExpr): ArrayType {
+  return { kind: 'array_type', elementType };
 }

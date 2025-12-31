@@ -35,6 +35,8 @@ import {
   irTypeDef,
   irTypeRef,
   irTypeSchema,
+  irSubtypeConstraint,
+  irArrayType,
   inferType,
 } from './ir';
 import { TypeExpr } from './ast';
@@ -166,7 +168,7 @@ function transformWithDepth(
 
     case 'typedef': {
       // Transform type definition
-      const irTypeExpr = transformTypeExpr(expr.typeExpr);
+      const irTypeExpr = transformTypeExprWithContext(expr.typeExpr, env, defining, nextDepth, maxDepth);
       // Add type name to environment as a parser function type
       const newEnv = new Map(env);
       newEnv.set(expr.name, Types.fn);
@@ -179,17 +181,39 @@ function transformWithDepth(
 /**
  * Transform an AST type expression to IR type expression
  */
-function transformTypeExpr(typeExpr: TypeExpr): IRTypeExpr {
-  if (typeExpr.kind === 'type_ref') {
-    return irTypeRef(typeExpr.name);
-  } else {
-    // type_schema
-    return irTypeSchema(
-      typeExpr.properties.map(prop => ({
-        key: prop.key,
-        typeExpr: transformTypeExpr(prop.typeExpr),
-      }))
-    );
+function transformTypeExprWithContext(
+  typeExpr: TypeExpr,
+  env: TypeEnv,
+  defining: Set<string>,
+  depth: number,
+  maxDepth: number
+): IRTypeExpr {
+  switch (typeExpr.kind) {
+    case 'type_ref':
+      return irTypeRef(typeExpr.name);
+
+    case 'type_schema':
+      return irTypeSchema(
+        typeExpr.properties.map(prop => ({
+          key: prop.key,
+          typeExpr: transformTypeExprWithContext(prop.typeExpr, env, defining, depth, maxDepth),
+        }))
+      );
+
+    case 'subtype_constraint': {
+      // Transform the base type
+      const baseTypeIR = transformTypeExprWithContext(typeExpr.baseType, env, defining, depth, maxDepth);
+      // Transform the constraint with the variable in scope
+      const constraintEnv = new Map(env);
+      constraintEnv.set(typeExpr.variable, Types.any);
+      const constraintIR = transformWithDepth(typeExpr.constraint, constraintEnv, defining, depth, maxDepth);
+      return irSubtypeConstraint(baseTypeIR, typeExpr.variable, constraintIR);
+    }
+
+    case 'array_type':
+      return irArrayType(
+        transformTypeExprWithContext(typeExpr.elementType, env, defining, depth, maxDepth)
+      );
   }
 }
 

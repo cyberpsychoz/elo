@@ -1,4 +1,4 @@
-import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply, dataPath, TypeExpr, TypeSchemaProperty, typeRef, typeSchema, typeDef } from './ast';
+import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply, dataPath, TypeExpr, TypeSchemaProperty, typeRef, typeSchema, typeDef, subtypeConstraint, arrayType } from './ast';
 
 /**
  * Token types
@@ -1069,13 +1069,21 @@ export class Parser {
   }
 
   /**
-   * Parse a type expression: String, Int, Any, . (dot for Any), or { prop: TypeExpr, ... }
+   * Parse a type expression: String, Int(i | i > 0), [Int], { prop: TypeExpr, ... }
    */
   private typeExpr(): TypeExpr {
     // Check for '.' (Any type shorthand)
     if (this.currentToken.type === 'DOT') {
       this.eat('DOT');
       return typeRef('Any');
+    }
+
+    // Check for array type: [TypeExpr]
+    if (this.currentToken.type === 'LBRACKET') {
+      this.eat('LBRACKET');
+      const elementType = this.typeExpr();
+      this.eat('RBRACKET');
+      return arrayType(elementType);
     }
 
     // Check for object schema: { prop: Type, ... }
@@ -1086,13 +1094,42 @@ export class Parser {
     // Must be a type name (UPPER_IDENTIFIER)
     if (this.currentToken.type !== 'UPPER_IDENTIFIER') {
       throw new Error(
-        `Expected type name or '{' at position ${this.currentToken.position}, got ${this.currentToken.type}`
+        `Expected type name, '[', or '{' at position ${this.currentToken.position}, got ${this.currentToken.type}`
       );
     }
 
     const name = this.currentToken.value;
     this.eat('UPPER_IDENTIFIER');
-    return typeRef(name);
+    const baseType = typeRef(name);
+
+    // Check for subtype constraint: Int(i | i > 0)
+    if ((this.currentToken as Token).type === 'LPAREN') {
+      return this.subtypeConstraintExpr(baseType);
+    }
+
+    return baseType;
+  }
+
+  /**
+   * Parse a subtype constraint: Int(i | i > 0)
+   * Called after the base type has been parsed, when we see '('
+   */
+  private subtypeConstraintExpr(baseType: TypeExpr): TypeExpr {
+    this.eat('LPAREN');
+
+    // Parse variable name
+    const varName = this.currentToken.value;
+    this.eat('IDENTIFIER');
+
+    // Expect '|' separator
+    this.eat('PIPE');
+
+    // Parse constraint expression
+    const constraint = this.expr();
+
+    this.eat('RPAREN');
+
+    return subtypeConstraint(baseType, varName, constraint);
   }
 
   /**
