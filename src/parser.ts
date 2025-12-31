@@ -1,4 +1,4 @@
-import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply, dataPath } from './ast';
+import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply, dataPath, TypeExpr, TypeSchemaProperty, typeRef, typeSchema, typeDef } from './ast';
 
 /**
  * Token types
@@ -293,10 +293,14 @@ class Lexer {
 
     // ISO8601 Duration: P1D, PT1H30M, P1Y2M3D, etc.
     if (this.current === 'P') {
+      // Save state in case this isn't actually a duration
+      const savedState = this.saveState();
       const durationStr = this.readDuration();
       if (durationStr.length > 1) {
         return { type: 'DURATION', value: durationStr, position: pos };
       }
+      // Not a valid duration, restore state and continue to identifier parsing
+      this.restoreState(savedState);
     }
 
     // Single-quoted strings: 'hello world'
@@ -897,16 +901,16 @@ export class Parser {
     while (this.currentToken.type === 'PIPE_OP') {
       this.eat('PIPE_OP');
 
-      // Right side must be an identifier (function name)
+      // Right side must be an identifier (function name) or uppercase (type name)
       const tok = this.currentToken as Token;
-      if (tok.type !== 'IDENTIFIER') {
+      if (tok.type !== 'IDENTIFIER' && tok.type !== 'UPPER_IDENTIFIER') {
         throw new Error(
           `Expected function name after |> at position ${tok.position}`
         );
       }
 
       const funcName = tok.value;
-      this.eat('IDENTIFIER');
+      this.eat(tok.type);
 
       const args: Expr[] = [node]; // Left side becomes first argument
 
@@ -1019,6 +1023,11 @@ export class Parser {
   private letExpr(): Expr {
     this.eat('LET');
 
+    // Check if this is a type definition (uppercase identifier)
+    if (this.currentToken.type === 'UPPER_IDENTIFIER') {
+      return this.typeDefExpr();
+    }
+
     const bindings: LetBinding[] = [];
 
     // Parse first binding
@@ -1043,6 +1052,82 @@ export class Parser {
     const body = this.expr(); // Body can be any expression including nested let
 
     return letExpr(bindings, body);
+  }
+
+  /**
+   * Parse a type definition: let Person = { name: String, age: Int } in body
+   * Called after 'let' when we see an UPPER_IDENTIFIER
+   */
+  private typeDefExpr(): Expr {
+    const typeName = this.currentToken.value;
+    this.eat('UPPER_IDENTIFIER');
+    this.eat('ASSIGN');
+    const typeExpr = this.typeExpr();
+    this.eat('IN');
+    const body = this.expr();
+    return typeDef(typeName, typeExpr, body);
+  }
+
+  /**
+   * Parse a type expression: String, Int, Any, . (dot for Any), or { prop: TypeExpr, ... }
+   */
+  private typeExpr(): TypeExpr {
+    // Check for '.' (Any type shorthand)
+    if (this.currentToken.type === 'DOT') {
+      this.eat('DOT');
+      return typeRef('Any');
+    }
+
+    // Check for object schema: { prop: Type, ... }
+    if (this.currentToken.type === 'LBRACE') {
+      return this.typeSchemaExpr();
+    }
+
+    // Must be a type name (UPPER_IDENTIFIER)
+    if (this.currentToken.type !== 'UPPER_IDENTIFIER') {
+      throw new Error(
+        `Expected type name or '{' at position ${this.currentToken.position}, got ${this.currentToken.type}`
+      );
+    }
+
+    const name = this.currentToken.value;
+    this.eat('UPPER_IDENTIFIER');
+    return typeRef(name);
+  }
+
+  /**
+   * Parse a type schema: { name: String, age: Int }
+   */
+  private typeSchemaExpr(): TypeExpr {
+    this.eat('LBRACE');
+
+    const properties: TypeSchemaProperty[] = [];
+
+    // Handle empty schema
+    if (this.currentToken.type === 'RBRACE') {
+      this.eat('RBRACE');
+      return typeSchema(properties);
+    }
+
+    // Parse first property
+    const firstName = this.currentToken.value;
+    this.eat('IDENTIFIER');
+    this.eat('COLON');
+    const firstType = this.typeExpr();
+    properties.push({ key: firstName, typeExpr: firstType });
+
+    // Parse additional properties
+    while (this.currentToken.type === 'COMMA') {
+      this.eat('COMMA');
+      const name = this.currentToken.value;
+      this.eat('IDENTIFIER');
+      this.eat('COLON');
+      const propType = this.typeExpr();
+      properties.push({ key: name, typeExpr: propType });
+    }
+
+    this.eat('RBRACE');
+    return typeSchema(properties);
   }
 
   private ifExprParse(): Expr {

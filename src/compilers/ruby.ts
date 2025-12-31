@@ -216,5 +216,8 @@ function emitRuby(ir: IRExpr): string {
       );
       return `[${segments.join(', ')}]`;
     }
+
+    case 'typedef':
+      throw new Error('Type definitions are not yet supported in Ruby compilation');
   }
 }

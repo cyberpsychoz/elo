@@ -33,7 +33,8 @@ export type IRExpr =
   | IRIf
   | IRLambda
   | IRAlternative
-  | IRDataPath;
+  | IRDataPath
+  | IRTypeDef;
 
 /**
  * Integer literal
@@ -235,6 +236,45 @@ export interface IRDataPath {
 }
 
 /**
+ * IR type expression (used in type definitions)
+ */
+export type IRTypeExpr = IRTypeRef | IRTypeSchema;
+
+/**
+ * Reference to a base type
+ */
+export interface IRTypeRef {
+  kind: 'type_ref';
+  name: string;  // 'String', 'Int', 'Bool', 'Datetime', 'Any'
+}
+
+/**
+ * Object type schema
+ */
+export interface IRTypeSchema {
+  kind: 'type_schema';
+  properties: IRTypeSchemaProperty[];
+}
+
+/**
+ * Property in a type schema
+ */
+export interface IRTypeSchemaProperty {
+  key: string;
+  typeExpr: IRTypeExpr;
+}
+
+/**
+ * Type definition: let Person = { name: String, age: Int } in body
+ */
+export interface IRTypeDef {
+  type: 'typedef';
+  name: string;
+  typeExpr: IRTypeExpr;
+  body: IRExpr;
+}
+
+/**
  * Factory functions for creating IR nodes
  */
 
@@ -314,6 +354,18 @@ export function irDataPath(segments: (string | number)[]): IRDataPath {
   return { type: 'datapath', segments };
 }
 
+export function irTypeRef(name: string): IRTypeRef {
+  return { kind: 'type_ref', name };
+}
+
+export function irTypeSchema(properties: IRTypeSchemaProperty[]): IRTypeSchema {
+  return { kind: 'type_schema', properties };
+}
+
+export function irTypeDef(name: string, typeExpr: IRTypeExpr, body: IRExpr): IRTypeDef {
+  return { type: 'typedef', name, typeExpr, body };
+}
+
 /**
  * Infer the type of an IR expression
  */
@@ -357,6 +409,9 @@ export function inferType(ir: IRExpr): EloType {
       return ir.resultType;
     case 'datapath':
       return Types.fn;  // DataPath is a function that takes data and returns a value
+
+    case 'typedef':
+      return inferType(ir.body);
   }
 }
 
@@ -421,5 +476,12 @@ export function usesInput(ir: IRExpr, boundVars: Set<string> = new Set()): boole
 
     case 'datapath':
       return false;  // DataPath is a pure value, doesn't reference variables
+
+    case 'typedef': {
+      // Type definitions add the type name to bound vars for the body
+      const newBound = new Set(boundVars);
+      newBound.add(ir.name);
+      return usesInput(ir.body, newBound);
+    }
   }
 }

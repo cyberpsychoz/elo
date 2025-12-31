@@ -563,10 +563,19 @@ describe('Parser - Let Expressions', () => {
     assert.throws(() => parse('let x in x'), /Expected ASSIGN/);
   });
 
-  it('should reject uppercase variable names in let bindings', () => {
-    // Uppercase names are reserved for Types and Selectors
-    assert.throws(() => parse('let X = 1 in X'), /Expected IDENTIFIER/);
-    assert.throws(() => parse('let MyVar = 1 in MyVar'), /Expected IDENTIFIER/);
+  it('should parse uppercase let bindings as type definitions', () => {
+    // Uppercase names define types (Finitio-like dressing)
+    const ast = parse('let X = String in x |> X');
+    assert.deepStrictEqual(ast, {
+      type: 'typedef',
+      name: 'X',
+      typeExpr: { kind: 'type_ref', name: 'String' },
+      body: {
+        type: 'function_call',
+        name: 'X',
+        args: [{ type: 'variable', name: 'x' }]
+      }
+    });
   });
 });
 

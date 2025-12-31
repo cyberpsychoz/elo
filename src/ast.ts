@@ -2,7 +2,7 @@
  * AST node types for Elo expressions
  */
 
-export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | ObjectLiteral | ArrayLiteral | Alternative | Apply | DataPath;
+export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | ObjectLiteral | ArrayLiteral | Alternative | Apply | DataPath | TypeDef;
 
 /**
  * Literal value (number or boolean)
@@ -325,4 +325,67 @@ export function dataPath(segments: (string | number)[]): DataPath {
     throw new Error('DataPath must have at least one segment');
   }
   return { type: 'datapath', segments };
+}
+
+/**
+ * Type expression for type definitions
+ * Used in `let Person = { name: String, age: Int }` style declarations
+ */
+export type TypeExpr = TypeRef | TypeSchema;
+
+/**
+ * Reference to a base type: String, Int, Bool, Datetime, Any
+ */
+export interface TypeRef {
+  kind: 'type_ref';
+  name: string;  // 'String', 'Int', 'Bool', 'Datetime', 'Any'
+}
+
+/**
+ * Object type schema: { name: String, age: Int }
+ */
+export interface TypeSchema {
+  kind: 'type_schema';
+  properties: TypeSchemaProperty[];
+}
+
+/**
+ * Property in a type schema
+ */
+export interface TypeSchemaProperty {
+  key: string;
+  typeExpr: TypeExpr;
+}
+
+/**
+ * Type definition: let Person = { name: String, age: Int }
+ * Binds a type name (uppercase) to a type expression.
+ * The body can use the type via pipe: data |> Person
+ */
+export interface TypeDef {
+  type: 'typedef';
+  name: string;           // Uppercase identifier like 'Person'
+  typeExpr: TypeExpr;     // The type expression
+  body: Expr;             // The expression where this type is used
+}
+
+/**
+ * Creates a type reference: String, Int, etc.
+ */
+export function typeRef(name: string): TypeRef {
+  return { kind: 'type_ref', name };
+}
+
+/**
+ * Creates a type schema: { name: String, age: Int }
+ */
+export function typeSchema(properties: TypeSchemaProperty[]): TypeSchema {
+  return { kind: 'type_schema', properties };
+}
+
+/**
+ * Creates a type definition expression
+ */
+export function typeDef(name: string, typeExpr: TypeExpr, body: Expr): TypeDef {
+  return { type: 'typedef', name, typeExpr, body };
 }

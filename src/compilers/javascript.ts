@@ -275,5 +275,56 @@ function emitJS(ir: IRExpr, requiredHelpers?: Set<string>): string {
       );
       return `[${segments.join(', ')}]`;
     }
+
+    case 'typedef': {
+      // Generate parser function for the type and bind it
+      // Wrap it so calling TypeName(value) auto-unwraps the result
+      const parserCode = emitTypeExprParser(ir.typeExpr, ctx);
+      ctx.requireHelper?.('pUnwrap');
+      const body = ctx.emit(ir.body);
+      // The type name becomes a function that calls the parser and unwraps
+      return `(() => { const _p_${ir.name} = ${parserCode}; const ${ir.name} = (v) => pUnwrap(_p_${ir.name}(v, '')); return ${body}; })()`;
+    }
+  }
+}
+
+/**
+ * Emit a parser function for a type expression
+ */
+function emitTypeExprParser(
+  typeExpr: import('../ir').IRTypeExpr,
+  ctx: EmitContext<string>
+): string {
+  if (typeExpr.kind === 'type_ref') {
+    // Map type name to parser helper
+    const parserMap: Record<string, string> = {
+      'Any': 'pAny',
+      'String': 'pString',
+      'Int': 'pInt',
+      'Bool': 'pBool',
+      'Boolean': 'pBool',
+      'Datetime': 'pDatetime',
+    };
+    const parserName = parserMap[typeExpr.name];
+    if (!parserName) {
+      throw new Error(`Unknown type in type definition: ${typeExpr.name}`);
+    }
+    ctx.requireHelper?.(parserName);
+    return parserName;
+  } else {
+    // Object schema: generate inline parser
+    ctx.requireHelper?.('pOk');
+    ctx.requireHelper?.('pFail');
+    const propParsers = typeExpr.properties.map(prop => {
+      const propParser = emitTypeExprParser(prop.typeExpr, ctx);
+      return { key: prop.key, parser: propParser };
+    });
+
+    // Generate object parser
+    const propChecks = propParsers.map(({ key, parser }) =>
+      `const _r_${key} = ${parser}(v.${key}, p + '.${key}'); if (!_r_${key}.success) return pFail(p, [_r_${key}]); _o.${key} = _r_${key}.value;`
+    ).join(' ');
+
+    return `(v, p) => { if (typeof v !== 'object' || v === null) return pFail(p, []); const _o = {}; ${propChecks} return pOk(_o, p); }`;
   }
 }

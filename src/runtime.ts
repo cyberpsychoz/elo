@@ -15,6 +15,12 @@
  */
 export const JS_HELPER_DEPS: Record<string, string[]> = {
   kNeq: ['kEq'],
+  // Parser helpers depend on pOk/pFail
+  pAny: ['pOk'],
+  pString: ['pOk', 'pFail'],
+  pInt: ['pOk', 'pFail'],
+  pBool: ['pOk', 'pFail'],
+  pDatetime: ['pOk', 'pFail'],
 };
 
 export const JS_HELPERS: Record<string, string> = {
@@ -134,4 +140,30 @@ export const JS_HELPERS: Record<string, string> = {
   if (typeof v === 'string') { try { return JSON.parse(v); } catch { return null; } }
   return v;
 }`,
+
+  // Parser helpers - return Result: { success: boolean, path: string, value: any, cause: Result[] }
+  pOk: `function pOk(v, p) { return { success: true, path: p, value: v, cause: [] }; }`,
+  pFail: `function pFail(p, c) { return { success: false, path: p, value: null, cause: c || [] }; }`,
+  pAny: `function pAny(v, p) { return pOk(v, p); }`,
+  pString: `function pString(v, p) {
+  if (typeof v === 'string') return pOk(v, p);
+  return pFail(p, []);
+}`,
+  pInt: `function pInt(v, p) {
+  if (typeof v === 'number' && Number.isInteger(v)) return pOk(v, p);
+  if (typeof v === 'string') { const n = parseInt(v, 10); if (!isNaN(n)) return pOk(n, p); }
+  return pFail(p, []);
+}`,
+  pBool: `function pBool(v, p) {
+  if (typeof v === 'boolean') return pOk(v, p);
+  if (v === 'true') return pOk(true, p);
+  if (v === 'false') return pOk(false, p);
+  return pFail(p, []);
+}`,
+  pDatetime: `function pDatetime(v, p) {
+  if (dayjs.isDayjs(v)) return pOk(v, p);
+  if (typeof v === 'string') { const d = dayjs(v); if (d.isValid()) return pOk(d, p); }
+  return pFail(p, []);
+}`,
+  pUnwrap: `function pUnwrap(r) { return r.success ? r.value : null; }`,
 };

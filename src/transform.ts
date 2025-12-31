@@ -12,6 +12,7 @@
 import { Expr } from './ast';
 import {
   IRExpr,
+  IRTypeExpr,
   irInt,
   irFloat,
   irBool,
@@ -31,8 +32,12 @@ import {
   irLambda,
   irAlternative,
   irDataPath,
+  irTypeDef,
+  irTypeRef,
+  irTypeSchema,
   inferType,
 } from './ir';
+import { TypeExpr } from './ast';
 import { EloType, Types } from './types';
 import { eloTypeDefs } from './typedefs';
 
@@ -158,6 +163,33 @@ function transformWithDepth(
 
     case 'datapath':
       return irDataPath(expr.segments);
+
+    case 'typedef': {
+      // Transform type definition
+      const irTypeExpr = transformTypeExpr(expr.typeExpr);
+      // Add type name to environment as a parser function type
+      const newEnv = new Map(env);
+      newEnv.set(expr.name, Types.fn);
+      const bodyIR = transformWithDepth(expr.body, newEnv, defining, nextDepth, maxDepth);
+      return irTypeDef(expr.name, irTypeExpr, bodyIR);
+    }
+  }
+}
+
+/**
+ * Transform an AST type expression to IR type expression
+ */
+function transformTypeExpr(typeExpr: TypeExpr): IRTypeExpr {
+  if (typeExpr.kind === 'type_ref') {
+    return irTypeRef(typeExpr.name);
+  } else {
+    // type_schema
+    return irTypeSchema(
+      typeExpr.properties.map(prop => ({
+        key: prop.key,
+        typeExpr: transformTypeExpr(prop.typeExpr),
+      }))
+    );
   }
 }
 

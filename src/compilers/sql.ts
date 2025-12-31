@@ -200,5 +200,8 @@ function emitSQL(ir: IRExpr): string {
       );
       return `ARRAY[${segments.join(', ')}]`;
     }
+
+    case 'typedef':
+      throw new Error('Type definitions are not yet supported in SQL compilation');
   }
 }
