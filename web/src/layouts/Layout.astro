@@ -94,12 +94,15 @@ const url = (path: string) => `${base}${path}`;
       <div class="nav-group">
         <a href={url('/stdlib')} class:list={[{ active: activeNav === 'stdlib' }]}>Stdlib</a>
         <div class="nav-submenu">
-          <a href={url('/stdlib#numeric')}>Numeric</a>
-          <a href={url('/stdlib#temporal')}>Temporal</a>
-          <a href={url('/stdlib#string')}>String</a>
-          <a href={url('/stdlib#lists')}>List</a>
-          <a href={url('/stdlib#introspection')}>Introspection</a>
           <a href={url('/stdlib#type-selectors')}>Type Selectors</a>
+          <a href={url('/stdlib#any')}>Any</a>
+          <a href={url('/stdlib#date')}>Date</a>
+          <a href={url('/stdlib#datetime')}>DateTime</a>
+          <a href={url('/stdlib#duration')}>Duration</a>
+          <a href={url('/stdlib#list')}>List</a>
+          <a href={url('/stdlib#numeric')}>Numeric</a>
+          <a href={url('/stdlib#string')}>String</a>
+          <a href={url('/stdlib#tuple')}>Tuple</a>
         </div>
       </div>
       <a href={url('/blog')} class:list={[{ active: activeNav === 'blog' }]}>Blog</a>
