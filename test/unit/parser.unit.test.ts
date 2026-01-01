@@ -1285,3 +1285,69 @@ describe('Parser - DataPath Literals', () => {
     assert.throws(() => parse('.x.'), /Expected identifier or number/);
   });
 });
+
+describe('Parser - Type Schema Optional Commas', () => {
+  it('should parse type schema with commas', () => {
+    const ast = parse('let T = { name: String, age: Int } in x |> T');
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.typeExpr.kind, 'type_schema');
+      if (ast.typeExpr.kind === 'type_schema') {
+        assert.strictEqual(ast.typeExpr.properties.length, 2);
+        assert.strictEqual(ast.typeExpr.properties[0].key, 'name');
+        assert.strictEqual(ast.typeExpr.properties[1].key, 'age');
+      }
+    }
+  });
+
+  it('should parse type schema without commas (Finitio style)', () => {
+    const ast = parse('let T = { name: String age: Int } in x |> T');
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.typeExpr.kind, 'type_schema');
+      if (ast.typeExpr.kind === 'type_schema') {
+        assert.strictEqual(ast.typeExpr.properties.length, 2);
+        assert.strictEqual(ast.typeExpr.properties[0].key, 'name');
+        assert.strictEqual(ast.typeExpr.properties[1].key, 'age');
+      }
+    }
+  });
+
+  it('should parse type schema with mixed comma usage', () => {
+    const ast = parse('let T = { a: Int, b: String c: Bool } in x |> T');
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.typeExpr.kind, 'type_schema');
+      if (ast.typeExpr.kind === 'type_schema') {
+        assert.strictEqual(ast.typeExpr.properties.length, 3);
+        assert.strictEqual(ast.typeExpr.properties[0].key, 'a');
+        assert.strictEqual(ast.typeExpr.properties[1].key, 'b');
+        assert.strictEqual(ast.typeExpr.properties[2].key, 'c');
+      }
+    }
+  });
+
+  it('should parse type schema with spread and no comma', () => {
+    const ast = parse('let T = { name: String ... } in x |> T');
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.typeExpr.kind, 'type_schema');
+      if (ast.typeExpr.kind === 'type_schema') {
+        assert.strictEqual(ast.typeExpr.properties.length, 1);
+        assert.strictEqual(ast.typeExpr.extras, 'ignored');
+      }
+    }
+  });
+
+  it('should parse type schema with typed spread and no comma', () => {
+    const ast = parse('let T = { name: String ...: Int } in x |> T');
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.typeExpr.kind, 'type_schema');
+      if (ast.typeExpr.kind === 'type_schema') {
+        assert.strictEqual(ast.typeExpr.properties.length, 1);
+        assert.strictEqual((ast.typeExpr.extras as any).kind, 'type_ref');
+      }
+    }
+  });
+});
