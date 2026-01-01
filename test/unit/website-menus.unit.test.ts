@@ -168,4 +168,82 @@ describe('Website Menu Consistency', () => {
       }
     });
   });
+
+  describe('learn.astro', () => {
+    const learnContent = readFile('pages/learn.astro');
+    const layoutContent = readFile('layouts/Layout.astro');
+
+    /**
+     * Extract lesson and exercise IDs from learn.astro body
+     */
+    function extractLearnSectionIds(content: string): string[] {
+      // Match lesson sections: <section class="lesson" id="chapter-1">
+      const lessonRegex = /<section[^>]*class=["'][^"']*lesson[^"']*["'][^>]*id=["']([^"']+)["']/g;
+      const lessonMatches = content.matchAll(lessonRegex);
+      const lessonIds = Array.from(lessonMatches, m => m[1]);
+
+      // Match exercise sections: <section class="exercise" id="ex-greeting">
+      const exerciseRegex = /<section[^>]*class=["'][^"']*exercise[^"']*["'][^>]*id=["']([^"']+)["']/g;
+      const exerciseMatches = content.matchAll(exerciseRegex);
+      const exerciseIds = Array.from(exerciseMatches, m => m[1]);
+
+      return [...lessonIds, ...exerciseIds];
+    }
+
+    it('sidebar links should match section IDs in page body', () => {
+      // Extract sidebar links from learn.astro
+      const sidebarLinks = extractHashLinks(learnContent, '<aside class="learn-toc">', '</aside>');
+
+      // Extract section IDs from page body (lessons and exercises)
+      const sectionIds = extractLearnSectionIds(learnContent);
+
+      // Every sidebar link should have a corresponding section (excluding chapter-next which is special)
+      for (const link of sidebarLinks) {
+        if (link === 'chapter-next') continue; // This is a special "What's Next" section, not a lesson
+        assert.ok(
+          sectionIds.includes(link),
+          `Sidebar link "#${link}" has no matching section in learn.astro body. ` +
+          `Add <section class="lesson" id="${link}"> or <section class="exercise" id="${link}"> or remove the link.`
+        );
+      }
+
+      // Every section should have a sidebar link (excluding special sections)
+      const specialSections = ['chapter-next', 'exercises-intro'];
+      for (const id of sectionIds) {
+        if (specialSections.includes(id)) continue;
+        assert.ok(
+          sidebarLinks.includes(id),
+          `Section id="${id}" has no sidebar link in learn.astro. ` +
+          `Add <a href="#${id}"> to the sidebar or remove the section.`
+        );
+      }
+    });
+
+    it('Layout.astro dropdown should match learn.astro sidebar', () => {
+      // Extract Layout dropdown links for /learn
+      const layoutLinks = extractLayoutLinks(layoutContent, '/learn');
+
+      // Extract sidebar links from learn.astro (excluding chapter-next)
+      const sidebarLinks = extractHashLinks(learnContent, '<aside class="learn-toc">', '</aside>')
+        .filter(link => link !== 'chapter-next');
+
+      // Every Layout link should exist in sidebar
+      for (const link of layoutLinks) {
+        assert.ok(
+          sidebarLinks.includes(link),
+          `Layout.astro has link to "/learn#${link}" but learn.astro sidebar doesn't have "#${link}". ` +
+          `Add it to learn.astro sidebar or remove from Layout.astro.`
+        );
+      }
+
+      // Every sidebar link should exist in Layout (ensures Layout is complete)
+      for (const link of sidebarLinks) {
+        assert.ok(
+          layoutLinks.includes(link),
+          `learn.astro sidebar has "#${link}" but Layout.astro dropdown is missing "/learn#${link}". ` +
+          `Add it to Layout.astro Learn submenu.`
+        );
+      }
+    });
+  });
 });
