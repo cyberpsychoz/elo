@@ -82,11 +82,18 @@ in {
   month: month(today)
 }`,
   durations: `P1D + PT2H`,
-  input: `_.price * _.quantity`
+  input: `_.price * _.quantity`,
+  'type-simple': `let Person = { name: String, age: Int } in
+{ name: 'Alice', age: '30' } |> Person`,
+  'type-validation': `let
+  Age = Int(a | a >= 0),
+  Person = { name: String, age: Age }
+in _ |> Person`
 };
 
 const EXAMPLE_INPUTS: Record<string, string> = {
-  input: `{"price": 100, "quantity": 2}`
+  input: `{"price": 100, "quantity": 2}`,
+  'type-validation': `{"name": "Alice", "age": "30"}`
 };
 
 export default class PlaygroundController extends Controller {

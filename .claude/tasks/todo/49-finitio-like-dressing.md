@@ -1,23 +1,38 @@
-## Implementation Status
+## Current Status (2026-01-01)
+
+15 commits on `finitio-types` branch. All unit, integration, and acceptance tests pass.
+
+### Completed ✅
+
+1. **Parser** - Uppercase let bindings trigger type expression parsing (`let Person = {...}`)
+2. **AST/IR** - TypeExpr nodes: TypeRef, TypeSchema, SubtypeConstraint, ArrayType, UnionType
+3. **JavaScript compiler** - Full implementation with Result-based parser functions
+4. **Ruby compiler** - Full implementation with same Result-based approach (c3f13af)
+5. **Acceptance tests** - 34 assertions in `test/fixtures/type-definitions.elo`
+
+### Remaining Sub-tasks
+
+- [x] **README documentation** - Added to Current Features list
+- [x] **Website documentation** - docs.astro, learn.astro, stdlib.astro, Layout.astro updated
 
 ### Finitio Type Constructs Coverage
 
 | Finitio Construct | Elo Syntax | Status | Notes |
 |-------------------|------------|--------|-------|
-| **Any type** | `.` or `Any` | ✅ JS | Accepts any value |
-| **Base types** | `String`, `Int`, `Bool`, `Datetime` | ✅ JS | With coercion (e.g., `'42'` → `42`) |
-| **Subtype constraint** | `Int(i \| i > 0)` | ✅ JS | Predicate on dressed value |
-| **Union type** | `Int\|String` | ✅ JS | PEG-style: tries left-to-right |
-| **Sequence type** | `[Int]` | ✅ JS | Homogeneous arrays |
-| **Struct type** | `{ name: String }` | ✅ JS | Object schemas with property types |
-| **Named types** | `let Person = ... in` | ✅ JS | Uppercase let bindings |
+| **Any type** | `.` or `Any` | ✅ | Accepts any value |
+| **Base types** | `String`, `Int`, `Bool`, `Datetime` | ✅ | With coercion (e.g., `'42'` → `42`) |
+| **Subtype constraint** | `Int(i \| i > 0)` | ✅ | Predicate on dressed value |
+| **Union type** | `Int\|String` | ✅ | PEG-style: tries left-to-right |
+| **Sequence type** | `[Int]` | ✅ | Homogeneous arrays |
+| **Struct type** | `{ name: String }` | ✅ | Object schemas with property types |
+| **Named types** | `let Person = ... in` | ✅ | Uppercase let bindings |
 | **Tuple type** | `[Int, String]` | ❌ | Fixed-length positional - not implemented |
 | **Relation type** | `{{name: String}}` | ❌ | Set of tuples - not implemented |
 | **Set type** | `{Int}` | ❌ | Unique elements - not implemented |
-| **Optional attr** | `name :? String` | ✅ JS | Missing/null values become null |
-| **Closed struct** | `{ name: String }` | ✅ JS | Extra attributes cause failure (default) |
-| **Open struct (ignored)** | `{ name: String, ... }` | ✅ JS | Extra attrs allowed but not in output |
-| **Open struct (typed)** | `{ name: String, ...: Int }` | ✅ JS | Extra attrs must match type |
+| **Optional attr** | `name :? String` | ✅ | Missing/null values become null |
+| **Closed struct** | `{ name: String }` | ✅ | Extra attributes cause failure (default) |
+| **Open struct (ignored)** | `{ name: String, ... }` | ✅ | Extra attrs allowed but not in output |
+| **Open struct (typed)** | `{ name: String, ...: Int }` | ✅ | Extra attrs must match type |
 
 ### Composition Support
 
@@ -41,9 +56,9 @@ let Result = { ok: Bool } | { error: String } in data |> Result
 
 | Target | Status | Notes |
 |--------|--------|-------|
-| **JavaScript** | ✅ Complete | All constructs work, 31 acceptance tests |
+| **JavaScript** | ✅ Complete | All constructs work, 34 acceptance tests |
 | **Ruby** | ✅ Complete | All constructs work, same tests as JS |
-| **SQL** | ❌ Pending | Throws "not implemented" error |
+| **SQL** | ⊘ Not supported | SQL lacks lambda/function capabilities for Result-based parsing |
 
 ### Implementation Details
 
@@ -79,13 +94,38 @@ let Result = { ok: Bool } | { error: String } in data |> Result
 
 ## Next Steps
 
-### Priority 1: Ruby/SQL Compilers
-Implement type definitions for Ruby and SQL targets using same Result-based approach.
+**Task 49 is complete.** All sub-tasks done:
+- JavaScript and Ruby compilers implemented
+- README and website documentation added
+- All tests passing
 
-### Deferred
+### Not in scope
+- **SQL target** - SQL lacks lambda/function capabilities for Result-based parsing
 - Tuple types `[Int, String]` - low priority, rarely needed
 - Set types `{Int}` - would require runtime deduplication
 - Relation types `{{...}}` - complex, SQL-specific use case
+
+---
+
+## Commit History (task 49)
+
+```
+c3f13af Add Ruby compilation support for type definitions
+20aac0a Support multiple type bindings and type alias references
+84f3fef Improve type error messages with path and description
+fca51ed Unify selector semantics with Finitio (throw on failure)
+0a32f3d Optional attributes skip missing values instead of null
+7c2112e Add unit tests for optional commas in type schemas
+cfc14fa Support optional commas in type schema definitions
+9bf16d6 Add extra attributes support to type schemas
+3ceeeb0 Add assertFails helper and throw on type parse failures
+432c75e Add optional attributes to type definitions
+3f3e149 Update task 49 with Finitio coverage summary
+cad0be8 Fix inline parser invocation in type schemas
+cd73c80 Add union types to type definitions
+cb9c10d Add subtype constraints and array types to type definitions
+1462eb9 Add Finitio-like type definitions for JavaScript
+```
 
 ---
 

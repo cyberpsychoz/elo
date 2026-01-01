@@ -18,6 +18,7 @@ const url = (path: string) => `${base}${path}`;
         <a href="#chapter-5" data-learn-progress-target="tocLink"><span class="toc-check"></span>5. Program Structure</a>
         <a href="#chapter-6" data-learn-progress-target="tocLink"><span class="toc-check"></span>6. Advanced Processing</a>
         <a href="#chapter-7" data-learn-progress-target="tocLink"><span class="toc-check"></span>7. Input Data</a>
+        <a href="#chapter-8" data-learn-progress-target="tocLink"><span class="toc-check"></span>8. Data Validation</a>
         <span class="toc-section">Exercises</span>
         <a href="#ex-greeting" data-exercises-target="tocLink"><span class="toc-check"></span>Build a Greeting</a>
         <a href="#ex-product" data-exercises-target="tocLink"><span class="toc-check"></span>Product Total</a>
@@ -25,6 +26,7 @@ const url = (path: string) => `${base}${path}`;
         <a href="#ex-area" data-exercises-target="tocLink"><span class="toc-check"></span>Rectangle Area</a>
         <a href="#ex-filter-map" data-exercises-target="tocLink"><span class="toc-check"></span>Filter and Double</a>
         <a href="#ex-input" data-exercises-target="tocLink"><span class="toc-check"></span>Order Total</a>
+        <a href="#ex-validate" data-exercises-target="tocLink"><span class="toc-check"></span>Validate Data</a>
         <span class="toc-section">Next</span>
         <a href="#chapter-next">What's Next?</a>
       </nav>
@@ -428,6 +430,88 @@ in
         </p>
       </section>
 
+      <section class="lesson" id="chapter-8" data-learn-progress-target="lesson">
+        <div class="lesson-header">
+          <h2>8. Data Validation</h2>
+          <button class="lesson-toggle" data-action="click->learn-progress#toggle" data-lesson="chapter-8" data-learn-progress-target="toggleBtn">
+            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
+          </button>
+        </div>
+        <p>
+          External data (JSON from APIs, user input) needs validation. Elo's type definitions
+          let you define schemas that validate structure and coerce values to the right types.
+        </p>
+        <p class="lesson-tip">
+          <strong>Note:</strong> Type definitions compile to JavaScript and Ruby only. SQL is not supported.
+        </p>
+
+        <h3>Type Coercion</h3>
+        <p>Type selectors like <code>Int()</code> parse strings. With type definitions, you define reusable types:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let T = Int in '42' |> T</pre>
+        </div>
+        <p>Uppercase names create type definitions. Apply them with the pipe operator.</p>
+
+        <h3>Struct Schemas</h3>
+        <p>Define the expected shape of objects:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let Person = &#123; name: String, age: Int &#125; in
+&#123; name: 'Alice', age: '30' &#125; |> Person</pre>
+        </div>
+        <p>
+          This validates the structure and coerces <code>age</code> from string <code>'30'</code> to integer <code>30</code>.
+          Missing or extra fields cause an error.
+        </p>
+
+        <h3>Optional Fields</h3>
+        <p>Mark fields as optional with <code>:?</code>:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let T = &#123; name: String, age :? Int &#125; in
+&#123; name: 'Bob' &#125; |> T</pre>
+        </div>
+        <p>Missing optional fields are omitted from the result.</p>
+
+        <h3>Arrays</h3>
+        <p>Validate arrays where each element matches a type:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let Numbers = [Int] in ['1', '2', '3'] |> Numbers</pre>
+        </div>
+        <p>Each string is coerced to an integer: <code>[1, 2, 3]</code>.</p>
+
+        <h3>Union Types</h3>
+        <p>Accept multiple types with <code>|</code>:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let T = Int|String in 'hello' |> T</pre>
+        </div>
+        <p>Tries each alternative left-to-right, returns the first match.</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let T = [Int|String] in ['42', 'hello'] |> T</pre>
+        </div>
+        <p>Returns <code>[42, 'hello']</code>—numeric strings become integers.</p>
+
+        <h3>Constraints</h3>
+        <p>Add validation predicates to types:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let Positive = Int(n | n > 0) in '42' |> Positive</pre>
+        </div>
+        <p>The value is first coerced to <code>Int</code>, then the constraint <code>n > 0</code> is checked.</p>
+
+        <h3>Composing Types</h3>
+        <p>Build complex schemas from simpler ones:</p>
+        <div class="lesson-example" data-action="click->doc#tryExample">
+          <pre class="example-code">let
+  Age = Int(a | a >= 0),
+  Person = &#123; name: String, age: Age &#125;
+in &#123; name: 'Alice', age: '30' &#125; |> Person</pre>
+        </div>
+        <p>Named types can reference other named types for reusable schemas.</p>
+
+        <p class="lesson-tip">
+          <strong>Think Finitio:</strong> Elo's type definitions are inspired by <a href="https://finitio.io">Finitio</a>.
+          They validate and transform external data in one step—perfect for API responses and user input.
+        </p>
+      </section>
+
       <section class="exercises-section" id="exercises-intro">
         <h2>Exercises</h2>
         <p class="exercises-intro">
@@ -618,6 +702,37 @@ in
           <div class="lesson-example" data-action="click->doc#tryExample">
             <pre class="example-code">let order = &#123; price: 50, quantity: 3 &#125; in
   assert(order.price * order.quantity == 150)</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="exercise" id="ex-validate" data-exercises-target="exercise">
+        <div class="exercise-header">
+          <h3>Validate Data</h3>
+          <span class="exercise-chapter">Chapter 8</span>
+          <button class="exercise-toggle" data-action="click->exercises#toggle" data-exercise-id="ex-validate" data-exercises-target="toggleBtn">
+            <span class="toggle-check"></span><span class="toggle-text">Mark as complete</span>
+          </button>
+        </div>
+        <p class="exercise-description">
+          Define a type that validates a product with a name (String) and price (Int), then apply it to coerce the price from a string.
+        </p>
+        <div
+          class="exercise-editor"
+          data-exercises-target="editor"
+          data-exercise-id="ex-validate"
+          data-initial-code={'let Product = { ???: ???, ???: ??? } in\n  assert({ name: \'Widget\', price: \'99\' } |> Product == { name: \'Widget\', price: 99 })'}
+        ></div>
+        <div class="exercise-actions">
+          <button class="exercise-check" data-action="click->exercises#check" data-exercises-target="checkButton" data-exercise-id="ex-validate">Check</button>
+          <button class="exercise-solution-toggle" data-action="click->exercises#toggleSolution" data-exercises-target="solutionButton" data-exercise-id="ex-validate">Show Solution</button>
+        </div>
+        <div class="exercise-feedback" data-exercises-target="feedback" data-exercise-id="ex-validate"></div>
+        <div class="exercise-solution hidden" data-exercises-target="solution" data-exercise-id="ex-validate">
+          <h4>Solution</h4>
+          <div class="lesson-example" data-action="click->doc#tryExample">
+            <pre class="example-code">let Product = &#123; name: String, price: Int &#125; in
+  assert(&#123; name: 'Widget', price: '99' &#125; |> Product == &#123; name: 'Widget', price: 99 &#125;)</pre>
           </div>
         </div>
       </section>

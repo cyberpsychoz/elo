@@ -32,6 +32,7 @@ See also the Related work section below.
 - **Pipe operator**: `|>` for function chaining (Elixir-style), parentheses optional
 - **Alternative operator**: `|` for fallback chains (returns first defined value)
 - **Type selectors**: `Int()`, `Float()`, `Bool()`, `Date()`, `Datetime()`, `Duration()`, `Data()` for parsing strings to typed values
+- **Type definitions**: Finitio-like schema validation with `let Person = { name: String, age: Int } in data |> Person`
 - **Lambdas**: `fn(x ~> x * 2)` or `x ~> x * 2` (sugar) for anonymous functions
 - **Input variable**: `_` for accessing external data passed to expressions
 - **Array iteration**: `map`, `filter`, `reduce`, `any`, `all` (JS/Ruby only)

@@ -20,6 +20,7 @@ import Footer from '../components/Footer.astro';
         <a href="#lambdas">Lambdas</a>
         <a href="#ranges">Ranges</a>
         <a href="#type-selectors">Type Selectors</a>
+        <a href="#type-definitions">Type Definitions</a>
         <a href="#assertions">Assertions</a>
         <span class="toc-section">Tools</span>
         <a href="#examples">Examples</a>
@@ -358,6 +359,92 @@ import Footer from '../components/Footer.astro';
           <p class="example-desc">Parses a JSON string and accesses a property.</p>
         </div>
         <p>Available: <code>Int()</code>, <code>Float()</code>, <code>Bool()</code>, <code>Date()</code>, <code>Datetime()</code>, <code>Duration()</code>, <code>Data()</code>.</p>
+      </section>
+
+      <section class="doc-section" id="type-definitions">
+        <h2>Type Definitions</h2>
+        <p>Type definitions let you validate and transform complex data structures like JSON. Define types using uppercase <code>let</code> bindings, then apply them with the pipe operator.</p>
+        <p class="note"><strong>Note:</strong> Type definitions compile to JavaScript and Ruby only. SQL is not supported.</p>
+
+        <h3>Basic Types</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Type Coercion</div>
+          <pre class="example-code">let T = Int in '42' |> T</pre>
+          <p class="example-desc">Coerces the string <code>'42'</code> to integer <code>42</code>.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Any Type</div>
+          <pre class="example-code">let T = . in 'anything' |> T</pre>
+          <p class="example-desc">The dot <code>.</code> accepts any value unchanged.</p>
+        </div>
+
+        <h3>Struct Schemas</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Struct</div>
+          <pre class="example-code">let Person = &#123; name: String, age: Int &#125; in
+&#123; name: 'Alice', age: '30' &#125; |> Person</pre>
+          <p class="example-desc">Validates shape and coerces <code>age</code> from string to integer.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Optional Attributes</div>
+          <pre class="example-code">let T = &#123; name: String, age :? Int &#125; in
+&#123; name: 'Bob' &#125; |> T</pre>
+          <p class="example-desc">Optional attributes (with <code>:?</code>) can be missing. Missing fields are omitted from result.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Open Struct</div>
+          <pre class="example-code">let T = &#123; name: String, ... &#125; in
+&#123; name: 'Eve', extra: 42 &#125; |> T</pre>
+          <p class="example-desc">Open structs (<code>...</code>) allow extra attributes. They're ignored in output.</p>
+        </div>
+
+        <h3>Array Types</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Array of Integers</div>
+          <pre class="example-code">let Numbers = [Int] in ['1', '2', '3'] |> Numbers</pre>
+          <p class="example-desc">Coerces each element. Returns <code>[1, 2, 3]</code>.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Array of Structs</div>
+          <pre class="example-code">let People = [&#123; name: String &#125;] in
+[&#123; name: 'A' &#125;, &#123; name: 'B' &#125;] |> People</pre>
+          <p class="example-desc">Validates each element against the struct schema.</p>
+        </div>
+
+        <h3>Union Types</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Union Type</div>
+          <pre class="example-code">let T = Int|String in 'hello' |> T</pre>
+          <p class="example-desc">Tries alternatives left-to-right. Returns first successful match.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Mixed Array</div>
+          <pre class="example-code">let T = [Int|String] in ['42', 'hello'] |> T</pre>
+          <p class="example-desc">Returns <code>[42, 'hello']</code> - numeric strings become integers.</p>
+        </div>
+
+        <h3>Subtype Constraints</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Positive Integer</div>
+          <pre class="example-code">let Positive = Int(i | i > 0) in '42' |> Positive</pre>
+          <p class="example-desc">Adds a predicate constraint. Throws if value is not positive.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Constrained Struct</div>
+          <pre class="example-code">let Adult = &#123; age: Int(a | a >= 18) &#125; in
+&#123; age: '25' &#125; |> Adult</pre>
+          <p class="example-desc">Constraints compose with struct schemas.</p>
+        </div>
+
+        <h3>Named Type Aliases</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Reusable Types</div>
+          <pre class="example-code">let
+  Age = Int(a | a >= 0),
+  Person = &#123; name: String, age: Age &#125;
+in &#123; name: 'Alice', age: '30' &#125; |> Person</pre>
+          <p class="example-desc">Define multiple types and reference them by name.</p>
+        </div>
       </section>
 
       <section class="doc-section" id="assertions">
