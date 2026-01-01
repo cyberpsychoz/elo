@@ -5,3 +5,4 @@
 (function() { if (!(1 == 1 || 2 == 2)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(!false)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(150 > 100 && 15 >= 10 || true == true)) throw new Error("Assertion failed"); return true; })()
+

@@ -145,48 +145,53 @@ export const JS_HELPERS: Record<string, string> = {
   return v;
 }`,
 
-  // Parser helpers - return Result: { success: boolean, path: string, value: any, cause: Result[] }
-  pOk: `function pOk(v, p) { return { success: true, path: p, value: v, cause: [] }; }`,
-  pFail: `function pFail(p, c) { return { success: false, path: p, value: null, cause: c || [] }; }`,
+  // Parser helpers - return Result: { success: boolean, path: string, message: string, value: any, cause: Result[] }
+  pOk: `function pOk(v, p) { return { success: true, path: p, message: '', value: v, cause: [] }; }`,
+  pFail: `function pFail(p, m, c) { return { success: false, path: p, message: m || '', value: null, cause: c || [] }; }`,
   pAny: `function pAny(v, p) { return pOk(v, p); }`,
   pString: `function pString(v, p) {
   if (typeof v === 'string') return pOk(v, p);
-  return pFail(p, []);
+  return pFail(p, 'expected String, got ' + (v === null ? 'Null' : typeof v));
 }`,
   pInt: `function pInt(v, p) {
   if (typeof v === 'number' && Number.isInteger(v)) return pOk(v, p);
   if (typeof v === 'string') { const n = parseInt(v, 10); if (!isNaN(n)) return pOk(n, p); }
-  return pFail(p, []);
+  return pFail(p, 'expected Int, got ' + (v === null ? 'Null' : typeof v === 'string' ? JSON.stringify(v) : typeof v));
 }`,
   pBool: `function pBool(v, p) {
   if (typeof v === 'boolean') return pOk(v, p);
   if (v === 'true') return pOk(true, p);
   if (v === 'false') return pOk(false, p);
-  return pFail(p, []);
+  return pFail(p, 'expected Bool, got ' + (v === null ? 'Null' : typeof v === 'string' ? JSON.stringify(v) : typeof v));
 }`,
   pDatetime: `function pDatetime(v, p) {
   if (dayjs.isDayjs(v)) return pOk(v, p);
   if (typeof v === 'string') { const d = dayjs(v); if (d.isValid()) return pOk(d, p); }
-  return pFail(p, []);
+  return pFail(p, 'expected Datetime, got ' + (v === null ? 'Null' : typeof v === 'string' ? 'invalid datetime ' + JSON.stringify(v) : typeof v));
 }`,
   pFloat: `function pFloat(v, p) {
   if (typeof v === 'number') return pOk(v, p);
   if (typeof v === 'string') { const n = parseFloat(v); if (!isNaN(n)) return pOk(n, p); }
-  return pFail(p, []);
+  return pFail(p, 'expected Float, got ' + (v === null ? 'Null' : typeof v === 'string' ? JSON.stringify(v) : typeof v));
 }`,
   pDate: `function pDate(v, p) {
   if (dayjs.isDayjs(v)) return pOk(v.startOf('day'), p);
   if (typeof v === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(v)) { const d = dayjs(v); if (d.isValid()) return pOk(d.startOf('day'), p); }
-  return pFail(p, []);
+  return pFail(p, 'expected Date (YYYY-MM-DD), got ' + (v === null ? 'Null' : typeof v === 'string' ? JSON.stringify(v) : typeof v));
 }`,
   pDuration: `function pDuration(v, p) {
   if (dayjs.isDuration(v)) return pOk(v, p);
   if (typeof v === 'string') { const d = dayjs.duration(v); if (!isNaN(d.asMilliseconds())) return pOk(d, p); }
-  return pFail(p, []);
+  return pFail(p, 'expected Duration (ISO 8601), got ' + (v === null ? 'Null' : typeof v === 'string' ? JSON.stringify(v) : typeof v));
 }`,
   pData: `function pData(v, p) {
-  if (typeof v === 'string') { try { return pOk(JSON.parse(v), p); } catch { return pFail(p, []); } }
+  if (typeof v === 'string') { try { return pOk(JSON.parse(v), p); } catch { return pFail(p, 'invalid JSON: ' + JSON.stringify(v)); } }
   return pOk(v, p);
 }`,
-  pUnwrap: `function pUnwrap(r) { if (r.success) return r.value; throw new Error('Type error at ' + (r.path || '(root)')); }`,
+  pUnwrap: `function pUnwrap(r) {
+  if (r.success) return r.value;
+  function findError(e) { if (e.message) return e; if (e.cause && e.cause[0]) return findError(e.cause[0]); return e; }
+  const err = findError(r);
+  throw new Error((err.path || '.') + ': ' + (err.message || 'type error'));
+}`,
 };

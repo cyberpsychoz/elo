@@ -7,3 +7,4 @@
 (function() { if (!((true && true) ? (1) : (0) == 1)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!((true) ? (true) : (false))) throw new Error("Assertion failed"); return true; })()
 (function() { if (!((5 > 3) ? (10 == 10) : (false))) throw new Error("Assertion failed"); return true; })()
+

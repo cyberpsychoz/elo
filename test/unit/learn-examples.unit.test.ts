@@ -165,6 +165,6 @@ describe('Learn Page Examples - Lesson 15: Parsing Data', () => {
     const dur = compile("Duration('P1D')", { runtime });
     assert.ok(dayjs.isDuration(dur));
     // Type selectors throw on invalid input (Finitio semantics)
-    assert.throws(() => compile("Int('not a number')", { runtime }), /Type error/);
+    assert.throws(() => compile("Int('not a number')", { runtime }), /expected Int/);
   });
 });

@@ -298,11 +298,11 @@ export function createRubyBinding(): StdLib<string> {
   rubyLib.register('Int', [Types.float], (args, ctx) => `${ctx.emit(args[0])}.to_i`);
   rubyLib.register('Int', [Types.string], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `Integer(${v})`;
+    return `(->(s) { Integer(s) rescue raise ".: expected Int, got #{s.inspect}" }).call(${v})`;
   });
   rubyLib.register('Int', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when Integer; v when Float; v.to_i when String; Integer(v) else raise "Type error at (root)" end }).call(${v})`;
+    return `(->(v) { case v when Integer; v when Float; v.to_i when String; Integer(v) rescue raise ".: expected Int, got #{v.inspect}" else raise ".: expected Int, got #{v.class}" end }).call(${v})`;
   });
 
   // Float - identity for float, convert for int, parse for string
@@ -310,55 +310,55 @@ export function createRubyBinding(): StdLib<string> {
   rubyLib.register('Float', [Types.int], (args, ctx) => `${ctx.emit(args[0])}.to_f`);
   rubyLib.register('Float', [Types.string], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `Float(${v})`;
+    return `(->(s) { Float(s) rescue raise ".: expected Float, got #{s.inspect}" }).call(${v})`;
   });
   rubyLib.register('Float', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when Float; v when Integer; v.to_f when String; Float(v) else raise "Type error at (root)" end }).call(${v})`;
+    return `(->(v) { case v when Float; v when Integer; v.to_f when String; Float(v) rescue raise ".: expected Float, got #{v.inspect}" else raise ".: expected Float, got #{v.class}" end }).call(${v})`;
   });
 
   // Bool - identity for bool, parse "true"/"false" for string
   rubyLib.register('Bool', [Types.bool], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('Bool', [Types.string], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(s) { case s when 'true'; true when 'false'; false else raise "Type error at (root)" end }).call(${v})`;
+    return `(->(s) { case s when 'true'; true when 'false'; false else raise ".: expected Bool, got #{s.inspect}" end }).call(${v})`;
   });
   rubyLib.register('Bool', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when true, false; v when 'true'; true when 'false'; false else raise "Type error at (root)" end }).call(${v})`;
+    return `(->(v) { case v when true, false; v when 'true'; true when 'false'; false else raise ".: expected Bool, got #{v.class}" end }).call(${v})`;
   });
 
   // Date - identity for date, parse ISO for string
   rubyLib.register('Date', [Types.date], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('Date', [Types.string], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(s) { raise "Type error at (root)" unless s =~ /^\\d{4}-\\d{2}-\\d{2}$/; Date.parse(s) }).call(${v})`;
+    return `(->(s) { raise ".: expected Date (YYYY-MM-DD), got #{s.inspect}" unless s =~ /^\\d{4}-\\d{2}-\\d{2}$/; Date.parse(s) }).call(${v})`;
   });
   rubyLib.register('Date', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when Date; v when String; raise "Type error at (root)" unless v =~ /^\\d{4}-\\d{2}-\\d{2}$/; Date.parse(v) else raise "Type error at (root)" end }).call(${v})`;
+    return `(->(v) { case v when Date; v when String; raise ".: expected Date (YYYY-MM-DD), got #{v.inspect}" unless v =~ /^\\d{4}-\\d{2}-\\d{2}$/; Date.parse(v) else raise ".: expected Date, got #{v.class}" end }).call(${v})`;
   });
 
   // Datetime - identity for datetime, parse ISO for string
   rubyLib.register('Datetime', [Types.datetime], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('Datetime', [Types.string], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `DateTime.parse(${v})`;
+    return `(->(s) { DateTime.parse(s) rescue raise ".: expected Datetime, got invalid datetime #{s.inspect}" }).call(${v})`;
   });
   rubyLib.register('Datetime', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when DateTime, Time; v when String; DateTime.parse(v) else raise "Type error at (root)" end }).call(${v})`;
+    return `(->(v) { case v when DateTime, Time; v when String; DateTime.parse(v) rescue raise ".: expected Datetime, got #{v.inspect}" else raise ".: expected Datetime, got #{v.class}" end }).call(${v})`;
   });
 
   // Duration - identity for duration, parse ISO for string
   rubyLib.register('Duration', [Types.duration], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('Duration', [Types.string], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `ActiveSupport::Duration.parse(${v})`;
+    return `(->(s) { ActiveSupport::Duration.parse(s) rescue raise ".: expected Duration (ISO 8601), got #{s.inspect}" }).call(${v})`;
   });
   rubyLib.register('Duration', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when ActiveSupport::Duration; v when String; ActiveSupport::Duration.parse(v) else raise "Type error at (root)" end }).call(${v})`;
+    return `(->(v) { case v when ActiveSupport::Duration; v when String; ActiveSupport::Duration.parse(v) rescue raise ".: expected Duration (ISO 8601), got #{v.inspect}" else raise ".: expected Duration, got #{v.class}" end }).call(${v})`;
   });
 
   // Data - identity for non-strings, parse JSON for strings
@@ -366,11 +366,11 @@ export function createRubyBinding(): StdLib<string> {
   rubyLib.register('Data', [Types.object], (args, ctx) => ctx.emit(args[0]));
   rubyLib.register('Data', [Types.string], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `JSON.parse(${v}, symbolize_names: true)`;
+    return `(->(s) { JSON.parse(s, symbolize_names: true) rescue raise ".: invalid JSON: #{s.inspect}" }).call(${v})`;
   });
   rubyLib.register('Data', [Types.any], (args, ctx) => {
     const v = ctx.emit(args[0]);
-    return `(->(v) { case v when String; JSON.parse(v, symbolize_names: true) else v end }).call(${v})`;
+    return `(->(v) { case v when String; JSON.parse(v, symbolize_names: true) rescue raise ".: invalid JSON: #{v.inspect}" else v end }).call(${v})`;
   });
 
   // No fallback - unknown functions should fail at compile time

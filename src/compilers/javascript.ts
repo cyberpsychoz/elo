@@ -328,10 +328,10 @@ function emitTypeExprParser(
       const propChecks = propParsers.map(({ key, parser, optional }) => {
         if (optional) {
           // Optional: if value is null/undefined, skip attribute; otherwise parse
-          return `if (v.${key} != null) { const _r_${key} = (${parser})(v.${key}, p + '.${key}'); if (!_r_${key}.success) return pFail(p, [_r_${key}]); _o.${key} = _r_${key}.value; }`;
+          return `if (v.${key} != null) { const _r_${key} = (${parser})(v.${key}, p + '.${key}'); if (!_r_${key}.success) return pFail(p, null, [_r_${key}]); _o.${key} = _r_${key}.value; }`;
         }
         // Required: parse and fail if not successful
-        return `const _r_${key} = (${parser})(v.${key}, p + '.${key}'); if (!_r_${key}.success) return pFail(p, [_r_${key}]); _o.${key} = _r_${key}.value;`;
+        return `const _r_${key} = (${parser})(v.${key}, p + '.${key}'); if (!_r_${key}.success) return pFail(p, null, [_r_${key}]); _o.${key} = _r_${key}.value;`;
       }).join(' ');
 
       // Handle extras based on the extras mode
@@ -339,7 +339,7 @@ function emitTypeExprParser(
       if (typeExpr.extras === undefined || typeExpr.extras === 'closed') {
         // Closed: fail if any extra keys exist
         const knownKeysSet = JSON.stringify(knownKeys);
-        extrasCheck = `const _ks = ${knownKeysSet}; for (const _k in v) { if (!_ks.includes(_k)) return pFail(p + '.' + _k, []); }`;
+        extrasCheck = `const _ks = ${knownKeysSet}; for (const _k in v) { if (!_ks.includes(_k)) return pFail(p + '.' + _k, 'unexpected attribute'); }`;
       } else if (typeExpr.extras === 'ignored') {
         // Ignored: no check, extras are silently ignored
         extrasCheck = '';
@@ -347,10 +347,10 @@ function emitTypeExprParser(
         // Typed extras: parse each extra key with the given type
         const extrasParser = emitTypeExprParser(typeExpr.extras, ctx);
         const knownKeysSet = JSON.stringify(knownKeys);
-        extrasCheck = `const _ks = ${knownKeysSet}; const _ep = ${extrasParser}; for (const _k in v) { if (!_ks.includes(_k)) { const _re = _ep(v[_k], p + '.' + _k); if (!_re.success) return pFail(p, [_re]); _o[_k] = _re.value; } }`;
+        extrasCheck = `const _ks = ${knownKeysSet}; const _ep = ${extrasParser}; for (const _k in v) { if (!_ks.includes(_k)) { const _re = _ep(v[_k], p + '.' + _k); if (!_re.success) return pFail(p, null, [_re]); _o[_k] = _re.value; } }`;
       }
 
-      return `(v, p) => { if (typeof v !== 'object' || v === null) return pFail(p, []); const _o = {}; ${propChecks} ${extrasCheck} return pOk(_o, p); }`;
+      return `(v, p) => { if (typeof v !== 'object' || v === null) return pFail(p, 'expected object, got ' + (v === null ? 'Null' : typeof v)); const _o = {}; ${propChecks} ${extrasCheck} return pOk(_o, p); }`;
     }
 
     case 'subtype_constraint': {
@@ -362,7 +362,7 @@ function emitTypeExprParser(
       const constraintCode = ctx.emit(typeExpr.constraint);
       const varName = typeExpr.variable;
 
-      return `(v, p) => { const _r = ${baseParser}(v, p); if (!_r.success) return _r; const ${varName} = _r.value; if (!(${constraintCode})) return pFail(p, []); return _r; }`;
+      return `(v, p) => { const _r = ${baseParser}(v, p); if (!_r.success) return _r; const ${varName} = _r.value; if (!(${constraintCode})) return pFail(p, 'constraint violated'); return _r; }`;
     }
 
     case 'array_type': {
@@ -373,7 +373,7 @@ function emitTypeExprParser(
       const elemParser = emitTypeExprParser(typeExpr.elementType, ctx);
 
       // Store element parser in variable to handle inline functions (like object schemas)
-      return `(v, p) => { if (!Array.isArray(v)) return pFail(p, []); const _el = ${elemParser}; const _a = []; for (let _i = 0; _i < v.length; _i++) { const _r = _el(v[_i], p + '[' + _i + ']'); if (!_r.success) return pFail(p, [_r]); _a.push(_r.value); } return pOk(_a, p); }`;
+      return `(v, p) => { if (!Array.isArray(v)) return pFail(p, 'expected array, got ' + (v === null ? 'Null' : typeof v)); const _el = ${elemParser}; const _a = []; for (let _i = 0; _i < v.length; _i++) { const _r = _el(v[_i], p + '.' + _i); if (!_r.success) return pFail(p, null, [_r]); _a.push(_r.value); } return pOk(_a, p); }`;
     }
 
     case 'union_type': {
@@ -383,9 +383,9 @@ function emitTypeExprParser(
       const parsers = typeExpr.types.map(t => emitTypeExprParser(t, ctx));
 
       // Generate tries: call each parser directly in order
-      const tries = parsers.map(p => `_r = (${p})(v, p); if (_r.success) return _r;`).join(' ');
+      const tries = parsers.map(p => `_r = (${p})(v, p); if (_r.success) return _r; _causes.push(_r);`).join(' ');
 
-      return `(v, p) => { let _r; ${tries} return pFail(p, []); }`;
+      return `(v, p) => { let _r; const _causes = []; ${tries} return pFail(p, 'no union alternative matched', _causes); }`;
     }
   }
 }

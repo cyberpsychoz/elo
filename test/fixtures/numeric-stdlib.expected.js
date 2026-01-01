@@ -19,3 +19,4 @@
 (function() { if (!(Math.ceil(-3.2) == -3)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(Math.ceil(-3.9) == -3)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(5 == 5)) throw new Error("Assertion failed"); return true; })()
+

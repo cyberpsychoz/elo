@@ -4,3 +4,4 @@
 (function() { if (!(30 >= 18 && (50000 > 30000 || true == true))) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(0.8 * 100 == 80)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(70 / Math.pow(1.75, 2) < 25)) throw new Error("Assertion failed"); return true; })()
+

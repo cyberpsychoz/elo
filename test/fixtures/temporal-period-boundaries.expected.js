@@ -13,3 +13,4 @@
 (function() { if (!(dayjs().startOf('year') <= dayjs().startOf('day'))) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(dayjs().endOf('year') >= dayjs().startOf('day'))) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(dayjs().startOf('year') < dayjs().endOf('year'))) throw new Error("Assertion failed"); return true; })()
+

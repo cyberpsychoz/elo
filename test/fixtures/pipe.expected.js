@@ -7,3 +7,4 @@
 (function() { if (!("  HELLO  ".trim().toLowerCase() == "hello")) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(Math.abs(0 - 5) == 5)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!("hello".toUpperCase().padStart(10, "-") == "-----HELLO")) throw new Error("Assertion failed"); return true; })()
+

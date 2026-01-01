@@ -3,3 +3,4 @@
 (function() { if (!("" == "")) throw new Error("Assertion failed"); return true; })()
 (function() { if (!("test123" == "test123")) throw new Error("Assertion failed"); return true; })()
 (function() { if (!("a" != "b")) throw new Error("Assertion failed"); return true; })()
+

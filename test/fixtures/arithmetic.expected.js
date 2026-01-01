@@ -5,3 +5,4 @@
 (function() { if (!((5 + 5) * (10 - 3) / 2 == 35)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(-5 + 10 == 5)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(10 % 3 + 8 / 2 == 5)) throw new Error("Assertion failed"); return true; })()
+

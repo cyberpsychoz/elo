@@ -10,3 +10,4 @@
 (function() { if (!(10 >= 10)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(10 == 10)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(5 != 10)) throw new Error("Assertion failed"); return true; })()
+

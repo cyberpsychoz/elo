@@ -13,7 +13,7 @@ CREATE OR REPLACE FUNCTION elo_int(v TEXT) RETURNS INTEGER AS $$
 BEGIN
   RETURN v::INTEGER;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Int, got %', quote_literal(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION elo_int(v ANYELEMENT) RETURNS INTEGER AS $$
 BEGIN
   RETURN v::INTEGER;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Int, got %', pg_typeof(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION elo_float(v TEXT) RETURNS DOUBLE PRECISION AS $$
 BEGIN
   RETURN v::DOUBLE PRECISION;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Float, got %', quote_literal(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -38,7 +38,7 @@ CREATE OR REPLACE FUNCTION elo_float(v ANYELEMENT) RETURNS DOUBLE PRECISION AS $
 BEGIN
   RETURN v::DOUBLE PRECISION;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Float, got %', pg_typeof(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -46,11 +46,11 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 CREATE OR REPLACE FUNCTION elo_date(v TEXT) RETURNS DATE AS $$
 BEGIN
   IF v !~ '^\d{4}-\d{2}-\d{2}$' THEN
-    RAISE EXCEPTION 'Type error at (root)';
+    RAISE EXCEPTION '.: expected Date (YYYY-MM-DD), got %', quote_literal(v);
   END IF;
   RETURN v::DATE;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Date (YYYY-MM-DD), got %', quote_literal(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -58,7 +58,7 @@ CREATE OR REPLACE FUNCTION elo_date(v ANYELEMENT) RETURNS DATE AS $$
 BEGIN
   RETURN v::DATE;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Date, got %', pg_typeof(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -67,7 +67,7 @@ CREATE OR REPLACE FUNCTION elo_datetime(v TEXT) RETURNS TIMESTAMP AS $$
 BEGIN
   RETURN v::TIMESTAMP;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Datetime, got %', quote_literal(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -75,7 +75,7 @@ CREATE OR REPLACE FUNCTION elo_datetime(v ANYELEMENT) RETURNS TIMESTAMP AS $$
 BEGIN
   RETURN v::TIMESTAMP;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Datetime, got %', pg_typeof(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -84,7 +84,7 @@ CREATE OR REPLACE FUNCTION elo_duration(v TEXT) RETURNS INTERVAL AS $$
 BEGIN
   RETURN v::INTERVAL;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Duration (ISO 8601), got %', quote_literal(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -92,7 +92,7 @@ CREATE OR REPLACE FUNCTION elo_duration(v ANYELEMENT) RETURNS INTERVAL AS $$
 BEGIN
   RETURN v::INTERVAL;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Duration, got %', pg_typeof(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -101,7 +101,7 @@ CREATE OR REPLACE FUNCTION elo_data(v TEXT) RETURNS JSONB AS $$
 BEGIN
   RETURN v::JSONB;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: invalid JSON: %', quote_literal(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -109,6 +109,6 @@ CREATE OR REPLACE FUNCTION elo_data(v ANYELEMENT) RETURNS JSONB AS $$
 BEGIN
   RETURN to_jsonb(v);
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Type error at (root)';
+  RAISE EXCEPTION '.: expected Data, got %', pg_typeof(v);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;

@@ -12,3 +12,4 @@
 (function() { function kTypeOf(v) { if (v === null || v === undefined) return 'Null'; if (dayjs.isDuration(v)) return 'Duration'; if (dayjs.isDayjs(v)) return 'DateTime'; if (typeof v === 'number') return Number.isInteger(v) ? 'Int' : 'Float'; if (typeof v === 'boolean') return 'Bool'; if (typeof v === 'string') return 'String'; if (typeof v === 'function') return 'Function'; if (Array.isArray(v)) return 'List'; return 'Tuple'; } return (function() { if (!(kTypeOf((i => i === -1 ? null : i)("hello".indexOf("x"))) == "Null")) throw new Error("Assertion failed"); return true; })(); })()
 (function() { if (!(((i => i === -1 ? null : i)("hello".indexOf("x"))) ?? (-1) == -1)) throw new Error("Assertion failed"); return true; })()
 (function() { if (!(((i => i === -1 ? null : i)("hello".indexOf("l"))) ?? (-1) == 2)) throw new Error("Assertion failed"); return true; })()
+
