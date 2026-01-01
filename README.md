@@ -77,7 +77,13 @@ npm run test:acceptance
 
 ## Command Line Interface
 
-Elo provides a CLI tool `eloc` for compiling expressions from the command line:
+Elo provides two CLI tools:
+- `eloc` - The compiler (for developers integrating Elo into their products)
+- `elo` - The evaluator (for quickly running Elo expressions)
+
+### Compiler (eloc)
+
+The compiler translates Elo expressions to Ruby, JavaScript, or SQL:
 
 ```bash
 # Compile expression to JavaScript (default)
@@ -104,19 +110,44 @@ Elo provides a CLI tool `eloc` for compiling expressions from the command line:
 # Compile from stdin
 echo "2 + 3 * 4" | ./bin/eloc -
 cat input.elo | ./bin/eloc - -t ruby
-
-# Compile and execute with input data (JS only)
-./bin/eloc -e "_.x + _.y" -i '{"x": 1, "y": 2}'
-# Outputs: 3
 ```
 
 Options:
 - `-e, --expression <expr>` - Expression to compile
 - `-t, --target <lang>` - Target language: `ruby`, `js` (default), `sql`
-- `-i, --input <data>` - JSON input data for `_` variable (or `@file` to read from file)
 - `-p, --prelude` - Include necessary library imports/requires
 - `--prelude-only` - Output only the prelude (no expression needed)
 - `-f, --file <path>` - Output to file instead of stdout
+- `-h, --help` - Show help message
+
+### Evaluator (elo)
+
+The evaluator compiles to JavaScript and immediately evaluates the expression:
+
+```bash
+# Evaluate a simple expression
+./bin/elo -e "2 + 3 * 4"
+# Outputs: 14
+
+# Evaluate with input data
+./bin/elo -e "_.x + _.y" -d '{"x": 1, "y": 2}'
+# Outputs: 3
+
+# Evaluate with data from file
+./bin/elo -e "_.name" -d @data.json
+
+# Evaluate from .elo file
+./bin/elo expressions.elo
+
+# Pipe data through stdin
+echo '{"x": 10}' | ./bin/elo -e "_.x * 2" --stdin
+# Outputs: 20
+```
+
+Options:
+- `-e, --expression <expr>` - Expression to evaluate
+- `-d, --data <json>` - JSON input data for `_` variable (or `@file` to read from file)
+- `--stdin` - Read input data as JSON from stdin
 - `-h, --help` - Show help message
 
 ## Using Elo in JavaScript/TypeScript
@@ -218,7 +249,8 @@ elo/
 │   ├── integration/  # Compilation tests
 │   └── acceptance/   # Runtime execution tests
 ├── examples/         # Usage examples
-├── bin/eloc          # CLI tool
+├── bin/eloc          # Compiler CLI
+├── bin/elo           # Evaluator CLI
 └── CLAUDE.md         # Developer guide
 ```
 

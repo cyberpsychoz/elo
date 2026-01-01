@@ -6,9 +6,6 @@ import { compileToRubyWithMeta } from './compilers/ruby';
 import { compileToJavaScriptWithMeta } from './compilers/javascript';
 import { compileToSQLWithMeta } from './compilers/sql';
 import { getPrelude, Target as PreludeTarget } from './preludes';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-dayjs.extend(duration);
 
 type Target = 'ruby' | 'js' | 'sql';
 
@@ -24,8 +21,6 @@ interface Options {
   target: Target;
   prelude?: boolean;
   preludeOnly?: boolean;
-  /** JSON input data to pass as _ (can be JSON string or @file path) */
-  inputData?: string;
   /** If true, output self-executing code (calls function with null/nil) */
   execute?: boolean;
 }
@@ -66,11 +61,6 @@ function parseArgs(args: string[]): Options {
 
       case '--prelude-only':
         options.preludeOnly = true;
-        break;
-
-      case '-i':
-      case '--input':
-        options.inputData = args[++i];
         break;
 
       case '-x':
@@ -114,7 +104,6 @@ Usage:
 Options:
   -e, --expression <expr>   Expression to compile (like ruby -e)
   -t, --target <lang>       Target language: ruby, js (default), sql
-  -i, --input <data>        JSON input data for _ variable (or @file to read from file)
   -x, --execute             Output self-executing code (calls function with null/nil)
   -p, --prelude             Include necessary library imports/requires
   --prelude-only            Output only the prelude (no expression needed)
@@ -147,14 +136,8 @@ Examples:
   echo "2 + 3 * 4" | eloc -
   cat input.elo | eloc - -t ruby
 
-  # Compile and run with input data
-  eloc -e "_.x + _.y" -i '{"x": 1, "y": 2}'
+For evaluating expressions, use the 'elo' command instead.
 `);
-}
-
-interface CompileResult {
-  code: string;
-  usesInput: boolean;
 }
 
 interface CompileOptions {
@@ -162,30 +145,26 @@ interface CompileOptions {
   execute?: boolean;
 }
 
-function compile(source: string, target: Target, options: CompileOptions = {}): CompileResult {
+function compile(source: string, target: Target, options: CompileOptions = {}): string {
   const ast = parse(source);
   const { includePrelude = false, execute = false } = options;
 
   let code: string;
-  let usesInput: boolean;
   switch (target) {
     case 'ruby': {
       const result = compileToRubyWithMeta(ast, { execute });
       code = result.code;
-      usesInput = result.usesInput;
       break;
     }
     case 'js': {
       const result = compileToJavaScriptWithMeta(ast, { execute });
       code = result.code;
-      usesInput = result.usesInput;
       break;
     }
     case 'sql': {
       // SQL doesn't support execute option (no function wrapping)
       const result = compileToSQLWithMeta(ast);
       code = result.code;
-      usesInput = result.usesInput;
       break;
     }
   }
@@ -197,32 +176,7 @@ function compile(source: string, target: Target, options: CompileOptions = {}): 
     }
   }
 
-  return { code, usesInput };
-}
-
-/**
- * Parse input data from CLI option (JSON string or @file path)
- */
-function parseInputData(inputData: string): unknown {
-  let jsonString = inputData;
-
-  // If starts with @, read from file
-  if (inputData.startsWith('@')) {
-    const filePath = inputData.slice(1);
-    try {
-      jsonString = readFileSync(filePath, 'utf-8');
-    } catch (error) {
-      console.error(`Error reading input file ${filePath}: ${error}`);
-      process.exit(1);
-    }
-  }
-
-  try {
-    return JSON.parse(jsonString);
-  } catch (error) {
-    console.error(`Error parsing input JSON: ${error}`);
-    process.exit(1);
-  }
+  return code;
 }
 
 function main() {
@@ -269,14 +223,14 @@ function main() {
   }
 
   // Compile each expression
-  let results: CompileResult[];
+  let results: string[];
   try {
     results = sources.map((source, index) => {
       try {
         const trimmed = source.trim();
         // Skip empty lines and comment lines - return empty result
         if (trimmed === '' || trimmed.startsWith('#')) {
-          return { code: '', usesInput: false };
+          return '';
         }
         return compile(trimmed, options.target, {
           includePrelude: index === 0 && options.prelude,
@@ -291,46 +245,8 @@ function main() {
     process.exit(1);
   }
 
-  // If input data is provided, execute the compiled code (JS only for now)
-  if (options.inputData) {
-    if (options.target !== 'js') {
-      console.error('Error: --input is only supported for JavaScript target (-t js)');
-      process.exit(1);
-    }
-
-    const inputValue = parseInputData(options.inputData);
-
-    // Execute each compiled expression
-    const outputs: string[] = [];
-    for (const result of results) {
-      try {
-        // Create function with dayjs in scope
-        const execFn = new Function('dayjs', `return ${result.code}`);
-        const fn = execFn(dayjs);
-        const output = result.usesInput ? fn(inputValue) : fn;
-        outputs.push(JSON.stringify(output));
-      } catch (error) {
-        console.error(`Execution error: ${error}`);
-        process.exit(1);
-      }
-    }
-
-    if (options.outputFile) {
-      try {
-        writeFileSync(options.outputFile, outputs.join('\n') + '\n', 'utf-8');
-        console.error(`Output written to ${options.outputFile}`);
-      } catch (error) {
-        console.error(`Error writing file ${options.outputFile}: ${error}`);
-        process.exit(1);
-      }
-    } else {
-      console.log(outputs.join('\n'));
-    }
-    return;
-  }
-
-  // Join lines with newlines (semicolons are now part of each compiled line when execute is true)
-  const output = results.map(r => r.code).join('\n');
+  // Join lines with newlines
+  const output = results.join('\n');
 
   // Output the result
   if (options.outputFile) {

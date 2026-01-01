@@ -296,7 +296,7 @@ import Footer from '../components/Footer.astro';
           <pre class="example-code">_.budget * 1.21</pre>
           <p class="example-desc">Apply VAT to a budget value from input.</p>
         </div>
-        <p class="note"><strong>Note:</strong> When using the CLI with <code>-i</code>, provide JSON input: <code>eloc -e "_.x + _.y" -i '&#123;"x": 1, "y": 2&#125;'</code></p>
+        <p class="note"><strong>Note:</strong> When using the CLI, use <code>elo</code> with JSON input: <code>elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'</code></p>
       </section>
 
       <section class="doc-section" id="lambdas">
@@ -472,8 +472,30 @@ compileToSQL(ast);        // => "2 + 3 * 4"</pre>
 
       <section class="doc-section" id="command-line">
         <h2>Command Line</h2>
-        <p>Elo provides a CLI tool <code>eloc</code> for compiling expressions from the terminal.</p>
-        <pre class="code-js"># Compile expression to JavaScript (default)
+        <p>Elo provides two CLI tools: <code>eloc</code> (compiler) and <code>elo</code> (evaluator).</p>
+
+        <h3>Evaluator (elo)</h3>
+        <p>Quickly evaluate Elo expressions:</p>
+        <pre class="code-js"># Evaluate an expression
+elo -e "2 + 3 * 4"     # => 14
+
+# Evaluate with input data
+elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'   # => 3
+
+# Evaluate from file
+elo expressions.elo</pre>
+        <table class="type-table">
+          <thead><tr><th>Option</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-e, --expression</code></td><td>Expression to evaluate</td></tr>
+            <tr><td><code>-d, --data</code></td><td>JSON input data for <code>_</code></td></tr>
+            <tr><td><code>--stdin</code></td><td>Read JSON input from stdin</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Compiler (eloc)</h3>
+        <p>Compile Elo to other languages:</p>
+        <pre class="code-js"># Compile to JavaScript (default)
 eloc -e "2 + 3 * 4"
 
 # Compile to Ruby
