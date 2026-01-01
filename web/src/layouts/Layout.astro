@@ -35,7 +35,15 @@ const url = (path: string) => `${base}${path}`;
 </head>
 <body>
   <header>
-    <a href={url('/')} class="logo">Elo — An expression language</a>
+    <a href={url('/')} class="logo">
+      <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="10" width="20" height="5" rx="2.5" fill="currentColor"/>
+        <rect x="8" y="21.5" width="28" height="5" rx="2.5" fill="currentColor"/>
+        <rect x="8" y="33" width="20" height="5" rx="2.5" fill="currentColor"/>
+        <path d="M36 24L42 28V20L36 24Z" fill="currentColor"/>
+      </svg>
+      Elo
+    </a>
     <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
       <span class="hamburger-icon"></span>
     </button>

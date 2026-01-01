@@ -61,6 +61,9 @@ body > header {
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--accent);
@@ -71,6 +74,12 @@ body > header {
 
 .logo:hover {
   opacity: 0.8;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 nav {
@@ -1065,6 +1074,18 @@ body.light-theme .hl-sql-operator {
 .hero {
   text-align: center;
   padding: 2rem 0 4rem;
+}
+
+.hero-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.hero-logo-icon {
+  width: 80px;
+  height: 80px;
+  color: var(--accent);
 }
 
 .hero h1 {
