@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileToRuby } from '../../../src/compilers/ruby';
-import { literal, stringLiteral, variable, binary, unary, letExpr } from '../../../src/ast';
+import { literal, stringLiteral, variable, binary, unary, letExpr, memberAccess } from '../../../src/ast';
 
 /**
  * Helper to wrap code as a lambda taking _ as input
@@ -46,10 +46,13 @@ describe('Ruby Compiler - String Literals', () => {
 });
 
 describe('Ruby Compiler - Variables', () => {
-  it('should compile variables', () => {
-    assert.strictEqual(compileToRuby(variable('x')), wrapRuby('x'));
-    assert.strictEqual(compileToRuby(variable('price')), wrapRuby('price'));
-    assert.strictEqual(compileToRuby(variable('user_name')), wrapRuby('user_name'));
+  it('should compile input variable _', () => {
+    assert.strictEqual(compileToRuby(variable('_')), wrapRuby('_'));
+  });
+
+  it('should compile member access on _', () => {
+    assert.strictEqual(compileToRuby(memberAccess(variable('_'), 'price')), wrapRuby('_[:price]'));
+    assert.strictEqual(compileToRuby(memberAccess(variable('_'), 'user_name')), wrapRuby('_[:user_name]'));
   });
 });
 
@@ -87,33 +90,33 @@ describe('Ruby Compiler - Arithmetic Operators', () => {
 
 describe('Ruby Compiler - Comparison Operators', () => {
   it('should compile less than', () => {
-    const ast = binary('<', variable('x'), literal(10));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('x < 10'));
+    const ast = binary('<', memberAccess(variable('_'), 'x'), literal(10));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:x] < 10'));
   });
 
   it('should compile greater than', () => {
-    const ast = binary('>', variable('x'), literal(10));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('x > 10'));
+    const ast = binary('>', memberAccess(variable('_'), 'x'), literal(10));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:x] > 10'));
   });
 
   it('should compile less than or equal', () => {
-    const ast = binary('<=', variable('x'), literal(10));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('x <= 10'));
+    const ast = binary('<=', memberAccess(variable('_'), 'x'), literal(10));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:x] <= 10'));
   });
 
   it('should compile greater than or equal', () => {
-    const ast = binary('>=', variable('x'), literal(10));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('x >= 10'));
+    const ast = binary('>=', memberAccess(variable('_'), 'x'), literal(10));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:x] >= 10'));
   });
 
   it('should compile equality', () => {
-    const ast = binary('==', variable('x'), literal(10));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('x == 10'));
+    const ast = binary('==', memberAccess(variable('_'), 'x'), literal(10));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:x] == 10'));
   });
 
   it('should compile inequality', () => {
-    const ast = binary('!=', variable('x'), literal(10));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('x != 10'));
+    const ast = binary('!=', memberAccess(variable('_'), 'x'), literal(10));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:x] != 10'));
   });
 });
 
@@ -129,8 +132,8 @@ describe('Ruby Compiler - Logical Operators', () => {
   });
 
   it('should compile NOT', () => {
-    const ast = unary('!', variable('active'));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('!active'));
+    const ast = unary('!', memberAccess(variable('_'), 'active'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('!_[:active]'));
   });
 });
 
@@ -146,8 +149,8 @@ describe('Ruby Compiler - Unary Operators', () => {
   });
 
   it('should compile negated variable', () => {
-    const ast = unary('-', variable('x'));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('-x'));
+    const ast = unary('-', memberAccess(variable('_'), 'x'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('-_[:x]'));
   });
 });
 
@@ -179,44 +182,44 @@ describe('Ruby Compiler - Operator Precedence', () => {
 });
 
 describe('Ruby Compiler - Complex Expressions', () => {
-  it('should compile (a + b) * c', () => {
+  it('should compile (_.a + _.b) * _.c', () => {
     const ast = binary(
       '*',
-      binary('+', variable('a'), variable('b')),
-      variable('c')
+      binary('+', memberAccess(variable('_'), 'a'), memberAccess(variable('_'), 'b')),
+      memberAccess(variable('_'), 'c')
     );
-    assert.strictEqual(compileToRuby(ast), wrapRuby('(a + b) * c'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('(_[:a] + _[:b]) * _[:c]'));
   });
 
-  it('should compile price * quantity - discount', () => {
+  it('should compile _.price * _.quantity - _.discount', () => {
     const ast = binary(
       '-',
-      binary('*', variable('price'), variable('quantity')),
-      variable('discount')
+      binary('*', memberAccess(variable('_'), 'price'), memberAccess(variable('_'), 'quantity')),
+      memberAccess(variable('_'), 'discount')
     );
-    assert.strictEqual(compileToRuby(ast), wrapRuby('price * quantity - discount'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:price] * _[:quantity] - _[:discount]'));
   });
 
-  it('should compile x > 0 && x < 100', () => {
+  it('should compile _.x > 0 && _.x < 100', () => {
     const ast = binary(
       '&&',
-      binary('>', variable('x'), literal(0)),
-      binary('<', variable('x'), literal(100))
+      binary('>', memberAccess(variable('_'), 'x'), literal(0)),
+      binary('<', memberAccess(variable('_'), 'x'), literal(100))
     );
-    assert.strictEqual(compileToRuby(ast), wrapRuby('x > 0 && x < 100'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:x] > 0 && _[:x] < 100'));
   });
 
-  it('should compile (x + 5) * (y - 3) / 2', () => {
+  it('should compile (_.x + 5) * (_.y - 3) / 2', () => {
     const ast = binary(
       '/',
       binary(
         '*',
-        binary('+', variable('x'), literal(5)),
-        binary('-', variable('y'), literal(3))
+        binary('+', memberAccess(variable('_'), 'x'), literal(5)),
+        binary('-', memberAccess(variable('_'), 'y'), literal(3))
       ),
       literal(2)
     );
-    assert.strictEqual(compileToRuby(ast), wrapRuby('(x + 5) * (y - 3) / 2'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('(_[:x] + 5) * (_[:y] - 3) / 2'));
   });
 
   it('should compile complex boolean with parentheses', () => {
@@ -224,21 +227,21 @@ describe('Ruby Compiler - Complex Expressions', () => {
       '||',
       binary(
         '&&',
-        binary('>', variable('price'), literal(100)),
-        binary('>=', variable('discount'), literal(10))
+        binary('>', memberAccess(variable('_'), 'price'), literal(100)),
+        binary('>=', memberAccess(variable('_'), 'discount'), literal(10))
       ),
-      binary('==', variable('vip'), literal(true))
+      binary('==', memberAccess(variable('_'), 'vip'), literal(true))
     );
-    assert.strictEqual(compileToRuby(ast), wrapRuby('price > 100 && discount >= 10 || vip == true'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:price] > 100 && _[:discount] >= 10 || _[:vip] == true'));
   });
 
   it('should compile mixed arithmetic and boolean', () => {
     const ast = binary(
       '>',
-      binary('*', variable('total'), literal(1.1)),
+      binary('*', memberAccess(variable('_'), 'total'), literal(1.1)),
       literal(1000)
     );
-    assert.strictEqual(compileToRuby(ast), wrapRuby('total * 1.1 > 1000'));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('_[:total] * 1.1 > 1000'));
   });
 });
 
@@ -262,8 +265,8 @@ describe('Ruby Compiler - Edge Cases', () => {
   });
 
   it('should handle unary with binary', () => {
-    const ast = binary('+', unary('-', variable('x')), literal(10));
-    assert.strictEqual(compileToRuby(ast), wrapRuby('-x + 10'));
+    const ast = binary('+', unary('-', memberAccess(variable('_'), 'x')), literal(10));
+    assert.strictEqual(compileToRuby(ast), wrapRuby('-_[:x] + 10'));
   });
 });
 

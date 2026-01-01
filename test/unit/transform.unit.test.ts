@@ -72,11 +72,11 @@ describe('transform - literals', () => {
 });
 
 describe('transform - variables', () => {
-  it('transforms unknown variable to any type', () => {
-    const ir = transform(variable('x'));
+  it('transforms _ (input variable) to any type', () => {
+    const ir = transform(variable('_'));
     assert.strictEqual(ir.type, 'variable');
     if (ir.type === 'variable') {
-      assert.strictEqual(ir.name, 'x');
+      assert.strictEqual(ir.name, '_');
       assert.deepStrictEqual(ir.inferredType, Types.any);
     }
   });
@@ -89,6 +89,20 @@ describe('transform - variables', () => {
       assert.strictEqual(ir.name, 'x');
       assert.deepStrictEqual(ir.inferredType, Types.int);
     }
+  });
+
+  it('rejects undefined variables to prevent access to host globals', () => {
+    assert.throws(
+      () => transform(variable('window')),
+      /Undefined variable: 'window'/
+    );
+  });
+
+  it('rejects any undefined variable', () => {
+    assert.throws(
+      () => transform(variable('foo')),
+      /Undefined variable: 'foo'/
+    );
   });
 });
 
@@ -306,8 +320,9 @@ describe('transform - string operations', () => {
 });
 
 describe('transform - unknown types', () => {
-  it('transforms unknown + unknown to any result', () => {
-    const ir = transform(binary('+', variable('a'), variable('b')));
+  it('transforms _ + _ to any result', () => {
+    // Use _ (input variable) which is always in scope with any type
+    const ir = transform(binary('+', memberAccess(variable('_'), 'a'), memberAccess(variable('_'), 'b')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
       assert.strictEqual(ir.fn, 'add');
@@ -316,8 +331,10 @@ describe('transform - unknown types', () => {
     }
   });
 
-  it('transforms known + unknown to any result', () => {
-    const ir = transform(binary('+', literal(1), variable('x')));
+  it('transforms known + env variable to any result', () => {
+    // Variables from env are allowed
+    const env: TypeEnv = new Map([['x', Types.any]]);
+    const ir = transform(binary('+', literal(1), variable('x')), env);
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
       assert.strictEqual(ir.fn, 'add');
@@ -369,7 +386,8 @@ describe('transform - unary operators', () => {
   });
 
   it('transforms -unknown to any', () => {
-    const ir = transform(unary('-', variable('x')));
+    // Use _ (input variable) which is always in scope with any type
+    const ir = transform(unary('-', variable('_')));
     assert.strictEqual(ir.type, 'call');
     if (ir.type === 'call') {
       assert.strictEqual(ir.fn, 'neg');
@@ -534,7 +552,8 @@ describe('transform - function calls', () => {
 
 describe('transform - member access', () => {
   it('transforms member access', () => {
-    const ir = transform(memberAccess(variable('obj'), 'property'));
+    // Use _ (input variable) which is always in scope
+    const ir = transform(memberAccess(variable('_'), 'property'));
     assert.strictEqual(ir.type, 'member_access');
     if (ir.type === 'member_access') {
       assert.strictEqual(ir.property, 'property');

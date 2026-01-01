@@ -1,4 +1,4 @@
-->(_) { (raise "Assertion failed" unless x + y == 15; true) }.call(nil);
-->(_) { (raise "Assertion failed" unless price + tax == 110; true) }.call(nil);
-->(_) { (raise "Assertion failed" unless user_age + account_balance == 2525; true) }.call(nil);
-->(_) { (raise "Assertion failed" unless var1 + var2 == 30; true) }.call(nil);
+->(_) { (raise "Assertion failed" unless _[:x] + _[:y] == 15; true) }.call(nil);
+->(_) { (raise "Assertion failed" unless _[:price] + _[:tax] == 110; true) }.call(nil);
+->(_) { (raise "Assertion failed" unless _[:user_age] + _[:account_balance] == 2525; true) }.call(nil);
+->(_) { (raise "Assertion failed" unless _[:var1] + _[:var2] == 30; true) }.call(nil);

@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileToJavaScript } from '../../../src/compilers/javascript';
-import { literal, stringLiteral, variable, binary, unary, letExpr } from '../../../src/ast';
+import { literal, stringLiteral, variable, binary, unary, letExpr, memberAccess } from '../../../src/ast';
 import { JS_HELPERS } from '../../../src/runtime';
 
 /**
@@ -56,10 +56,13 @@ describe('JavaScript Compiler - String Literals', () => {
 });
 
 describe('JavaScript Compiler - Variables', () => {
-  it('should compile variables', () => {
-    assert.strictEqual(compileToJavaScript(variable('x')), wrapJS('x'));
-    assert.strictEqual(compileToJavaScript(variable('price')), wrapJS('price'));
-    assert.strictEqual(compileToJavaScript(variable('userName')), wrapJS('userName'));
+  it('should compile input variable _', () => {
+    assert.strictEqual(compileToJavaScript(variable('_')), wrapJS('_'));
+  });
+
+  it('should compile member access on _', () => {
+    assert.strictEqual(compileToJavaScript(memberAccess(variable('_'), 'price')), wrapJS('_.price'));
+    assert.strictEqual(compileToJavaScript(memberAccess(variable('_'), 'userName')), wrapJS('_.userName'));
   });
 });
 
@@ -96,19 +99,19 @@ describe('JavaScript Compiler - Arithmetic Operators (typed literals)', () => {
 });
 
 describe('JavaScript Compiler - Arithmetic Operators (unknown types)', () => {
-  it('should use kPow helper for variables', () => {
-    const ast = binary('^', variable('x'), variable('y'));
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kPow(x, y)', 'kPow'));
+  it('should use kPow helper for input variable members', () => {
+    const ast = binary('^', memberAccess(variable('_'), 'x'), memberAccess(variable('_'), 'y'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kPow(_.x, _.y)', 'kPow'));
   });
 
-  it('should use kAdd helper for variables', () => {
-    const ast = binary('+', variable('a'), variable('b'));
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kAdd(a, b)', 'kAdd'));
+  it('should use kAdd helper for input variable members', () => {
+    const ast = binary('+', memberAccess(variable('_'), 'a'), memberAccess(variable('_'), 'b'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kAdd(_.a, _.b)', 'kAdd'));
   });
 
   it('should use kMul helper for mixed known/unknown', () => {
-    const ast = binary('*', literal(2), variable('x'));
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kMul(2, x)', 'kMul'));
+    const ast = binary('*', literal(2), memberAccess(variable('_'), 'x'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kMul(2, _.x)', 'kMul'));
   });
 });
 
@@ -145,8 +148,8 @@ describe('JavaScript Compiler - Comparison Operators', () => {
 
   it('should use native operators for comparison with unknown types', () => {
     // JS comparison always uses native operators, even with unknown types
-    const ast = binary('<', variable('x'), literal(10));
-    assert.strictEqual(compileToJavaScript(ast), wrapJS('x < 10'));
+    const ast = binary('<', memberAccess(variable('_'), 'x'), literal(10));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS('_.x < 10'));
   });
 });
 
@@ -168,8 +171,8 @@ describe('JavaScript Compiler - Logical Operators', () => {
 
   it('should use native NOT for unknown type', () => {
     // NOT always uses native JS ! operator
-    const ast = unary('!', variable('active'));
-    assert.strictEqual(compileToJavaScript(ast), wrapJS('!active'));
+    const ast = unary('!', memberAccess(variable('_'), 'active'));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS('!_.active'));
   });
 });
 
@@ -185,8 +188,8 @@ describe('JavaScript Compiler - Unary Operators', () => {
   });
 
   it('should use kNeg helper for negated variable (unknown type)', () => {
-    const ast = unary('-', variable('x'));
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kNeg(x)', 'kNeg'));
+    const ast = unary('-', memberAccess(variable('_'), 'x'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kNeg(_.x)', 'kNeg'));
   });
 });
 
@@ -214,55 +217,55 @@ describe('JavaScript Compiler - Operator Precedence (typed)', () => {
 });
 
 describe('JavaScript Compiler - Complex Expressions (unknown types)', () => {
-  it('should compile (a + b) * c with helpers', () => {
+  it('should compile (_.a + _.b) * _.c with helpers', () => {
     const ast = binary(
       '*',
-      binary('+', variable('a'), variable('b')),
-      variable('c')
+      binary('+', memberAccess(variable('_'), 'a'), memberAccess(variable('_'), 'b')),
+      memberAccess(variable('_'), 'c')
     );
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kMul(kAdd(a, b), c)', 'kAdd', 'kMul'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kMul(kAdd(_.a, _.b), _.c)', 'kAdd', 'kMul'));
   });
 
-  it('should compile price * quantity - discount', () => {
+  it('should compile _.price * _.quantity - _.discount', () => {
     const ast = binary(
       '-',
-      binary('*', variable('price'), variable('quantity')),
-      variable('discount')
+      binary('*', memberAccess(variable('_'), 'price'), memberAccess(variable('_'), 'quantity')),
+      memberAccess(variable('_'), 'discount')
     );
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kSub(kMul(price, quantity), discount)', 'kMul', 'kSub'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kSub(kMul(_.price, _.quantity), _.discount)', 'kMul', 'kSub'));
   });
 
-  it('should compile x > 0 && x < 100 with native operators', () => {
+  it('should compile _.x > 0 && _.x < 100 with native operators', () => {
     // Comparison and logical operators use native JS even with unknown types
     const ast = binary(
       '&&',
-      binary('>', variable('x'), literal(0)),
-      binary('<', variable('x'), literal(100))
+      binary('>', memberAccess(variable('_'), 'x'), literal(0)),
+      binary('<', memberAccess(variable('_'), 'x'), literal(100))
     );
-    assert.strictEqual(compileToJavaScript(ast), wrapJS('x > 0 && x < 100'));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS('_.x > 0 && _.x < 100'));
   });
 
-  it('should compile (x + 5) * (y - 3) / 2', () => {
+  it('should compile (_.x + 5) * (_.y - 3) / 2', () => {
     const ast = binary(
       '/',
       binary(
         '*',
-        binary('+', variable('x'), literal(5)),
-        binary('-', variable('y'), literal(3))
+        binary('+', memberAccess(variable('_'), 'x'), literal(5)),
+        binary('-', memberAccess(variable('_'), 'y'), literal(3))
       ),
       literal(2)
     );
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kDiv(kMul(kAdd(x, 5), kSub(y, 3)), 2)', 'kAdd', 'kSub', 'kMul', 'kDiv'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kDiv(kMul(kAdd(_.x, 5), kSub(_.y, 3)), 2)', 'kAdd', 'kSub', 'kMul', 'kDiv'));
   });
 
   it('should compile mixed arithmetic and boolean', () => {
     // Comparison uses native operators, but arithmetic uses helpers
     const ast = binary(
       '>',
-      binary('*', variable('total'), literal(1.1)),
+      binary('*', memberAccess(variable('_'), 'total'), literal(1.1)),
       literal(1000)
     );
-    assert.strictEqual(compileToJavaScript(ast), withHelpers('kMul(total, 1.1) > 1000', 'kMul'));
+    assert.strictEqual(compileToJavaScript(ast), withHelpers('kMul(_.total, 1.1) > 1000', 'kMul'));
   });
 });
 
@@ -286,9 +289,9 @@ describe('JavaScript Compiler - Edge Cases', () => {
   });
 
   it('should handle multiple unary operators with unknown type', () => {
-    const ast = unary('!', unary('!', variable('x')));
+    const ast = unary('!', unary('!', memberAccess(variable('_'), 'x')));
     // NOT uses native ! even for unknown types
-    assert.strictEqual(compileToJavaScript(ast), wrapJS('!!x'));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS('!!_.x'));
   });
 });
 

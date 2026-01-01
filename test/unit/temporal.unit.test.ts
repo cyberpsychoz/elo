@@ -249,7 +249,8 @@ describe('Temporal - Complex Expressions', () => {
   });
 
   it('should compile age check expression', () => {
-    const ast = parse('current_date - birth_date > P18Y');
+    // Use _.field syntax which works across all targets
+    const ast = parse('_.current_date - _.birth_date > P18Y');
     const ruby = compileToRuby(ast);
     const js = compileToJavaScript(ast);
     const sql = compileToSQL(ast);

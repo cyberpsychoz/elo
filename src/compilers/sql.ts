@@ -77,9 +77,13 @@ export function compileToSQL(expr: Expr, options?: SQLCompileOptions): string {
 /**
  * Compiles Elo expressions to SQL with metadata about input usage.
  * Use this when you need to know if the expression uses input parameter $1.
+ *
+ * Note: SQL compilation allows undefined variables since they represent
+ * database column names, not program variables with potential global access.
  */
 export function compileToSQLWithMeta(expr: Expr, options?: SQLCompileOptions): SQLCompileResult {
-  const ir = transform(expr);
+  // SQL allows undefined variables since they represent column names
+  const ir = transform(expr, new Map(), new Set(), { allowUndefinedVariables: true });
   const needsInput = usesInput(ir) || options?.asFunction;
   const code = emitSQL(ir);
 
