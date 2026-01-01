@@ -329,6 +329,21 @@ export function createSQLBinding(): StdLib<string> {
   sqlLib.register('Data', [Types.string], (args, ctx) => `elo_data(${ctx.emit(args[0])})`);
   sqlLib.register('Data', [Types.any], (args, ctx) => `elo_data(${ctx.emit(args[0])})`);
 
+  // List manipulation functions
+  // PostgreSQL doesn't have built-in array_reverse, use subquery with ordinality
+  sqlLib.register('reverse', [Types.array], (args, ctx) => {
+    const arr = ctx.emit(args[0]);
+    return `(SELECT ARRAY_AGG(elem ORDER BY ord DESC) FROM UNNEST(${arr}) WITH ORDINALITY AS t(elem, ord))`;
+  });
+
+  // Join list elements with separator
+  sqlLib.register('join', [Types.array, Types.string], (args, ctx) =>
+    `array_to_string(${ctx.emit(args[0])}, ${ctx.emit(args[1])})`);
+
+  // Split string into list
+  sqlLib.register('split', [Types.string, Types.string], (args, ctx) =>
+    `string_to_array(${ctx.emit(args[0])}, ${ctx.emit(args[1])})`);
+
   // No fallback - unknown functions should fail at compile time
   // (StdLib.emit() will throw if no implementation is found)
 

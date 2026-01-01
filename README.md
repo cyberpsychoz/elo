@@ -36,6 +36,7 @@ See also the Related work section below.
 - **Lambdas**: `fn(x ~> x * 2)` or `x ~> x * 2` (sugar) for anonymous functions
 - **Input variable**: `_` for accessing external data passed to expressions
 - **Array iteration**: `map`, `filter`, `reduce`, `any`, `all` (JS/Ruby only)
+- **List functions**: `reverse`, `join(list, separator)`, `split(string, separator)`
 - **Literals**:
   - Numbers: `42`, `3.14`
   - Booleans: `true`, `false`

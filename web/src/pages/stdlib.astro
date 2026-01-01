@@ -271,6 +271,12 @@ import Footer from '../components/Footer.astro';
             <p class="fn-desc">Pads the end of the string to reach the target length.</p>
             <div class="fn-example"><code class="example-code">padEnd('hi', 5, '.')</code><span class="fn-result">→ 'hi...'</span></div>
           </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">split</div>
+            <div class="fn-sig">(s: String, sep: String) → List</div>
+            <p class="fn-desc">Splits the string into a list using the separator.</p>
+            <div class="fn-example"><code class="example-code">split('a,b,c', ',')</code><span class="fn-result">→ ['a', 'b', 'c']</span></div>
+          </div>
         </div>
       </section>
 
@@ -343,6 +349,18 @@ import Footer from '../components/Footer.astro';
             <div class="fn-sig">(list: List, predicate: Function) → Bool</div>
             <p class="fn-desc">Returns <code>true</code> if all elements satisfy predicate. <em>JS/Ruby only.</em></p>
             <div class="fn-example"><code class="example-code">all([1, 2, 3], fn(x ~> x > 0))</code><span class="fn-result">→ true</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">reverse</div>
+            <div class="fn-sig">(list: List) → List</div>
+            <p class="fn-desc">Returns a new list with elements in reverse order.</p>
+            <div class="fn-example"><code class="example-code">reverse([1, 2, 3])</code><span class="fn-result">→ [3, 2, 1]</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">join</div>
+            <div class="fn-sig">(list: List, sep: String) → String</div>
+            <p class="fn-desc">Joins list elements into a string using the separator.</p>
+            <div class="fn-example"><code class="example-code">join(['a', 'b', 'c'], ',')</code><span class="fn-result">→ 'a,b,c'</span></div>
           </div>
         </div>
       </section>

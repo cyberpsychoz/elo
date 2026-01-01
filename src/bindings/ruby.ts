@@ -373,6 +373,22 @@ export function createRubyBinding(): StdLib<string> {
     return `(->(v) { case v when String; JSON.parse(v, symbolize_names: true) rescue raise ".: invalid JSON: #{v.inspect}" else v end }).call(${v})`;
   });
 
+  // List manipulation functions
+  rubyLib.register('reverse', [Types.array], (args, ctx) =>
+    `${ctx.emit(args[0])}.reverse`);
+
+  // Join list elements with separator
+  for (const t of [Types.array, Types.any]) {
+    rubyLib.register('join', [t, Types.string], (args, ctx) =>
+      `${ctx.emit(args[0])}.join(${ctx.emit(args[1])})`);
+  }
+
+  // Split string into list
+  for (const t of [Types.string, Types.any]) {
+    rubyLib.register('split', [t, Types.string], (args, ctx) =>
+      `${wrapReceiver(args, ctx)}.split(${ctx.emit(args[1])})`);
+  }
+
   // No fallback - unknown functions should fail at compile time
   // (StdLib.emit() will throw if no implementation is found)
 

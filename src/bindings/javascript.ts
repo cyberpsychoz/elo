@@ -400,6 +400,27 @@ export function createJavaScriptBinding(): StdLib<string> {
   jsLib.register('Data', [Types.string], parserUnwrap('pData'));
   jsLib.register('Data', [Types.any], parserUnwrap('pData'));
 
+  // List manipulation functions
+  jsLib.register('reverse', [Types.array], (args, ctx) =>
+    `[...${ctx.emit(args[0])}].reverse()`);
+
+  // Join list elements with separator
+  for (const t of [Types.array, Types.any]) {
+    jsLib.register('join', [t, Types.string], (args, ctx) =>
+      `${ctx.emit(args[0])}.join(${ctx.emit(args[1])})`);
+  }
+
+  // Split string into list
+  // Note: We use a wrapper to normalize empty string behavior across targets
+  // JavaScript returns [''] for ''.split(','), but Ruby/SQL return []
+  for (const t of [Types.string, Types.any]) {
+    jsLib.register('split', [t, Types.string], (args, ctx) => {
+      const str = wrapReceiver(args, ctx);
+      const sep = ctx.emit(args[1]);
+      return `(${str} === '' ? [] : ${str}.split(${sep}))`;
+    });
+  }
+
   // No fallback - unknown functions should fail at compile time
   // (StdLib.emit() will throw if no implementation is found)
 
