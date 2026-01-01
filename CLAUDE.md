@@ -83,5 +83,10 @@ a typical list of things to do is :
 - Re-run all the tests, since some consistency tests exist that check the documentation.
 - Commit and mark the task done.
 
-If you block on something and are in autonomous mode, adapt the task with your
-analysis and questions, move it to `analyzed` and move to the next task.
+**IMPORTANT** If you block on something and are in autonomous mode, adapt the
+task with your analysis and questions, move it to `analyzed` and move to the
+next task.
+
+**CRITICAL** Commit everytime you have something stable. You should end up having
+ONE commit per task. Use `commit --amend` if needed. NEVER have two different tasks
+commited together.
