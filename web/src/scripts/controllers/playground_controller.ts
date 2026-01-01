@@ -369,7 +369,7 @@ export default class PlaygroundController extends Controller {
 
     try {
       const ast = parse(input);
-      const { code: jsCode, usesInput } = compileToJavaScriptWithMeta(ast);
+      const { code: jsCode } = compileToJavaScriptWithMeta(ast);
 
       // Parse input data if provided
       let inputData: unknown = null;
@@ -384,14 +384,9 @@ export default class PlaygroundController extends Controller {
         }
       }
 
-      // Evaluate the JavaScript code
-      let result;
-      if (usesInput) {
-        const fn = eval(jsCode);
-        result = fn(inputData);
-      } else {
-        result = eval(jsCode);
-      }
+      // Evaluate the JavaScript code - always call the function with input data
+      const fn = eval(jsCode);
+      const result = fn(inputData);
 
       // Display the result
       this.showResult(this.formatResult(result));

@@ -158,7 +158,7 @@ export default class ExercisesController extends Controller {
 
     try {
       const ast = parse(code);
-      const jsCode = compileToJavaScript(ast);
+      const jsCode = compileToJavaScript(ast, { execute: true });
       const result = eval(jsCode);
 
       // All assertions passed if we get here without exception and result is true
