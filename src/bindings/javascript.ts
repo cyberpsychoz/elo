@@ -7,7 +7,21 @@
 
 import { IRExpr } from '../ir';
 import { Types } from '../types';
-import { StdLib, simpleBinaryOp, nullary, fnCall, helperCall } from '../stdlib';
+import { StdLib, simpleBinaryOp, nullary, fnCall, helperCall, FunctionEmitter } from '../stdlib';
+
+/**
+ * Helper for type selector using Finitio parser + pUnwrap.
+ * Generates: pUnwrap(pParser(value, ''))
+ * This throws on parse failure instead of returning null.
+ */
+function parserUnwrap(parserName: string): FunctionEmitter<string> {
+  return (args, ctx) => {
+    ctx.requireHelper?.(parserName);
+    ctx.requireHelper?.('pUnwrap');
+    const emittedArg = ctx.emit(args[0]);
+    return `pUnwrap(${parserName}(${emittedArg}, ''))`;
+  };
+}
 
 /**
  * Check if a call will be emitted as a native JS binary operator
@@ -347,44 +361,44 @@ export function createJavaScriptBinding(): StdLib<string> {
     return `(function() { throw new Error(${message}); })()`;
   });
 
-  // Type selectors (information contracts)
-  // Int - identity for int/float, parse for string
+  // Type selectors (Finitio schemas - throw on failure)
+  // Int - identity for int, truncate float, parse for string
   jsLib.register('Int', [Types.int], (args, ctx) => ctx.emit(args[0]));
   jsLib.register('Int', [Types.float], (args, ctx) => `Math.trunc(${ctx.emit(args[0])})`);
-  jsLib.register('Int', [Types.string], helperCall('kInt'));
-  jsLib.register('Int', [Types.any], helperCall('kInt'));
+  jsLib.register('Int', [Types.string], parserUnwrap('pInt'));
+  jsLib.register('Int', [Types.any], parserUnwrap('pInt'));
 
-  // Float - identity for float, convert for int, parse for string
+  // Float - identity for float/int, parse for string
   jsLib.register('Float', [Types.float], (args, ctx) => ctx.emit(args[0]));
   jsLib.register('Float', [Types.int], (args, ctx) => ctx.emit(args[0])); // JS numbers are already floats
-  jsLib.register('Float', [Types.string], helperCall('kFloat'));
-  jsLib.register('Float', [Types.any], helperCall('kFloat'));
+  jsLib.register('Float', [Types.string], parserUnwrap('pFloat'));
+  jsLib.register('Float', [Types.any], parserUnwrap('pFloat'));
 
   // Bool - identity for bool, parse "true"/"false" for string
   jsLib.register('Bool', [Types.bool], (args, ctx) => ctx.emit(args[0]));
-  jsLib.register('Bool', [Types.string], helperCall('kBool'));
-  jsLib.register('Bool', [Types.any], helperCall('kBool'));
+  jsLib.register('Bool', [Types.string], parserUnwrap('pBool'));
+  jsLib.register('Bool', [Types.any], parserUnwrap('pBool'));
 
   // Date - identity for date, parse ISO for string
   jsLib.register('Date', [Types.date], (args, ctx) => ctx.emit(args[0]));
-  jsLib.register('Date', [Types.string], helperCall('kDate'));
-  jsLib.register('Date', [Types.any], helperCall('kDate'));
+  jsLib.register('Date', [Types.string], parserUnwrap('pDate'));
+  jsLib.register('Date', [Types.any], parserUnwrap('pDate'));
 
   // Datetime - identity for datetime, parse ISO for string
   jsLib.register('Datetime', [Types.datetime], (args, ctx) => ctx.emit(args[0]));
-  jsLib.register('Datetime', [Types.string], helperCall('kDatetime'));
-  jsLib.register('Datetime', [Types.any], helperCall('kDatetime'));
+  jsLib.register('Datetime', [Types.string], parserUnwrap('pDatetime'));
+  jsLib.register('Datetime', [Types.any], parserUnwrap('pDatetime'));
 
   // Duration - identity for duration, parse ISO for string
   jsLib.register('Duration', [Types.duration], (args, ctx) => ctx.emit(args[0]));
-  jsLib.register('Duration', [Types.string], helperCall('kDuration'));
-  jsLib.register('Duration', [Types.any], helperCall('kDuration'));
+  jsLib.register('Duration', [Types.string], parserUnwrap('pDuration'));
+  jsLib.register('Duration', [Types.any], parserUnwrap('pDuration'));
 
   // Data - identity for non-strings, parse JSON for strings
   jsLib.register('Data', [Types.array], (args, ctx) => ctx.emit(args[0]));
   jsLib.register('Data', [Types.object], (args, ctx) => ctx.emit(args[0]));
-  jsLib.register('Data', [Types.string], helperCall('kData'));
-  jsLib.register('Data', [Types.any], helperCall('kData'));
+  jsLib.register('Data', [Types.string], parserUnwrap('pData'));
+  jsLib.register('Data', [Types.any], parserUnwrap('pData'));
 
   // No fallback - unknown functions should fail at compile time
   // (StdLib.emit() will throw if no implementation is found)

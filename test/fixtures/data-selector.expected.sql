@@ -8,3 +8,4 @@ CASE WHEN jsonb_build_object('x', 10).x = 10 THEN TRUE ELSE (SELECT pg_terminate
 CASE WHEN elo_data('not valid json') IS NULL THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
 CASE WHEN elo_data(NULL) IS NULL THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
 CASE WHEN COALESCE(elo_data('invalid'), jsonb_build_object('default', TRUE) = jsonb_build_object('default', TRUE)) THEN TRUE ELSE (SELECT pg_terminate_backend(pg_backend_pid())) END
+

@@ -21,6 +21,10 @@ export const JS_HELPER_DEPS: Record<string, string[]> = {
   pInt: ['pOk', 'pFail'],
   pBool: ['pOk', 'pFail'],
   pDatetime: ['pOk', 'pFail'],
+  pFloat: ['pOk', 'pFail'],
+  pDate: ['pOk', 'pFail'],
+  pDuration: ['pOk', 'pFail'],
+  pData: ['pOk', 'pFail'],
 };
 
 export const JS_HELPERS: Record<string, string> = {
@@ -164,6 +168,25 @@ export const JS_HELPERS: Record<string, string> = {
   if (dayjs.isDayjs(v)) return pOk(v, p);
   if (typeof v === 'string') { const d = dayjs(v); if (d.isValid()) return pOk(d, p); }
   return pFail(p, []);
+}`,
+  pFloat: `function pFloat(v, p) {
+  if (typeof v === 'number') return pOk(v, p);
+  if (typeof v === 'string') { const n = parseFloat(v); if (!isNaN(n)) return pOk(n, p); }
+  return pFail(p, []);
+}`,
+  pDate: `function pDate(v, p) {
+  if (dayjs.isDayjs(v)) return pOk(v.startOf('day'), p);
+  if (typeof v === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(v)) { const d = dayjs(v); if (d.isValid()) return pOk(d.startOf('day'), p); }
+  return pFail(p, []);
+}`,
+  pDuration: `function pDuration(v, p) {
+  if (dayjs.isDuration(v)) return pOk(v, p);
+  if (typeof v === 'string') { const d = dayjs.duration(v); if (!isNaN(d.asMilliseconds())) return pOk(d, p); }
+  return pFail(p, []);
+}`,
+  pData: `function pData(v, p) {
+  if (typeof v === 'string') { try { return pOk(JSON.parse(v), p); } catch { return pFail(p, []); } }
+  return pOk(v, p);
 }`,
   pUnwrap: `function pUnwrap(r) { if (r.success) return r.value; throw new Error('Type error at ' + (r.path || '(root)')); }`,
 };

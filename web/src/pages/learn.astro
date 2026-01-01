@@ -356,7 +356,7 @@ in
         </div>
 
         <h3>Type Selectors</h3>
-        <p>Parse strings into typed values:</p>
+        <p>Parse and validate strings into typed values:</p>
         <div class="lesson-example" data-action="click->doc#tryExample">
           <pre class="example-code">Int('42')</pre>
         </div>
@@ -364,12 +364,12 @@ in
           <pre class="example-code">Date('2024-12-25')</pre>
         </div>
         <div class="lesson-example" data-action="click->doc#tryExample">
-          <pre class="example-code">Int('not a number') | 0</pre>
+          <pre class="example-code">Duration('P1D')</pre>
         </div>
 
         <p class="lesson-tip">
-          <strong>Robust processing:</strong> Combine <code>|</code> with type selectors for safe parsing.
-          Invalid input returns <code>null</code>, which you catch with a fallback.
+          <strong>Strict validation:</strong> Type selectors throw an error if parsing fails.
+          This ensures data integrity - invalid input like <code>Int('abc')</code> won't silently become null.
         </p>
         <p class="lesson-exercise">
           <a href="#ex-filter-map">Practice: Filter and Double</a>

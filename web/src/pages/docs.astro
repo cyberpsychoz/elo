@@ -341,16 +341,16 @@ import Footer from '../components/Footer.astro';
 
       <section class="doc-section" id="type-selectors">
         <h2>Type Selectors</h2>
-        <p>Type selectors convert values to specific types, parsing strings when needed. They return <code>null</code> on invalid input.</p>
+        <p>Type selectors validate and convert values to specific types. They throw an error if parsing fails.</p>
         <div class="example" data-action="click->doc#tryExample">
           <div class="example-header">Parse String to Integer</div>
           <pre class="example-code">Int('123')</pre>
           <p class="example-desc">Parses the string to the integer <code>123</code>.</p>
         </div>
         <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Parse with Default</div>
-          <pre class="example-code">Int('abc') | 0</pre>
-          <p class="example-desc">Returns <code>0</code> because <code>'abc'</code> cannot be parsed.</p>
+          <div class="example-header">Parse Date</div>
+          <pre class="example-code">Date('2024-12-25')</pre>
+          <p class="example-desc">Parses ISO 8601 date string to a date value.</p>
         </div>
         <div class="example" data-action="click->doc#tryExample">
           <div class="example-header">Parse JSON</div>

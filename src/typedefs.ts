@@ -264,6 +264,7 @@ export function createTypeDefs(): TypeDefs {
   defs.register('assert', [Types.bool, Types.string], Types.bool);
   defs.register('assert', [Types.any], Types.bool);
   defs.register('assert', [Types.any, Types.string], Types.bool);
+  defs.register('assertFails', [Types.fn], Types.bool);
 
   // ============================================
   // Range membership functions -> bool

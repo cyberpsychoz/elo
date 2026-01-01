@@ -8,3 +8,4 @@ assert(Data({x: 10}).x == 10)
 assert(isNull(Data('not valid json')))
 assert(isNull(Data(null)))
 assert(Data('invalid') | {default: true} == {default: true})
+
