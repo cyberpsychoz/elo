@@ -1059,15 +1059,64 @@ export class Parser {
   /**
    * Parse a type definition: let Person = { name: String, age: Int } in body
    * Called after 'let' when we see an UPPER_IDENTIFIER
+   * Supports multiple bindings: let Person = {...}, Persons = [Person] in body
    */
   private typeDefExpr(): Expr {
     const typeName = this.currentToken.value;
     this.eat('UPPER_IDENTIFIER');
     this.eat('ASSIGN');
     const typeExpr = this.typeExpr();
+
+    // Check for additional bindings
+    if (this.currentToken.type === 'COMMA') {
+      this.eat('COMMA');
+      // Next binding could be another type def or a value binding
+      // Use type assertion since eat() updates currentToken but TS doesn't track this
+      const nextTokenType = this.currentToken.type as TokenType;
+      if (nextTokenType === 'UPPER_IDENTIFIER') {
+        // Another type definition - recurse
+        const body = this.typeDefExpr();
+        return typeDef(typeName, typeExpr, body);
+      } else {
+        // Value binding - parse remaining as let bindings
+        const body = this.parseLetBindingsAfterComma();
+        return typeDef(typeName, typeExpr, body);
+      }
+    }
+
     this.eat('IN');
     const body = this.expr();
     return typeDef(typeName, typeExpr, body);
+  }
+
+  /**
+   * Parse remaining let bindings after a comma (when mixing type and value bindings)
+   * Returns a LetExpr with the remaining bindings
+   */
+  private parseLetBindingsAfterComma(): Expr {
+    const bindings: LetBinding[] = [];
+
+    // Parse first binding after comma
+    const firstName = this.currentToken.value;
+    this.eat('IDENTIFIER');
+    this.eat('ASSIGN');
+    const firstValue = this.logical_or();
+    bindings.push({ name: firstName, value: firstValue });
+
+    // Parse additional bindings
+    while (this.currentToken.type === 'COMMA') {
+      this.eat('COMMA');
+      const name = this.currentToken.value;
+      this.eat('IDENTIFIER');
+      this.eat('ASSIGN');
+      const value = this.logical_or();
+      bindings.push({ name, value });
+    }
+
+    this.eat('IN');
+    const body = this.expr();
+
+    return letExpr(bindings, body);
   }
 
   /**

@@ -577,6 +577,71 @@ describe('Parser - Let Expressions', () => {
       }
     });
   });
+
+  it('should parse multiple type bindings (desugared to nested)', () => {
+    const ast = parse('let A = String, B = Int in 1');
+    // Multiple type bindings are desugared to nested typedef expressions
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.name, 'A');
+      assert.deepStrictEqual(ast.typeExpr, { kind: 'type_ref', name: 'String' });
+      assert.strictEqual(ast.body.type, 'typedef');
+      if (ast.body.type === 'typedef') {
+        assert.strictEqual(ast.body.name, 'B');
+        assert.deepStrictEqual(ast.body.typeExpr, { kind: 'type_ref', name: 'Int' });
+        assert.deepStrictEqual(ast.body.body, { type: 'literal', value: 1 });
+      }
+    }
+  });
+
+  it('should parse type binding referencing earlier type binding', () => {
+    const ast = parse('let Person = { name: String }, Persons = [Person] in 1');
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.name, 'Person');
+      assert.strictEqual(ast.typeExpr.kind, 'type_schema');
+      assert.strictEqual(ast.body.type, 'typedef');
+      if (ast.body.type === 'typedef') {
+        assert.strictEqual(ast.body.name, 'Persons');
+        assert.strictEqual(ast.body.typeExpr.kind, 'array_type');
+        if (ast.body.typeExpr.kind === 'array_type') {
+          assert.deepStrictEqual(ast.body.typeExpr.elementType, { kind: 'type_ref', name: 'Person' });
+        }
+      }
+    }
+  });
+
+  it('should parse type binding followed by value binding', () => {
+    const ast = parse('let T = String, x = 1 in x');
+    // Type binding first, then value binding
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.name, 'T');
+      assert.deepStrictEqual(ast.typeExpr, { kind: 'type_ref', name: 'String' });
+      // Body is a let expression with the value binding
+      assert.strictEqual(ast.body.type, 'let');
+      if (ast.body.type === 'let') {
+        assert.strictEqual(ast.body.bindings.length, 1);
+        assert.strictEqual(ast.body.bindings[0].name, 'x');
+        assert.deepStrictEqual(ast.body.bindings[0].value, { type: 'literal', value: 1 });
+      }
+    }
+  });
+
+  it('should parse type binding followed by multiple value bindings', () => {
+    const ast = parse('let T = Int, x = 1, y = 2 in x + y');
+    assert.strictEqual(ast.type, 'typedef');
+    if (ast.type === 'typedef') {
+      assert.strictEqual(ast.name, 'T');
+      assert.strictEqual(ast.body.type, 'let');
+      if (ast.body.type === 'let') {
+        // Value bindings are desugared to nested lets
+        assert.strictEqual(ast.body.bindings.length, 1);
+        assert.strictEqual(ast.body.bindings[0].name, 'x');
+        assert.strictEqual(ast.body.body.type, 'let');
+      }
+    }
+  });
 });
 
 describe('Parser - Range Membership', () => {

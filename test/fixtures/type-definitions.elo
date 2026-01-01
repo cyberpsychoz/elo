@@ -38,4 +38,12 @@ assertFails(fn( ~> let Person = { name: String, ...: Int } in { name: 'Alice', b
 assert((let Scores = { ...: Int } in { a: '1', b: '2' } |> Scores) == { a: 1, b: 2 })
 # Open type with just spread (ignored)
 assert((let Open = { ... } in { a: 1, b: 'two' } |> Open) == {})
+# Multiple type bindings
+assert((let A = String, B = Int in '42' |> B) == 42)
+assert((let A = String, B = Int in 'hello' |> A) == 'hello')
+assert((let Person = { name: String, age: Int(i | i > 0) }, Persons = [Person] in [{ name: 'Bernard', age: '18' }, { name: 'Louis', age: '10' }] |> Persons) == [{ name: 'Bernard', age: 18 }, { name: 'Louis', age: 10 }])
+assert((let Item = { id: Int }, Items = [Item] in [{ id: '1' }, { id: '2' }] |> Items) == [{ id: 1 }, { id: 2 }])
+# Type binding followed by value binding
+assert((let T = Int, x = 5 in x * 2) == 10)
+assert((let T = Int, x = 5, y = 3 in x + y) == 8)
 

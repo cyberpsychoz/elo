@@ -307,11 +307,17 @@ function emitTypeExprParser(
         'Datetime': 'pDatetime',
       };
       const parserName = parserMap[typeExpr.name];
-      if (!parserName) {
-        throw new Error(`Unknown type in type definition: ${typeExpr.name}`);
+      if (parserName) {
+        ctx.requireHelper?.(parserName);
+        return parserName;
       }
-      ctx.requireHelper?.(parserName);
-      return parserName;
+      // Check if it's a user-defined type (uppercase identifier not in built-ins)
+      // User-defined types are referenced as _p_TypeName
+      const firstChar = typeExpr.name.charAt(0);
+      if (firstChar === firstChar.toUpperCase() && firstChar !== firstChar.toLowerCase()) {
+        return `_p_${typeExpr.name}`;
+      }
+      throw new Error(`Unknown type in type definition: ${typeExpr.name}`);
     }
 
     case 'type_schema': {
