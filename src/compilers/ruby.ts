@@ -136,6 +136,8 @@ export function compileToRubyWithMeta(expr: Expr, options?: RubyCompileOptions):
  * Emit Ruby with helper tracking
  */
 function emitRubyWithHelpers(ir: IRExpr): EmitResult {
+  // Reset counter for deterministic output
+  typeParserVarCounter = 0;
   const requiredHelpers = new Set<string>();
   const code = emitRuby(ir, requiredHelpers);
   return { code, requiredHelpers };
@@ -275,6 +277,18 @@ function emitRuby(ir: IRExpr, requiredHelpers?: Set<string>): string {
 }
 
 /**
+ * Counter for generating unique variable names in nested type parsers
+ */
+let typeParserVarCounter = 0;
+
+/**
+ * Get a unique variable suffix for type parser variables
+ */
+function nextVarSuffix(): string {
+  return `_${typeParserVarCounter++}`;
+}
+
+/**
  * Emit a parser lambda for a type expression in Ruby
  */
 function emitTypeExprParser(
@@ -309,40 +323,47 @@ function emitTypeExprParser(
 
     case 'type_schema': {
       // Object schema: generate inline parser lambda
+      // Use unique variable names to avoid Ruby closure issues with nested schemas
       ctx.requireHelper?.('p_ok');
       ctx.requireHelper?.('p_fail');
+      const suffix = nextVarSuffix();
+      const oVar = `_o${suffix}`;
       const propParsers = typeExpr.properties.map(prop => {
         const propParser = emitTypeExprParser(prop.typeExpr, ctx);
         return { key: prop.key, parser: propParser, optional: prop.optional };
       });
       const knownKeys = typeExpr.properties.map(p => p.key);
 
-      // Generate object parser
+      // Generate object parser with unique variable names
       const propChecks = propParsers.map(({ key, parser, optional }) => {
+        const rVar = `_r_${key}${suffix}`;
         if (optional) {
           // Optional: if value is null/undefined, skip attribute; otherwise parse
-          return `unless v[:${key}].nil?; _r_${key} = (${parser}).call(v[:${key}], p + '.${key}'); return p_fail(p, nil, [_r_${key}]) unless _r_${key}[:success]; _o[:${key}] = _r_${key}[:value]; end`;
+          return `unless v[:${key}].nil?; ${rVar} = (${parser}).call(v[:${key}], p + '.${key}'); return p_fail(p, nil, [${rVar}]) unless ${rVar}[:success]; ${oVar}[:${key}] = ${rVar}[:value]; end`;
         }
         // Required: parse and fail if not successful
-        return `_r_${key} = (${parser}).call(v[:${key}], p + '.${key}'); return p_fail(p, nil, [_r_${key}]) unless _r_${key}[:success]; _o[:${key}] = _r_${key}[:value]`;
+        return `${rVar} = (${parser}).call(v[:${key}], p + '.${key}'); return p_fail(p, nil, [${rVar}]) unless ${rVar}[:success]; ${oVar}[:${key}] = ${rVar}[:value]`;
       }).join('; ');
 
       // Handle extras based on the extras mode
       let extrasCheck: string;
       const knownKeysArr = knownKeys.map(k => `:${k}`).join(', ');
+      const ksVar = `_ks${suffix}`;
       if (typeExpr.extras === undefined || typeExpr.extras === 'closed') {
         // Closed: fail if any extra keys exist
-        extrasCheck = `_ks = [${knownKeysArr}]; v.each_key { |_k| return p_fail(p + '.' + _k.to_s, 'unexpected attribute') unless _ks.include?(_k) }`;
+        extrasCheck = `${ksVar} = [${knownKeysArr}]; v.each_key { |_k| return p_fail(p + '.' + _k.to_s, 'unexpected attribute') unless ${ksVar}.include?(_k) }`;
       } else if (typeExpr.extras === 'ignored') {
         // Ignored: no check, extras are silently ignored
         extrasCheck = '';
       } else {
         // Typed extras: parse each extra key with the given type
         const extrasParser = emitTypeExprParser(typeExpr.extras, ctx);
-        extrasCheck = `_ks = [${knownKeysArr}]; _ep = ${extrasParser}; v.each_key { |_k| unless _ks.include?(_k); _re = _ep.call(v[_k], p + '.' + _k.to_s); return p_fail(p, nil, [_re]) unless _re[:success]; _o[_k] = _re[:value]; end }`;
+        const epVar = `_ep${suffix}`;
+        const reVar = `_re${suffix}`;
+        extrasCheck = `${ksVar} = [${knownKeysArr}]; ${epVar} = ${extrasParser}; v.each_key { |_k| unless ${ksVar}.include?(_k); ${reVar} = ${epVar}.call(v[_k], p + '.' + _k.to_s); return p_fail(p, nil, [${reVar}]) unless ${reVar}[:success]; ${oVar}[_k] = ${reVar}[:value]; end }`;
       }
 
-      return `->(v, p) { return p_fail(p, 'expected object, got ' + (v.nil? ? 'Null' : v.class.to_s)) unless v.is_a?(Hash); _o = {}; ${propChecks}; ${extrasCheck}; p_ok(_o, p) }`;
+      return `->(v, p) { return p_fail(p, 'expected object, got ' + (v.nil? ? 'Null' : v.class.to_s)) unless v.is_a?(Hash); ${oVar} = {}; ${propChecks}; ${extrasCheck}; p_ok(${oVar}, p) }`;
     }
 
     case 'subtype_constraint': {
