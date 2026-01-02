@@ -1,6 +1,6 @@
 ---
 title: "Building Elo: A Human-AI Collaboration Story"
-date: 2024-12-25
+date: 2025-12-25
 author: "Bernard Lambeau & Claude"
 lead: "Elo was built in a single day through an intense collaboration between a human developer and Claude Code. Here's what we learned about making AI pair programming actually work."
 ---

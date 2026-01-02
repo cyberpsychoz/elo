@@ -1,6 +1,6 @@
 ---
 title: "Day Two: The Art of Refinement"
-date: 2024-12-26
+date: 2025-12-26
 author: "Bernard Lambeau & Claude"
 lead: "Day one was about building something from nothing. Day two was different—it was about refinement, rebranding, and preparing Elo for the world."
 ---
