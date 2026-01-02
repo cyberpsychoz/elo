@@ -9,6 +9,7 @@
     "bin"
   ],
   "bin": {
+    "elo": "./bin/elo",
     "eloc": "./bin/eloc"
   },
   "scripts": {
