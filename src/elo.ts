@@ -5,6 +5,9 @@ import { parse } from './parser';
 import { compileToJavaScriptWithMeta } from './compilers/javascript';
 import { DateTime, Duration } from 'luxon';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pkg = require('../../package.json');
+
 interface Options {
   expression?: string;
   inputFile?: string;
@@ -41,6 +44,12 @@ function parseArgs(args: string[]): Options {
         process.exit(0);
         break;
 
+      case '-v':
+      case '--version':
+        console.log(`Elo ${pkg.version}`);
+        process.exit(0);
+        break;
+
       case '-':
         // Read expression from stdin
         options.inputFile = '-';
@@ -63,7 +72,7 @@ function parseArgs(args: string[]): Options {
 
 function printHelp() {
   console.log(`
-Elo Evaluator (elo) - Evaluate Elo expressions
+Elo Evaluator (elo) v${pkg.version} - Evaluate Elo expressions
 
 Usage:
   elo [options] [input-file]
@@ -72,6 +81,7 @@ Options:
   -e, --expression <expr>   Expression to evaluate (like ruby -e)
   -d, --data <json>         JSON input data for _ variable (or @file to read from file)
   --stdin                   Read input data as JSON from stdin
+  -v, --version             Show version number
   -h, --help                Show this help message
 
 Examples:

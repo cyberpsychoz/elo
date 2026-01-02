@@ -7,6 +7,9 @@ import { compileToJavaScriptWithMeta } from './compilers/javascript';
 import { compileToSQLWithMeta } from './compilers/sql';
 import { getPrelude, Target as PreludeTarget } from './preludes';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pkg = require('../../package.json');
+
 type Target = 'ruby' | 'js' | 'sql';
 
 // Map CLI target names to prelude target names
@@ -74,6 +77,12 @@ function parseArgs(args: string[]): Options {
         process.exit(0);
         break;
 
+      case '-v':
+      case '--version':
+        console.log(`Elo ${pkg.version}`);
+        process.exit(0);
+        break;
+
       case '-':
         // Read from stdin
         options.inputFile = '-';
@@ -96,7 +105,7 @@ function parseArgs(args: string[]): Options {
 
 function printHelp() {
   console.log(`
-Elo Compiler (eloc) - Compile Elo expressions to Ruby, JavaScript, or SQL
+Elo Compiler (eloc) v${pkg.version} - Compile Elo expressions to Ruby, JavaScript, or SQL
 
 Usage:
   eloc [options] [input-file]
@@ -108,6 +117,7 @@ Options:
   -p, --prelude             Include necessary library imports/requires
   --prelude-only            Output only the prelude (no expression needed)
   -f, --file <path>         Output to file instead of stdout
+  -v, --version             Show version number
   -h, --help                Show this help message
 
 Examples:
