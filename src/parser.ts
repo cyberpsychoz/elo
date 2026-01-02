@@ -598,7 +598,8 @@ export class Parser {
 
       // Check if this is a temporal keyword
       const temporalKeywords = ['NOW', 'TODAY', 'TOMORROW', 'YESTERDAY',
-        'SOD', 'EOD', 'SOW', 'EOW', 'SOM', 'EOM', 'SOQ', 'EOQ', 'SOY', 'EOY'];
+        'SOD', 'EOD', 'SOW', 'EOW', 'SOM', 'EOM', 'SOQ', 'EOQ', 'SOY', 'EOY',
+        'BOT', 'EOT'];
       if (temporalKeywords.includes(name)) {
         return temporalKeyword(name as any);
       }

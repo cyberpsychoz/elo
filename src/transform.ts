@@ -359,6 +359,12 @@ function transformTemporalKeyword(keyword: string): IRExpr {
     case 'EOY':
       return irCall('end_of_year', [now()], [Types.datetime], Types.datetime);
 
+    case 'BOT':
+      return irCall('bot', [], [], Types.datetime);
+
+    case 'EOT':
+      return irCall('eot', [], [], Types.datetime);
+
     default:
       throw new Error(`Unknown temporal keyword: ${keyword}`);
   }

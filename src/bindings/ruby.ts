@@ -34,6 +34,8 @@ export function createRubyBinding(): StdLib<string> {
   // Temporal nullary functions
   rubyLib.register('today', [], nullary('Date.today'));
   rubyLib.register('now', [], nullary('DateTime.now'));
+  rubyLib.register('bot', [], nullary('DateTime.new(1, 1, 1, 0, 0, 0)'));
+  rubyLib.register('eot', [], nullary('DateTime.new(9999, 12, 31, 23, 59, 59)'));
 
   // Period boundary functions
   const periodBoundaryMap: Record<string, string> = {

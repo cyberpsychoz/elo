@@ -61,7 +61,8 @@ export interface TemporalKeyword {
     | 'SOW' | 'EOW'   // Start/End of Week
     | 'SOM' | 'EOM'   // Start/End of Month
     | 'SOQ' | 'EOQ'   // Start/End of Quarter
-    | 'SOY' | 'EOY';  // Start/End of Year
+    | 'SOY' | 'EOY'   // Start/End of Year
+    | 'BOT' | 'EOT';  // Beginning/End of Time
 }
 
 /**

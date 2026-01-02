@@ -45,6 +45,8 @@ export function createSQLBinding(): StdLib<string> {
   // Temporal nullary functions
   sqlLib.register('today', [], nullary('CURRENT_DATE'));
   sqlLib.register('now', [], nullary('CURRENT_TIMESTAMP'));
+  sqlLib.register('bot', [], nullary("TIMESTAMP '0001-01-01 00:00:00'"));
+  sqlLib.register('eot', [], nullary("TIMESTAMP '9999-12-31 23:59:59'"));
 
   // Period boundary functions using date_trunc
   const periodBoundarySQL: Record<string, { truncate: string; end?: string }> = {
