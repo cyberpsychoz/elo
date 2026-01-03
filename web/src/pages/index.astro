@@ -45,81 +45,64 @@ const url = (path: string) => `${base}${path}`;
         </div>
       </section>
 
-      <section class="comparison">
-        <h2>Elo vs JavaScript</h2>
-        <p class="comparison-intro">See how Elo simplifies common data expressions</p>
+      <section class="unique-features">
+        <h2>What Makes Elo Different</h2>
+        <p class="unique-intro">Built for real-world data problems, Elo brings powerful features in a simple syntax</p>
 
-        <div class="comparison-grid">
-          <div class="comparison-example clickable" data-action="click->doc#tryExample">
-            <div class="comparison-header">
-              <span class="lang-badge elo-badge">Elo</span>
-              <span class="comparison-title">Has the 30-day trial expired?</span>
-            </div>
-            <pre class="comparison-code example-code">let
+        <div class="unique-grid">
+          <div class="unique-example clickable" data-action="click->doc#tryExample">
+            <pre class="example-code">let
   signup = D2024-06-15
 in
   TODAY > signup + P30D</pre>
           </div>
-          <div class="comparison-example js-example">
-            <div class="comparison-header">
-              <span class="lang-badge js-badge">JavaScript</span>
-              <span class="comparison-title">The same thing...</span>
-            </div>
-            <pre class="comparison-code code-js">const signup = new Date('2024-06-15');
-const trialEnd = new Date(signup);
-trialEnd.setDate(trialEnd.getDate() + 30);
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-today > trialEnd;</pre>
+          <div class="unique-explain">
+            <h4>First-Class Dates &amp; Durations</h4>
+            <p>Dates, times, and durations are native types with intuitive literal syntax. Add 30 days to a date? Just write <code>+ P30D</code>. No parsing, no conversion, no library imports.</p>
           </div>
         </div>
 
-        <div class="comparison-grid">
-          <div class="comparison-example clickable" data-action="click->doc#tryExample">
-            <div class="comparison-header">
-              <span class="lang-badge elo-badge">Elo</span>
-              <span class="comparison-title">Data validation &amp; coercion</span>
-            </div>
-            <pre class="comparison-code example-code">{`let Event = {
+        <div class="unique-grid">
+          <div class="unique-example clickable" data-action="click->doc#tryExample" data-input='{"name": "Conf", "date": "2025-06-15T09:00", "capacity": "100"}'>
+            <pre class="example-code">{`let Event = {
   name: String,
-  date: Datetime
-} in { name: 'Conf', date: '2025-06-15T09:00:00' } |> Event`}</pre>
+  date: Datetime,
+  capacity: Int(c | c > 0)
+} in _ |> Event`}</pre>
           </div>
-          <div class="comparison-example js-example">
-            <div class="comparison-header">
-              <span class="lang-badge js-badge">JavaScript</span>
-              <span class="comparison-title">The same thing...</span>
-            </div>
-            <pre class="comparison-code code-js">// Just validation - no coercion!
-if (typeof data.name !== 'string') throw Error();
-if (isNaN(Date.parse(data.date))) throw Error();
-// Elo also coerces strings to Datetime</pre>
+          <div class="unique-explain">
+            <h4>Data Schemas That Work</h4>
+            <p>Turn untrusted input into safe, validated data. Elo coerces and checks everything so your code always runs on data you can trust.</p>
           </div>
         </div>
 
-        <div class="comparison-grid">
-          <div class="comparison-example clickable" data-action="click->doc#tryExample">
-            <div class="comparison-header">
-              <span class="lang-badge elo-badge">Elo</span>
-              <span class="comparison-title">Data transformation pipeline</span>
-            </div>
-            <pre class="comparison-code example-code">items
+        <div class="unique-grid">
+          <div class="unique-example clickable" data-action="click->doc#tryExample">
+            <pre class="example-code">items
   |> filter(i ~> i.price > 100)
-  |> map(i ~> i.price * 1.21)</pre>
+  |> map(i ~> i.price * 1.21)
+  |> sum</pre>
           </div>
-          <div class="comparison-example js-example">
-            <div class="comparison-header">
-              <span class="lang-badge js-badge">JavaScript</span>
-              <span class="comparison-title">The same thing...</span>
-            </div>
-            <pre class="comparison-code code-js">// Works in JS, but what about Ruby?
-// Elo compiles to both with same semantics.
-items.filter(i => i.price > 100)
-     .map(i => i.price * 1.21)</pre>
+          <div class="unique-explain">
+            <h4>Functional &amp; Portable</h4>
+            <p>Pipeline operators, lambdas, and a comprehensive <a href={url('/stdlib')}>standard library</a>. Write once, compile to JavaScript, Ruby, and SQL—same semantics everywhere.</p>
           </div>
         </div>
 
-        <p class="comparison-link">
+        <div class="unique-grid coming-soon">
+          <div class="unique-example">
+            <pre class="code-preview">{`orders
+  |> restrict(o ~> o.status == 'pending')
+  |> extend({total: o ~> o.qty * o.price})
+  |> project([.customer, .total])`}</pre>
+          </div>
+          <div class="unique-explain">
+            <h4>Coming Soon: Relational Algebra</h4>
+            <p>Inspired by Tutorial D and powered by <a href="https://relational-algebra.dev" target="_blank">Bmg</a>, Elo will bring true relational algebra to your data pipelines. Query, join, and aggregate—all with portable semantics.</p>
+          </div>
+        </div>
+
+        <p class="unique-link">
           See more practical applications in the <a href={url('/learn#usecases-intro')}>Use Cases</a> section.
         </p>
       </section>

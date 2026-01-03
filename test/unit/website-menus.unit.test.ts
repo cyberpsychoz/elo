@@ -55,22 +55,22 @@ function extractSectionIds(content: string, sectionClass: string): string[] {
 
 describe('Website Menu Consistency', () => {
 
-  describe('docs.astro', () => {
-    const docsContent = readFile('pages/docs.astro');
+  describe('reference.astro', () => {
+    const referenceContent = readFile('pages/reference.astro');
     const layoutContent = readFile('layouts/Layout.astro');
 
     it('sidebar links should match section IDs in page body', () => {
-      // Extract sidebar links from docs.astro
-      const sidebarLinks = extractHashLinks(docsContent, '<aside class="doc-toc">', '</aside>');
+      // Extract sidebar links from reference.astro
+      const sidebarLinks = extractHashLinks(referenceContent, '<aside class="doc-toc">', '</aside>');
 
       // Extract section IDs from page body
-      const sectionIds = extractSectionIds(docsContent, 'doc-section');
+      const sectionIds = extractSectionIds(referenceContent, 'doc-section');
 
       // Every sidebar link should have a corresponding section
       for (const link of sidebarLinks) {
         assert.ok(
           sectionIds.includes(link),
-          `Sidebar link "#${link}" has no matching section in docs.astro body. ` +
+          `Sidebar link "#${link}" has no matching section in reference.astro body. ` +
           `Add <section class="doc-section" id="${link}"> or remove the link.`
         );
       }
@@ -79,25 +79,25 @@ describe('Website Menu Consistency', () => {
       for (const id of sectionIds) {
         assert.ok(
           sidebarLinks.includes(id),
-          `Section id="${id}" has no sidebar link in docs.astro. ` +
+          `Section id="${id}" has no sidebar link in reference.astro. ` +
           `Add <a href="#${id}"> to the sidebar or remove the section.`
         );
       }
     });
 
-    it('Layout.astro dropdown should match docs.astro sidebar', () => {
-      // Extract Layout dropdown links for /docs
-      const layoutLinks = extractLayoutLinks(layoutContent, '/docs');
+    it('Layout.astro dropdown should match reference.astro sidebar', () => {
+      // Extract Layout dropdown links for /reference
+      const layoutLinks = extractLayoutLinks(layoutContent, '/reference');
 
-      // Extract sidebar links from docs.astro
-      const sidebarLinks = extractHashLinks(docsContent, '<aside class="doc-toc">', '</aside>');
+      // Extract sidebar links from reference.astro
+      const sidebarLinks = extractHashLinks(referenceContent, '<aside class="doc-toc">', '</aside>');
 
       // Every Layout link should exist in sidebar
       for (const link of layoutLinks) {
         assert.ok(
           sidebarLinks.includes(link),
-          `Layout.astro has link to "/docs#${link}" but docs.astro sidebar doesn't have "#${link}". ` +
-          `Add it to docs.astro sidebar or remove from Layout.astro.`
+          `Layout.astro has link to "/reference#${link}" but reference.astro sidebar doesn't have "#${link}". ` +
+          `Add it to reference.astro sidebar or remove from Layout.astro.`
         );
       }
 
@@ -105,7 +105,7 @@ describe('Website Menu Consistency', () => {
       for (const link of sidebarLinks) {
         assert.ok(
           layoutLinks.includes(link),
-          `docs.astro sidebar has "#${link}" but Layout.astro dropdown is missing "/docs#${link}". ` +
+          `reference.astro sidebar has "#${link}" but Layout.astro dropdown is missing "/reference#${link}". ` +
           `Add it to Layout.astro Reference submenu.`
         );
       }

@@ -128,8 +128,12 @@ export default class PlaygroundController extends Controller {
     // Check for code in URL parameters first, then localStorage
     const urlParams = new URLSearchParams(window.location.search);
     const codeFromUrl = urlParams.get('code');
+    const inputFromUrl = urlParams.get('input');
     if (codeFromUrl) {
       this.setCode(codeFromUrl);
+      if (inputFromUrl) {
+        this.setInputData(inputFromUrl);
+      }
       // Clean URL without reload
       window.history.replaceState({}, '', window.location.pathname);
     } else {

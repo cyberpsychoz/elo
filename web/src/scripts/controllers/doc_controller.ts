@@ -11,9 +11,14 @@ export default class DocController extends Controller {
     if (!codeElement) return;
 
     const code = (codeElement.textContent || '').trim();
+    const inputData = target.dataset.input;
 
-    // Navigate to playground with code as URL parameter
+    // Navigate to playground with code (and optionally input) as URL parameters
     const encodedCode = encodeURIComponent(code);
-    window.location.href = `${BASE_URL}/try?code=${encodedCode}&run=1`;
+    let url = `${BASE_URL}/try?code=${encodedCode}&run=1`;
+    if (inputData) {
+      url += `&input=${encodeURIComponent(inputData)}`;
+    }
+    window.location.href = url;
   }
 }

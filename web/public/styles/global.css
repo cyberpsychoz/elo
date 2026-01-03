@@ -1224,7 +1224,128 @@ body.light-theme .hl-sql-operator {
   line-height: 1.6;
 }
 
-/* Comparison Section */
+/* Unique Features Section */
+.unique-features {
+  margin-bottom: 4rem;
+}
+
+.unique-features h2 {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.unique-intro {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.unique-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  align-items: start;
+}
+
+.unique-example {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.unique-example.clickable {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.unique-example.clickable:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.unique-example pre {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  overflow-x: auto;
+}
+
+.unique-example .code-preview {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.unique-explain {
+  padding: 0.5rem 0;
+}
+
+.unique-explain h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.unique-explain p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.unique-explain code {
+  background: var(--bg-panel);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  color: var(--accent);
+}
+
+.unique-explain a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.unique-explain a:hover {
+  text-decoration: underline;
+}
+
+.unique-grid.coming-soon .unique-example {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.unique-grid.coming-soon .unique-explain h4 {
+  color: var(--accent);
+}
+
+.unique-link {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 1.5rem;
+}
+
+.unique-link a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.unique-link a:hover {
+  text-decoration: underline;
+}
+
+/* Comparison Section (legacy, kept for reference) */
 .comparison {
   margin-bottom: 4rem;
 }
@@ -1998,8 +2119,17 @@ body.light-theme .js-badge {
     gap: 1rem;
   }
 
-  .comparison-grid {
+  .comparison-grid,
+  .unique-grid {
     grid-template-columns: 1fr;
+  }
+
+  .unique-grid {
+    gap: 1rem;
+  }
+
+  .unique-explain {
+    padding: 0;
   }
 
   .target-card {

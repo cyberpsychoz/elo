@@ -27,10 +27,15 @@ function extractExamples(content: string): { code: string; line: number }[] {
   let match;
 
   while ((match = regex.exec(content)) !== null) {
-    const code = match[1];
+    let code = match[1];
     // Calculate line number by counting newlines before this match
     const beforeMatch = content.slice(0, match.index);
     const line = (beforeMatch.match(/\n/g) || []).length + 1;
+
+    // Strip Astro template literal wrapper {`...`} if present
+    if (code.startsWith('{`') && code.endsWith('`}')) {
+      code = code.slice(2, -2);
+    }
 
     // Decode HTML entities
     const decoded = code
@@ -81,9 +86,9 @@ describe('Website Example Validation', () => {
     }
   });
 
-  describe('docs.astro examples', () => {
-    const docsContent = readFile('pages/docs.astro');
-    const examples = extractExamples(docsContent);
+  describe('reference.astro examples', () => {
+    const referenceContent = readFile('pages/reference.astro');
+    const examples = extractExamples(referenceContent);
 
     for (const { code, line } of examples) {
       if (shouldSkip(code)) continue;
