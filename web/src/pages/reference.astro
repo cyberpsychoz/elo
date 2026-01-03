@@ -19,6 +19,7 @@ import Footer from '../components/Footer.astro';
         <span class="toc-section">Data</span>
         <a href="#tuples">Tuples</a>
         <a href="#lists">Lists</a>
+        <a href="#data-paths">Data Paths</a>
         <a href="#input">Input Data</a>
         <a href="#data-formats">Data Formats</a>
         <a href="#data-schemas">Data Schemas</a>
@@ -58,7 +59,6 @@ import Footer from '../components/Footer.astro';
             <tr><td><code>Tuple</code></td><td>Key-value tuples</td><td><code>&#123;name: 'Alice', age: 30&#125;</code></td></tr>
             <tr><td><code>List</code></td><td>Ordered collections</td><td><code>[1, 2, 3]</code>, <code>['a', 'b']</code></td></tr>
             <tr><td><code>Function</code></td><td>Lambda functions</td><td><code>fn( x ~> x * 2 )</code></td></tr>
-            <tr><td><code>DataPath</code></td><td>Data structure paths</td><td><code>.name</code>, <code>.items.0</code></td></tr>
             <tr><td><code>Null</code></td><td>Null values</td><td><code>null</code></td></tr>
           </tbody>
         </table>
@@ -125,19 +125,9 @@ import Footer from '../components/Footer.astro';
         </div>
         <h3>Data Paths</h3>
         <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Simple Path</div>
-          <pre class="example-code">.name</pre>
-          <p class="example-desc">A path for accessing the <code>name</code> property. Use with <code>fetch()</code>.</p>
-        </div>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Nested Path</div>
+          <div class="example-header">Path Literal</div>
           <pre class="example-code">.user.address.city</pre>
-          <p class="example-desc">Navigate through nested tuples.</p>
-        </div>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Path with List Index</div>
-          <pre class="example-code">.items.0.name</pre>
-          <p class="example-desc">Access list elements by index.</p>
+          <p class="example-desc">Shorthand for <code>['user', 'address', 'city']</code>. See <a href="#data-paths">Data Paths</a>.</p>
         </div>
       </section>
 
@@ -308,6 +298,39 @@ import Footer from '../components/Footer.astro';
           <p class="example-desc">Lists can contain other lists.</p>
         </div>
         <p class="note"><strong>Note:</strong> Lists look like JavaScript arrays but Elo uses relational terminology. In SQL, they compile to PostgreSQL <code>ARRAY[...]</code> syntax.</p>
+      </section>
+
+      <section class="doc-section" id="data-paths">
+        <h2>Data Paths</h2>
+        <p>Data paths are <strong>syntactic sugar</strong> for lists of strings and integers. They provide a concise way to describe locations within nested data structures.</p>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Path</div>
+          <pre class="example-code">.name</pre>
+          <p class="example-desc">Equivalent to <code>['name']</code>.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Nested Path</div>
+          <pre class="example-code">.user.address.city</pre>
+          <p class="example-desc">Equivalent to <code>['user', 'address', 'city']</code>.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Path with Index</div>
+          <pre class="example-code">.items.0.name</pre>
+          <p class="example-desc">Equivalent to <code>['items', 0, 'name']</code>. Integers access list elements.</p>
+        </div>
+        <h3>Navigating Data</h3>
+        <p>Use <code>fetch()</code> to retrieve values and <code>patch()</code> to update them immutably.</p>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Fetch Value</div>
+          <pre class="example-code">fetch(&#123;user: &#123;name: 'Alice'&#125;&#125;, .user.name)</pre>
+          <p class="example-desc">Returns <code>'Alice'</code>. Returns <code>null</code> if path doesn't exist.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Patch Value</div>
+          <pre class="example-code">patch(&#123;user: &#123;name: 'Alice'&#125;&#125;, .user.name, 'Bob')</pre>
+          <p class="example-desc">Returns a new tuple with the value updated at the path.</p>
+        </div>
+        <p class="note"><strong>Note:</strong> Since data paths are lists, <code>typeOf(.name)</code> returns <code>'List'</code>. The stdlib uses "DataPath" as a conceptual name in function signatures.</p>
       </section>
 
       <section class="doc-section" id="input">
