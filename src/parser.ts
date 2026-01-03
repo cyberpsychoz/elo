@@ -1,4 +1,4 @@
-import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply, dataPath, TypeExpr, TypeSchemaProperty, typeRef, typeSchema, typeDef, subtypeConstraint, arrayType, unionType, Constraint } from './ast';
+import { Expr, literal, nullLiteral, stringLiteral, variable, binary, unary, dateLiteral, dateTimeLiteral, durationLiteral, temporalKeyword, functionCall, memberAccess, letExpr, ifExpr, lambda, LetBinding, objectLiteral, ObjectProperty, arrayLiteral, alternative, apply, dataPath, TypeExpr, TypeSchemaProperty, typeRef, typeSchema, typeDef, subtypeConstraint, arrayType, unionType, Constraint, guardExpr } from './ast';
 
 /**
  * Token types
@@ -48,6 +48,8 @@ type TokenType =
   | 'THEN'
   | 'ELSE'
   | 'FN'
+  | 'GUARD'
+  | 'CHECK'
   | 'ASSIGN'
   | 'QUESTION'
   | 'EOF';
@@ -365,6 +367,12 @@ class Lexer {
       if (id === 'fn') {
         return { type: 'FN', value: id, position: pos, line, column: col };
       }
+      if (id === 'guard') {
+        return { type: 'GUARD', value: id, position: pos, line, column: col };
+      }
+      if (id === 'check') {
+        return { type: 'CHECK', value: id, position: pos, line, column: col };
+      }
       // Uppercase identifiers: types, selectors, temporal keywords
       if (/^[A-Z]/.test(id)) {
         return { type: 'UPPER_IDENTIFIER', value: id, position: pos, line, column: col };
@@ -643,6 +651,14 @@ export class Parser {
 
       // Check if this is a function call
       if (this.currentToken.type === 'LPAREN') {
+        // Special handling for guard/check pipe-style: guard(x | condition)
+        if (name === 'guard' || name === 'check') {
+          const pipeGuard = this.tryParsePipeGuard(name as 'guard' | 'check');
+          if (pipeGuard) {
+            return pipeGuard;
+          }
+        }
+
         this.eat('LPAREN');
         const args: Expr[] = [];
 
@@ -680,6 +696,17 @@ export class Parser {
     // Handle if expressions (can appear anywhere an expression is expected)
     if (token.type === 'IF') {
       return this.ifExprParse();
+    }
+
+    // Handle guard expressions: guard [label:] condition in body
+    // Note: pipe-style guard(x | condition) is handled in expr() via guardOrPipeGuard
+    if (token.type === 'GUARD') {
+      return this.guardExprParse('guard');
+    }
+
+    // Handle check expressions (synonym for guard, for postconditions)
+    if (token.type === 'CHECK') {
+      return this.guardExprParse('check');
     }
 
     // Handle lambda expressions: fn( x | body ) or fn( x, y | body )
@@ -925,16 +952,29 @@ export class Parser {
     while (this.currentToken.type === 'PIPE_OP') {
       this.eat('PIPE_OP');
 
-      // Right side must be an identifier (function name) or uppercase (type name)
+      // Right side must be an identifier (function name), uppercase (type name), or guard/check
       const tok = this.currentToken as Token;
-      if (tok.type !== 'IDENTIFIER' && tok.type !== 'UPPER_IDENTIFIER') {
+      if (tok.type !== 'IDENTIFIER' && tok.type !== 'UPPER_IDENTIFIER' &&
+          tok.type !== 'GUARD' && tok.type !== 'CHECK') {
         throw new Error(
           `Expected function name after |> at ${this.formatLocation(tok)}`
         );
       }
 
       const funcName = tok.value;
+      const isGuardOrCheck = tok.type === 'GUARD' || tok.type === 'CHECK';
       this.eat(tok.type);
+
+      // For guard/check with pipe-style syntax, parse specially
+      if (isGuardOrCheck && (this.currentToken as Token).type === 'LPAREN') {
+        const guardType = funcName as 'guard' | 'check';
+        const pipeGuard = this.tryParsePipeGuardBody(guardType);
+        if (pipeGuard) {
+          // Apply the lambda to the piped value: node |> guard(x | cond) -> pipeGuard(node)
+          node = apply(pipeGuard, [node]);
+          continue;
+        }
+      }
 
       const args: Expr[] = [node]; // Left side becomes first argument
 
@@ -1070,6 +1110,16 @@ export class Parser {
       this.eat('ASSIGN');
       const value = this.logical_or();
       bindings.push({ name, value });
+    }
+
+    // Check for let...guard or let...check sugar: let x = ... guard/check condition in body
+    if ((this.currentToken as Token).type === 'GUARD') {
+      const inner = this.guardExprParse('guard');
+      return letExpr(bindings, inner);
+    }
+    if ((this.currentToken as Token).type === 'CHECK') {
+      const inner = this.guardExprParse('check');
+      return letExpr(bindings, inner);
     }
 
     this.eat('IN');
@@ -1374,6 +1424,101 @@ export class Parser {
   }
 
   /**
+   * Try to parse pipe-style guard: guard(x | condition, ...)
+   * Returns a lambda that checks constraints and returns the input value.
+   * Returns null if not a pipe-style guard (e.g., regular function call).
+   * Called from lowercase identifier parsing (when guard/check used as function name).
+   */
+  private tryParsePipeGuard(guardType: 'guard' | 'check'): Expr | null {
+    const savedState = this.saveState();
+    this.eat('LPAREN');
+    return this.parsePipeGuardBody(guardType, savedState);
+  }
+
+  /**
+   * Try to parse pipe-style guard body after LPAREN has been seen.
+   * Called from GUARD/CHECK keyword parsing.
+   * Returns null if not a valid pipe-style guard pattern.
+   */
+  private tryParsePipeGuardBody(guardType: 'guard' | 'check'): Expr | null {
+    const savedState = this.saveState();
+    this.eat('LPAREN');
+    return this.parsePipeGuardBody(guardType, savedState);
+  }
+
+  /**
+   * Parse the body of a pipe-style guard after LPAREN has been consumed.
+   * Returns null if not a valid pattern, restoring the saved state.
+   */
+  private parsePipeGuardBody(guardType: 'guard' | 'check', savedState: ParserState): Expr | null {
+    // Check for IDENTIFIER PIPE pattern
+    if (this.currentToken.type !== 'IDENTIFIER') {
+      this.restoreState(savedState);
+      return null;
+    }
+
+    const varName = this.currentToken.value;
+    this.eat('IDENTIFIER');
+
+    if ((this.currentToken as Token).type !== 'PIPE') {
+      this.restoreState(savedState);
+      return null;
+    }
+    this.eat('PIPE');
+
+    // Parse constraints (one or more, comma-separated) - reuse constraint parsing
+    const constraints: Constraint[] = [];
+    constraints.push(this.parseConstraint());
+
+    while ((this.currentToken as Token).type === 'COMMA') {
+      this.eat('COMMA');
+      constraints.push(this.parseConstraint());
+    }
+
+    this.eat('RPAREN');
+
+    // Create a lambda: fn(x ~> guard constraints in x)
+    // The guard body is just the variable itself (returns input if guard passes)
+    const varRef = variable(varName);
+    const guardBody = guardExpr(constraints, varRef, guardType);
+    return lambda([varName], guardBody);
+  }
+
+  /**
+   * Parse guard/check expression: guard [label:] condition[, ...] in body
+   * Supports the guard...let...check...in sugar pattern
+   */
+  private guardExprParse(guardType: 'guard' | 'check'): Expr {
+    this.eat(guardType === 'guard' ? 'GUARD' : 'CHECK');
+
+    // Parse constraints (one or more, comma-separated)
+    const constraints: Constraint[] = [];
+    constraints.push(this.parseConstraint());
+
+    while ((this.currentToken as Token).type === 'COMMA') {
+      this.eat('COMMA');
+      constraints.push(this.parseConstraint());
+    }
+
+    // Check for guard...check sugar
+    // guard cond check cond in body
+    const tok = this.currentToken as Token;
+    if (tok.type === 'GUARD' && guardType === 'guard') {
+      // guard...guard sugar (nested guards)
+      const inner = this.guardExprParse('guard');
+      return guardExpr(constraints, inner, guardType);
+    } else if (tok.type === 'CHECK') {
+      // guard...check sugar: guard cond check cond in body
+      const inner = this.guardExprParse('check');
+      return guardExpr(constraints, inner, guardType);
+    }
+
+    this.eat('IN');
+    const body = this.expr();
+    return guardExpr(constraints, body, guardType);
+  }
+
+  /**
    * Parse lambda expression: fn( ~> body ) or fn( x ~> body ) or fn( x, y ~> body )
    */
   private lambdaParse(): Expr {
@@ -1590,17 +1735,44 @@ export class Parser {
     this.depth++;
     this.checkDepth();
     try {
-      // Let and if expressions have lowest precedence
+      // Let, if, guard, check expressions have lowest precedence
       if (this.currentToken.type === 'LET') {
         return this.letExpr();
       }
       if (this.currentToken.type === 'IF') {
         return this.ifExprParse();
       }
+      // Handle guard/check: either block-style or pipe-style
+      if (this.currentToken.type === 'GUARD') {
+        return this.guardOrPipeGuard('guard');
+      }
+      if (this.currentToken.type === 'CHECK') {
+        return this.guardOrPipeGuard('check');
+      }
       return this.pipe();
     } finally {
       this.depth--;
     }
+  }
+
+  /**
+   * Parse guard/check: detect if it's pipe-style guard(x | cond) or block-style guard cond in body
+   */
+  private guardOrPipeGuard(guardType: 'guard' | 'check'): Expr {
+    const savedState = this.saveState();
+    this.eat(guardType === 'guard' ? 'GUARD' : 'CHECK');
+
+    // Check for pipe-style: guard(x | condition)
+    if ((this.currentToken as Token).type === 'LPAREN') {
+      const pipeGuard = this.tryParsePipeGuardBody(guardType);
+      if (pipeGuard) {
+        return pipeGuard;
+      }
+    }
+
+    // Not pipe-style, restore and parse as block-style
+    this.restoreState(savedState);
+    return this.guardExprParse(guardType);
   }
 
   parse(): Expr {

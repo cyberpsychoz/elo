@@ -38,6 +38,7 @@ import {
   irSubtypeConstraint,
   irArrayType,
   irUnionType,
+  irGuard,
   inferType,
 } from './ir';
 import { TypeExpr } from './ast';
@@ -187,6 +188,16 @@ function transformWithDepth(
       newEnv.set(expr.name, Types.fn);
       const bodyIR = transformWithDepth(expr.body, newEnv, defining, nextDepth, maxDepth, allowUndefinedVariables);
       return irTypeDef(expr.name, irTypeExpr, bodyIR);
+    }
+
+    case 'guard': {
+      // Transform guard expression
+      const constraintsIR = expr.constraints.map(c => ({
+        label: c.label,
+        condition: recurse(c.condition)
+      }));
+      const bodyIR = recurse(expr.body);
+      return irGuard(constraintsIR, bodyIR, expr.guardType);
     }
   }
 }

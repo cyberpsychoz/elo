@@ -26,6 +26,8 @@ interface Options {
   preludeOnly?: boolean;
   /** If true, output self-executing code (calls function with null/nil) */
   execute?: boolean;
+  /** If true, strip guard/check assertions from output */
+  stripGuards?: boolean;
 }
 
 function parseArgs(args: string[]): Options {
@@ -69,6 +71,10 @@ function parseArgs(args: string[]): Options {
       case '-x':
       case '--execute':
         options.execute = true;
+        break;
+
+      case '--strip-guards':
+        options.stripGuards = true;
         break;
 
       case '-h':
@@ -116,6 +122,7 @@ Options:
   -x, --execute             Output self-executing code (calls function with null/nil)
   -p, --prelude             Include necessary library imports/requires
   --prelude-only            Output only the prelude (no expression needed)
+  --strip-guards            Strip guard/check assertions from output
   -f, --file <path>         Output to file instead of stdout
   -v, --version             Show version number
   -h, --help                Show this help message
@@ -153,26 +160,28 @@ For evaluating expressions, use the 'elo' command instead.
 interface CompileOptions {
   includePrelude?: boolean;
   execute?: boolean;
+  stripGuards?: boolean;
 }
 
 function compile(source: string, target: Target, options: CompileOptions = {}): string {
   const ast = parse(source);
-  const { includePrelude = false, execute = false } = options;
+  const { includePrelude = false, execute = false, stripGuards = false } = options;
 
   let code: string;
   switch (target) {
     case 'ruby': {
-      const result = compileToRubyWithMeta(ast, { execute });
+      const result = compileToRubyWithMeta(ast, { execute, stripGuards });
       code = result.code;
       break;
     }
     case 'js': {
-      const result = compileToJavaScriptWithMeta(ast, { execute });
+      const result = compileToJavaScriptWithMeta(ast, { execute, stripGuards });
       code = result.code;
       break;
     }
     case 'sql': {
       // SQL doesn't support execute option (no function wrapping)
+      // and guards already throw an error, so stripGuards is not needed
       const result = compileToSQLWithMeta(ast);
       code = result.code;
       break;
@@ -244,7 +253,8 @@ function main() {
         }
         return compile(trimmed, options.target, {
           includePrelude: index === 0 && options.prelude,
-          execute: options.execute
+          execute: options.execute,
+          stripGuards: options.stripGuards
         });
       } catch (error) {
         throw new Error(`Line ${index + 1}: ${error}`);

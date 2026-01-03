@@ -2,7 +2,7 @@
  * AST node types for Elo expressions
  */
 
-export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | ObjectLiteral | ArrayLiteral | Alternative | Apply | DataPath | TypeDef;
+export type Expr = Literal | NullLiteral | StringLiteral | Variable | BinaryOp | UnaryOp | DateLiteral | DateTimeLiteral | DurationLiteral | TemporalKeyword | FunctionCall | MemberAccess | LetExpr | IfExpr | Lambda | ObjectLiteral | ArrayLiteral | Alternative | Apply | DataPath | TypeDef | GuardExpr;
 
 /**
  * Literal value (number or boolean)
@@ -455,4 +455,27 @@ export function unionType(types: TypeExpr[]): UnionType {
     throw new Error('Union type must have at least two types');
   }
   return { kind: 'union_type', types };
+}
+
+/**
+ * Guard expression: guard [label:] condition in body
+ * Used for preconditions (guard) and postconditions (check).
+ * Throws at runtime if condition is false, unless guards are stripped.
+ */
+export interface GuardExpr {
+  type: 'guard';
+  constraints: Constraint[];  // One or more labeled constraints
+  body: Expr;
+  guardType: 'guard' | 'check';  // Semantic distinction for clarity
+}
+
+/**
+ * Creates a guard expression
+ * Multiple guards get nested: guard a in guard b in body
+ */
+export function guardExpr(constraints: Constraint[], body: Expr, guardType: 'guard' | 'check' = 'guard'): GuardExpr {
+  if (constraints.length === 0) {
+    throw new Error('Guard expression must have at least one constraint');
+  }
+  return { type: 'guard', constraints, body, guardType };
 }

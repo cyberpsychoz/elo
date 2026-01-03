@@ -207,5 +207,8 @@ function emitSQL(ir: IRExpr): string {
 
     case 'typedef':
       throw new Error('Type definitions are not yet supported in SQL compilation');
+
+    case 'guard':
+      throw new Error('Guard expressions are not supported in SQL compilation');
   }
 }

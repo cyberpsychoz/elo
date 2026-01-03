@@ -13,6 +13,8 @@ export interface RubyCompileOptions {
   asFunction?: boolean;
   /** If true, immediately execute the lambda with nil as input */
   execute?: boolean;
+  /** If true, strip guard/check assertions from output */
+  stripGuards?: boolean;
 }
 
 /**
@@ -101,7 +103,8 @@ export function compileToRuby(expr: Expr, options?: RubyCompileOptions): string 
 export function compileToRubyWithMeta(expr: Expr, options?: RubyCompileOptions): RubyCompileResult {
   const ir = transform(expr);
   const actuallyUsesInput = usesInput(ir);
-  const result = emitRubyWithHelpers(ir);
+  const emitOptions: EmitOptions = { stripGuards: options?.stripGuards || false };
+  const result = emitRubyWithHelpers(ir, emitOptions);
 
   // Resolve helper dependencies
   const allHelpers = new Set(result.requiredHelpers);
@@ -130,24 +133,31 @@ export function compileToRubyWithMeta(expr: Expr, options?: RubyCompileOptions):
 }
 
 /**
+ * Options for Ruby emission
+ */
+interface EmitOptions {
+  stripGuards: boolean;
+}
+
+/**
  * Emit Ruby with helper tracking
  */
-function emitRubyWithHelpers(ir: IRExpr): EmitResult {
+function emitRubyWithHelpers(ir: IRExpr, options: EmitOptions): EmitResult {
   // Reset counter for deterministic output
   typeParserVarCounter = 0;
   const requiredHelpers = new Set<string>();
-  const code = emitRuby(ir, requiredHelpers);
+  const code = emitRuby(ir, requiredHelpers, options);
   return { code, requiredHelpers };
 }
 
 /**
  * Emit Ruby code from IR
  */
-function emitRuby(ir: IRExpr, requiredHelpers?: Set<string>): string {
+function emitRuby(ir: IRExpr, requiredHelpers?: Set<string>, options?: EmitOptions): string {
   const ctx: EmitContext<string> = {
-    emit: (child) => emitRuby(child, requiredHelpers),
+    emit: (child) => emitRuby(child, requiredHelpers, options),
     emitWithParens: (child, parentOp, side) => {
-      const emitted = emitRuby(child, requiredHelpers);
+      const emitted = emitRuby(child, requiredHelpers, options);
       if (needsParens(child, parentOp, side)) {
         return `(${emitted})`;
       }
@@ -269,6 +279,25 @@ function emitRuby(ir: IRExpr, requiredHelpers?: Set<string>): string {
       const body = ctx.emit(ir.body);
       // The type name becomes a lambda that calls the parser and unwraps
       return `(_p_${ir.name} = ${parserCode}; ${ir.name} = ->(v) { p_unwrap(_p_${ir.name}.call(v, '')) }; ${body})`;
+    }
+
+    case 'guard': {
+      const body = ctx.emit(ir.body);
+      // If stripGuards is enabled, just emit the body
+      if (options?.stripGuards) {
+        return body;
+      }
+      // Generate guard checks that raise on failure
+      const guardChecks = ir.constraints.map(c => {
+        const conditionCode = ctx.emit(c.condition);
+        const errorMsg = c.label
+          ? (c.label.includes(' ') ? c.label : `${ir.guardType} '${c.label}' failed`)
+          : `${ir.guardType} failed`;
+        // Escape single quotes in the error message for Ruby string
+        const escapedMsg = errorMsg.replace(/'/g, "\\'");
+        return `raise '${escapedMsg}' unless ${conditionCode}`;
+      }).join('; ');
+      return `(${guardChecks}; ${body})`;
     }
   }
 }

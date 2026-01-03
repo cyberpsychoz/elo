@@ -1517,3 +1517,142 @@ describe('Parser - Subtype Constraints with Labels', () => {
     }
   });
 });
+
+describe('Parser - Guard expressions', () => {
+  it('should parse basic guard expression', () => {
+    const ast = parse('guard x > 0 in x * 2');
+    assert.strictEqual(ast.type, 'guard');
+    if (ast.type === 'guard') {
+      assert.strictEqual(ast.guardType, 'guard');
+      assert.strictEqual(ast.constraints.length, 1);
+      assert.strictEqual(ast.constraints[0].label, undefined);
+      assert.strictEqual(ast.body.type, 'binary');
+    }
+  });
+
+  it('should parse guard with labeled constraint', () => {
+    const ast = parse('guard positive: x > 0 in x * 2');
+    assert.strictEqual(ast.type, 'guard');
+    if (ast.type === 'guard') {
+      assert.strictEqual(ast.constraints.length, 1);
+      assert.strictEqual(ast.constraints[0].label, 'positive');
+    }
+  });
+
+  it('should parse guard with string message', () => {
+    const ast = parse("guard 'must be positive': x > 0 in x * 2");
+    assert.strictEqual(ast.type, 'guard');
+    if (ast.type === 'guard') {
+      assert.strictEqual(ast.constraints.length, 1);
+      assert.strictEqual(ast.constraints[0].label, 'must be positive');
+    }
+  });
+
+  it('should parse guard with multiple constraints', () => {
+    const ast = parse('guard positive: x > 0, even: x % 2 == 0 in x');
+    assert.strictEqual(ast.type, 'guard');
+    if (ast.type === 'guard') {
+      assert.strictEqual(ast.constraints.length, 2);
+      assert.strictEqual(ast.constraints[0].label, 'positive');
+      assert.strictEqual(ast.constraints[1].label, 'even');
+    }
+  });
+
+  it('should parse check expression (synonym for guard)', () => {
+    const ast = parse('check x > 0 in x');
+    assert.strictEqual(ast.type, 'guard');
+    if (ast.type === 'guard') {
+      assert.strictEqual(ast.guardType, 'check');
+      assert.strictEqual(ast.constraints.length, 1);
+    }
+  });
+
+  it('should parse let...guard sugar', () => {
+    const ast = parse('let x = 5 guard x > 0 in x * 2');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.body.type, 'guard');
+    }
+  });
+
+  it('should parse guard...check sugar', () => {
+    const ast = parse('guard x > 0 check x < 100 in x');
+    assert.strictEqual(ast.type, 'guard');
+    if (ast.type === 'guard') {
+      assert.strictEqual(ast.guardType, 'guard');
+      assert.strictEqual(ast.body.type, 'guard');
+      if (ast.body.type === 'guard') {
+        assert.strictEqual(ast.body.guardType, 'check');
+      }
+    }
+  });
+
+  it('should parse let...guard...check sugar', () => {
+    const ast = parse('let x = 5 guard x > 0 check x < 100 in x * 2');
+    assert.strictEqual(ast.type, 'let');
+    if (ast.type === 'let') {
+      assert.strictEqual(ast.body.type, 'guard');
+      if (ast.body.type === 'guard') {
+        assert.strictEqual(ast.body.body.type, 'guard');
+        if (ast.body.body.type === 'guard') {
+          assert.strictEqual(ast.body.body.guardType, 'check');
+        }
+      }
+    }
+  });
+
+  it('should parse pipe-style guard', () => {
+    const ast = parse('guard(x | x > 0)');
+    assert.strictEqual(ast.type, 'lambda');
+    if (ast.type === 'lambda') {
+      assert.deepStrictEqual(ast.params, ['x']);
+      assert.strictEqual(ast.body.type, 'guard');
+    }
+  });
+
+  it('should parse pipe-style guard with label', () => {
+    const ast = parse('guard(x | positive: x > 0)');
+    assert.strictEqual(ast.type, 'lambda');
+    if (ast.type === 'lambda') {
+      assert.strictEqual(ast.body.type, 'guard');
+      if (ast.body.type === 'guard') {
+        assert.strictEqual(ast.body.constraints[0].label, 'positive');
+      }
+    }
+  });
+
+  it('should parse pipe-style guard with multiple constraints', () => {
+    const ast = parse('guard(x | positive: x > 0, small: x < 100)');
+    assert.strictEqual(ast.type, 'lambda');
+    if (ast.type === 'lambda') {
+      assert.strictEqual(ast.body.type, 'guard');
+      if (ast.body.type === 'guard') {
+        assert.strictEqual(ast.body.constraints.length, 2);
+        assert.strictEqual(ast.body.constraints[0].label, 'positive');
+        assert.strictEqual(ast.body.constraints[1].label, 'small');
+      }
+    }
+  });
+
+  it('should parse pipe-style check', () => {
+    const ast = parse('check(x | x > 0)');
+    assert.strictEqual(ast.type, 'lambda');
+    if (ast.type === 'lambda') {
+      assert.strictEqual(ast.body.type, 'guard');
+      if (ast.body.type === 'guard') {
+        assert.strictEqual(ast.body.guardType, 'check');
+      }
+    }
+  });
+
+  it('should parse guard in pipe chain', () => {
+    const ast = parse('[1, 2, 3] |> guard(x | size(x) > 0)');
+    // Pipe desugars to apply: (fn(x ~> guard ... in x))([1, 2, 3])
+    assert.strictEqual(ast.type, 'apply');
+    if (ast.type === 'apply') {
+      assert.strictEqual(ast.fn.type, 'lambda');
+      assert.strictEqual(ast.args.length, 1);
+      assert.strictEqual(ast.args[0].type, 'array');
+    }
+  });
+});

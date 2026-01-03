@@ -34,6 +34,7 @@ See also the Related work section below.
 - **Type selectors**: `Int()`, `Float()`, `Bool()`, `String()`, `Null()`, `Date()`, `Datetime()`, `Duration()`, `Data()` for parsing and converting values
 - **Type definitions**: Finitio-like schema validation with `let Person = { name: String, age: Int } in data |> Person`
 - **Lambdas**: `fn(x ~> x * 2)` or `x ~> x * 2` (sugar) for anonymous functions
+- **Guards**: `guard condition in body` for runtime validation with `check` for postconditions
 - **Input variable**: `_` for accessing external data passed to expressions
 - **Array iteration**: `map`, `filter`, `reduce`, `any`, `all` (JS/Ruby only)
 - **List functions**: `reverse`, `join(list, separator)`, `split(string, separator)`

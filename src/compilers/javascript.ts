@@ -13,6 +13,8 @@ export interface JavaScriptCompileOptions {
   asFunction?: boolean;
   /** If true, immediately execute the function with null as input */
   execute?: boolean;
+  /** If true, strip guard/check assertions from output */
+  stripGuards?: boolean;
 }
 
 /**
@@ -60,7 +62,8 @@ export function compileToJavaScript(expr: Expr, options?: JavaScriptCompileOptio
 export function compileToJavaScriptWithMeta(expr: Expr, options?: JavaScriptCompileOptions): JavaScriptCompileResult {
   const ir = transform(expr);
   const actuallyUsesInput = usesInput(ir);
-  const result = emitJSWithHelpers(ir);
+  const emitOptions = { stripGuards: options?.stripGuards || false };
+  const result = emitJSWithHelpers(ir, emitOptions);
 
   // Resolve helper dependencies
   const allHelpers = new Set(result.requiredHelpers);
@@ -89,11 +92,18 @@ export function compileToJavaScriptWithMeta(expr: Expr, options?: JavaScriptComp
 }
 
 /**
+ * Options for JS emission
+ */
+interface EmitOptions {
+  stripGuards: boolean;
+}
+
+/**
  * Emit JavaScript with helper tracking
  */
-function emitJSWithHelpers(ir: IRExpr): EmitResult {
+function emitJSWithHelpers(ir: IRExpr, options: EmitOptions): EmitResult {
   const requiredHelpers = new Set<string>();
-  const code = emitJS(ir, requiredHelpers);
+  const code = emitJS(ir, requiredHelpers, options);
   return { code, requiredHelpers };
 }
 
@@ -143,11 +153,11 @@ const jsLib = createJavaScriptBinding();
 /**
  * Emit JavaScript code from IR
  */
-function emitJS(ir: IRExpr, requiredHelpers?: Set<string>): string {
+function emitJS(ir: IRExpr, requiredHelpers?: Set<string>, options?: EmitOptions): string {
   const ctx: EmitContext<string> = {
-    emit: (child) => emitJS(child, requiredHelpers),
+    emit: (child) => emitJS(child, requiredHelpers, options),
     emitWithParens: (child, parentOp, side) => {
-      const emitted = emitJS(child, requiredHelpers);
+      const emitted = emitJS(child, requiredHelpers, options);
       if (needsParens(child, parentOp, side)) {
         return `(${emitted})`;
       }
@@ -281,6 +291,25 @@ function emitJS(ir: IRExpr, requiredHelpers?: Set<string>): string {
       const body = ctx.emit(ir.body);
       // The type name becomes a function that calls the parser and unwraps
       return `(() => { const _p_${ir.name} = ${parserCode}; const ${ir.name} = (v) => pUnwrap(_p_${ir.name}(v, '')); return ${body}; })()`;
+    }
+
+    case 'guard': {
+      const body = ctx.emit(ir.body);
+      // If stripGuards is enabled, just emit the body
+      if (options?.stripGuards) {
+        return body;
+      }
+      // Generate guard checks that throw on failure
+      const guardChecks = ir.constraints.map(c => {
+        const conditionCode = ctx.emit(c.condition);
+        const errorMsg = c.label
+          ? (c.label.includes(' ') ? c.label : `${ir.guardType} '${c.label}' failed`)
+          : `${ir.guardType} failed`;
+        // Escape single quotes in the error message for JS string
+        const escapedMsg = errorMsg.replace(/'/g, "\\'");
+        return `if (!(${conditionCode})) throw new Error('${escapedMsg}');`;
+      }).join(' ');
+      return `(() => { ${guardChecks} return ${body}; })()`;
     }
   }
 }

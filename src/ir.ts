@@ -34,7 +34,8 @@ export type IRExpr =
   | IRLambda
   | IRAlternative
   | IRDataPath
-  | IRTypeDef;
+  | IRTypeDef
+  | IRGuard;
 
 /**
  * Integer literal
@@ -316,6 +317,18 @@ export interface IRTypeDef {
 }
 
 /**
+ * Guard expression: guard [label:] condition in body
+ * Throws at runtime if condition is false, unless guards are stripped.
+ * guardType distinguishes preconditions (guard) from postconditions (check).
+ */
+export interface IRGuard {
+  type: 'guard';
+  constraints: IRConstraint[];  // One or more labeled constraints
+  body: IRExpr;
+  guardType: 'guard' | 'check';  // Semantic distinction for clarity
+}
+
+/**
  * Factory functions for creating IR nodes
  */
 
@@ -419,6 +432,10 @@ export function irTypeDef(name: string, typeExpr: IRTypeExpr, body: IRExpr): IRT
   return { type: 'typedef', name, typeExpr, body };
 }
 
+export function irGuard(constraints: IRConstraint[], body: IRExpr, guardType: 'guard' | 'check' = 'guard'): IRGuard {
+  return { type: 'guard', constraints, body, guardType };
+}
+
 /**
  * Infer the type of an IR expression
  */
@@ -464,6 +481,9 @@ export function inferType(ir: IRExpr): EloType {
       return Types.fn;  // DataPath is a function that takes data and returns a value
 
     case 'typedef':
+      return inferType(ir.body);
+
+    case 'guard':
       return inferType(ir.body);
   }
 }
@@ -536,5 +556,10 @@ export function usesInput(ir: IRExpr, boundVars: Set<string> = new Set()): boole
       newBound.add(ir.name);
       return usesInput(ir.body, newBound);
     }
+
+    case 'guard':
+      // Check constraints and body for input usage
+      return ir.constraints.some(c => usesInput(c.condition, boundVars)) ||
+             usesInput(ir.body, boundVars);
   }
 }
