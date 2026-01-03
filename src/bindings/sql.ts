@@ -280,6 +280,32 @@ export function createSQLBinding(): StdLib<string> {
     // Convert path array to text array and use jsonb #> operator
     return `(${data})::jsonb #> (${path})::text[]`;
   });
+  sqlLib.register('fetch', [Types.any, Types.object], (args, ctx) => {
+    const data = ctx.emit(args[0]);
+    const pathsObj = args[1];
+    if (pathsObj.type !== 'object_literal') {
+      throw new Error('fetch with object requires an object literal');
+    }
+    // Build jsonb_build_object with key, fetch pairs
+    const pairs = pathsObj.properties.map(({ key, value }) => {
+      const pathEmitted = ctx.emit(value);
+      return `'${key}', (${data})::jsonb #> (${pathEmitted})::text[]`;
+    });
+    return `jsonb_build_object(${pairs.join(', ')})`;
+  });
+  sqlLib.register('fetch', [Types.any, Types.array], (args, ctx) => {
+    const data = ctx.emit(args[0]);
+    const pathsArr = args[1];
+    if (pathsArr.type !== 'array_literal') {
+      throw new Error('fetch with array requires an array literal');
+    }
+    // Build jsonb_build_array with fetched values
+    const elements = pathsArr.elements.map(elem => {
+      const pathEmitted = ctx.emit(elem);
+      return `(${data})::jsonb #> (${pathEmitted})::text[]`;
+    });
+    return `jsonb_build_array(${elements.join(', ')})`;
+  });
   sqlLib.register('patch', [Types.any, Types.fn, Types.any], (args, ctx) => {
     const data = ctx.emit(args[0]);
     const path = ctx.emit(args[1]);

@@ -281,11 +281,23 @@ export function createRubyBinding(): StdLib<string> {
   // Null handling
   rubyLib.register('isNull', [Types.any], (args, ctx) => `(${ctx.emit(args[0])}).nil?`);
 
-  // Data path navigation
+  // Data path navigation - core fetch helper (used by all fetch variants)
+  const rubyFetchLambda = '->(d, p) { p.reduce(d) { |cur, seg| break nil if cur.nil?; seg.is_a?(Integer) ? (cur.is_a?(Array) ? cur[seg] : nil) : (cur.is_a?(Hash) ? cur[seg] : nil) } }';
+
   rubyLib.register('fetch', [Types.any, Types.fn], (args, ctx) => {
     const data = ctx.emit(args[0]);
     const path = ctx.emit(args[1]);
-    return `(->(d, p) { p.reduce(d) { |cur, seg| break nil if cur.nil?; seg.is_a?(Integer) ? (cur.is_a?(Array) ? cur[seg] : nil) : (cur.is_a?(Hash) ? cur[seg] : nil) } }).call(${data}, ${path})`;
+    return `(${rubyFetchLambda}).call(${data}, ${path})`;
+  });
+  rubyLib.register('fetch', [Types.any, Types.object], (args, ctx) => {
+    const data = ctx.emit(args[0]);
+    const paths = ctx.emit(args[1]);
+    return `(->(d, ps) { f = ${rubyFetchLambda}; ps.transform_values { |p| f.call(d, p) } }).call(${data}, ${paths})`;
+  });
+  rubyLib.register('fetch', [Types.any, Types.array], (args, ctx) => {
+    const data = ctx.emit(args[0]);
+    const paths = ctx.emit(args[1]);
+    return `(->(d, ps) { f = ${rubyFetchLambda}; ps.map { |p| f.call(d, p) } }).call(${data}, ${paths})`;
   });
   rubyLib.register('patch', [Types.any, Types.fn, Types.any], (args, ctx) => {
     ctx.requireHelper?.('k_patch');

@@ -15,6 +15,8 @@
  */
 export const JS_HELPER_DEPS: Record<string, string[]> = {
   kNeq: ['kEq'],
+  kFetchObject: ['kFetch'],
+  kFetchArray: ['kFetch'],
   // Parser helpers depend on pOk/pFail
   pAny: ['pOk'],
   pNull: ['pOk', 'pFail'],
@@ -102,6 +104,16 @@ export const JS_HELPERS: Record<string, string> = {
     }
   }
   return current === undefined ? null : current;
+}`,
+  kFetchObject: `function kFetchObject(data, paths) {
+  const result = {};
+  for (const key of Object.keys(paths)) {
+    result[key] = kFetch(data, paths[key]);
+  }
+  return result;
+}`,
+  kFetchArray: `function kFetchArray(data, paths) {
+  return paths.map(p => kFetch(data, p));
 }`,
   kPatch: `function kPatch(data, path, value) {
   if (path.length === 0) return value;

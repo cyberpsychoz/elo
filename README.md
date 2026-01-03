@@ -49,7 +49,7 @@ See also the Related work section below.
   - Objects: `{name: 'Alice', age: 30}`
   - Arrays: `[1, 2, 3]`, `['a', 'b']`, `[1, 'mixed', true, null]`
   - DataPaths: `.x.y.z`, `.items.0.name` (for navigating data structures)
-- **Data functions**: `fetch(data, .path)` for safe access with null handling, `patch(data, .path, value)` for immutable updates, `merge(a, b)` and `deepMerge(a, b)` for merging objects
+- **Data functions**: `fetch(data, .path)` for safe access, `fetch(data, {x: .a, y: .b})` and `fetch(data, [.a, .b])` for multi-path extraction, `patch(data, .path, value)` for immutable updates, `merge(a, b)` and `deepMerge(a, b)` for merging objects
 - **Parentheses** for grouping
 - **Multi-target compilation**:
   - Ruby (using `**` for power, `&&`/`||`/`!` for boolean logic, `Date.parse()`, `DateTime.parse()`, `ActiveSupport::Duration.parse()`)

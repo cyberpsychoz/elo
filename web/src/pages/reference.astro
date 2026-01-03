@@ -401,6 +401,16 @@ import Footer from '../components/Footer.astro';
           <p class="example-desc">Returns <code>'Alice'</code>. Returns <code>null</code> if path doesn't exist.</p>
         </div>
         <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Fetch Multiple (Tuple)</div>
+          <pre class="example-code">fetch(&#123;a: 1, b: 2&#125;, &#123;x: .a, y: .b&#125;)</pre>
+          <p class="example-desc">Fetch multiple paths into a tuple. Returns <code>&#123;x: 1, y: 2&#125;</code>.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Fetch Multiple (List)</div>
+          <pre class="example-code">fetch(&#123;a: 1, b: 2&#125;, [.a, .b])</pre>
+          <p class="example-desc">Fetch multiple paths into a list. Returns <code>[1, 2]</code>.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
           <div class="example-header">Patch Value</div>
           <pre class="example-code">patch(&#123;user: &#123;name: 'Alice'&#125;&#125;, .user.name, 'Bob')</pre>
           <p class="example-desc">Returns a new tuple with the value updated at the path.</p>
