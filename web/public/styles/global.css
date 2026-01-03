@@ -1046,6 +1046,23 @@ select:focus {
   min-width: 0;
 }
 
+/* Links inside content areas */
+.doc-content a,
+.stdlib-content a,
+.learn-content a,
+.about-content a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.doc-content a:hover,
+.stdlib-content a:hover,
+.learn-content a:hover,
+.about-content a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
 .doc-section {
   margin-bottom: 2.5rem;
 }
