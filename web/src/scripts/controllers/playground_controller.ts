@@ -11,7 +11,8 @@ import {
   compileToJavaScript,
   compileToJavaScriptWithMeta,
   compileToSQL,
-  getPrelude
+  getPrelude,
+  toEloCode
 } from '@enspirit/elo';
 import type { PreludeTarget } from '@enspirit/elo';
 import { elo } from '../codemirror/elo-language';
@@ -435,35 +436,7 @@ export default class PlaygroundController extends Controller {
   }
 
   private formatResult(value: any): string {
-    if (value === undefined) {
-      return 'undefined';
-    }
-    if (value === null) {
-      return 'null';
-    }
-    if (typeof value === 'boolean') {
-      return value ? 'true' : 'false';
-    }
-    // Handle luxon DateTime objects
-    if (DateTime.isDateTime(value)) {
-      return value.toISO();
-    }
-    // Handle luxon Duration objects
-    if (Duration.isDuration(value)) {
-      return value.toISO();
-    }
-    if (value instanceof Date) {
-      return value.toISOString();
-    }
-    // Pretty print objects and arrays
-    if (typeof value === 'object') {
-      try {
-        return JSON.stringify(value, null, 2);
-      } catch {
-        return String(value);
-      }
-    }
-    return String(value);
+    return toEloCode(value);
   }
 
   private compileToLanguage(ast: ReturnType<typeof parse>, language: TargetLanguage): string {

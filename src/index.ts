@@ -15,3 +15,4 @@ export type { SQLCompileOptions } from './compilers/sql';
 export { JS_HELPERS } from './runtime';
 export { getPrelude } from './preludes';
 export type { Target as PreludeTarget } from './preludes';
+export { toEloCode } from './serialize';
