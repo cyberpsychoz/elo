@@ -12,7 +12,8 @@ import {
   compileToJavaScriptWithMeta,
   compileToSQL,
   getPrelude,
-  toEloCode
+  defaultFormats,
+  getFormat
 } from '@enspirit/elo';
 import type { PreludeTarget } from '@enspirit/elo';
 import { elo } from '../codemirror/elo-language';
@@ -74,7 +75,10 @@ in {
   month: month(today)
 }`,
   durations: `P1D + PT2H`,
-  input: `_.price * _.quantity`,
+  'input-json': `_.price * _.quantity`,
+  'input-csv': `_
+  |> filter(r ~> Int(r.age) >= 30)
+  |> map(r ~> r.name)`,
   'type-simple': `let Person = { name: String, age: Int } in
 { name: 'Alice', age: '30' } |> Person`,
   'type-validation': `let
@@ -83,13 +87,22 @@ in {
 in _ |> Person`
 };
 
-const EXAMPLE_INPUTS: Record<string, string> = {
-  input: `{"price": 100, "quantity": 2}`,
-  'type-validation': `{"name": "Alice", "age": "30"}`
+interface ExampleInput {
+  data: string;
+  format: 'json' | 'csv';
+}
+
+const EXAMPLE_INPUTS: Record<string, ExampleInput> = {
+  'input-json': { data: `{"price": 100, "quantity": 2}`, format: 'json' },
+  'input-csv': { data: `name,age,city
+Alice,30,Brussels
+Bob,25,Paris
+Carol,35,London`, format: 'csv' },
+  'type-validation': { data: `{"name": "Alice", "age": "30"}`, format: 'json' }
 };
 
 export default class PlaygroundController extends Controller {
-  static targets = ['editor', 'inputEditor', 'output', 'language', 'pretty', 'prelude', 'outputFormat', 'error', 'result', 'resultPanel', 'copyButton', 'saveButton', 'examples', 'inputAccordion', 'inputToggle', 'inputBody', 'settingsToggle', 'settingsMenu', 'compiledAccordion', 'compiledToggle', 'compiledBody'];
+  static targets = ['editor', 'inputEditor', 'output', 'language', 'pretty', 'prelude', 'inputFormat', 'outputFormat', 'error', 'result', 'resultPanel', 'copyButton', 'saveButton', 'examples', 'inputAccordion', 'inputToggle', 'inputBody', 'settingsToggle', 'settingsMenu', 'compiledAccordion', 'compiledToggle', 'compiledBody'];
 
   declare editorTarget: HTMLDivElement;
   declare inputEditorTarget: HTMLDivElement;
@@ -97,6 +110,7 @@ export default class PlaygroundController extends Controller {
   declare languageTarget: HTMLSelectElement;
   declare prettyTarget: HTMLInputElement;
   declare preludeTarget: HTMLInputElement;
+  declare inputFormatTarget: HTMLSelectElement;
   declare outputFormatTarget: HTMLSelectElement;
   declare errorTarget: HTMLDivElement;
   declare resultTarget: HTMLPreElement;
@@ -208,37 +222,45 @@ export default class PlaygroundController extends Controller {
     const currentInput = this.inputEditorView?.state.doc.toString() || '';
     const isLight = document.body.classList.contains('light-theme');
     const theme = isLight ? eloLightTheme : eloDarkTheme;
+    const inputFormat = this.inputFormatTarget?.value || 'json';
+
+    // Build extensions - only include JSON mode for JSON format
+    const extensions = [
+      history(),
+      bracketMatching(),
+      keymap.of([...defaultKeymap, ...historyKeymap]),
+      ...(inputFormat === 'json' ? [json()] : []),
+      ...theme,
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          this.scheduleAutoRun();
+        }
+      }),
+      EditorView.lineWrapping
+    ];
 
     this.inputEditorView = new EditorView({
       state: EditorState.create({
         doc: currentInput,
-        extensions: [
-          history(),
-          bracketMatching(),
-          keymap.of([...defaultKeymap, ...historyKeymap]),
-          json(),
-          ...theme,
-          EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              this.scheduleAutoRun();
-            }
-          }),
-          EditorView.lineWrapping
-        ]
+        extensions
       }),
       parent: this.inputEditorTarget
     });
+  }
+
+  private reinitializeInputEditor() {
+    if (this.inputEditorView) {
+      this.inputEditorView.destroy();
+    }
+    this.initializeInputEditor();
   }
 
   private reinitializeEditors() {
     if (this.editorView) {
       this.editorView.destroy();
     }
-    if (this.inputEditorView) {
-      this.inputEditorView.destroy();
-    }
+    this.reinitializeInputEditor();
     this.initializeEditor();
-    this.initializeInputEditor();
   }
 
   disconnect() {
@@ -289,15 +311,24 @@ export default class PlaygroundController extends Controller {
     const exampleId = this.examplesTarget.value;
     if (exampleId && EXAMPLES[exampleId]) {
       this.setCode(EXAMPLES[exampleId]);
-      // Set input data if example has one
-      const hasInput = !!EXAMPLE_INPUTS[exampleId];
-      this.setInputData(EXAMPLE_INPUTS[exampleId] || '');
+      // Set input data and format if example has one
+      const exampleInput = EXAMPLE_INPUTS[exampleId];
+      const hasInput = !!exampleInput;
+      this.setInputData(exampleInput?.data || '');
+      this.inputFormatTarget.value = exampleInput?.format || 'json';
+      this.reinitializeInputEditor();
       // Auto-expand input accordion if example uses input data
       if (hasInput) {
         this.inputAccordionTarget.classList.add('open');
       }
       this.examplesTarget.value = ''; // Reset dropdown
     }
+  }
+
+  inputFormatChanged() {
+    // Reinitialize input editor with appropriate language mode
+    this.reinitializeInputEditor();
+    this.scheduleAutoRun();
   }
 
   private scheduleAutoRun() {
@@ -413,10 +444,11 @@ export default class PlaygroundController extends Controller {
       let inputData: unknown = null;
       const inputDataStr = this.getInputData().trim();
       if (inputDataStr) {
+        const inputFormat = this.inputFormatTarget.value;
         try {
-          inputData = JSON.parse(inputDataStr);
+          inputData = getFormat(defaultFormats, inputFormat).parse(inputDataStr);
         } catch {
-          this.showError('Invalid JSON in input data');
+          this.showError(`Invalid ${inputFormat.toUpperCase()} in input data`);
           this.hideResult();
           return;
         }
@@ -478,10 +510,12 @@ export default class PlaygroundController extends Controller {
   }
 
   private formatResult(value: any): string {
-    if (this.outputFormatTarget.value === 'json') {
+    const format = this.outputFormatTarget.value;
+    // Use pretty JSON for readability in playground
+    if (format === 'json') {
       return JSON.stringify(value, null, 2);
     }
-    return toEloCode(value);
+    return getFormat(defaultFormats, format).serialize(value);
   }
 
   private compileToLanguage(ast: ReturnType<typeof parse>, language: TargetLanguage): string {

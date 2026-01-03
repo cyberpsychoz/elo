@@ -4,17 +4,25 @@ import { readFileSync } from 'fs';
 import { parse } from './parser';
 import { compileToJavaScriptWithMeta } from './compilers/javascript';
 import { DateTime, Duration } from 'luxon';
+import { defaultFormats, getFormat, FormatRegistry } from './formats';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pkg = require('../../package.json');
 
+type InputFormat = 'json' | 'csv';
+type OutputFormat = 'json' | 'elo' | 'csv';
+
 interface Options {
   expression?: string;
   inputFile?: string;
-  /** JSON input data to pass as _ (can be JSON string or @file path) */
+  /** Input data to pass as _ (can be JSON/CSV string or @file path) */
   inputData?: string;
   /** Read input data from stdin */
   stdinData?: boolean;
+  /** Input data format (json or csv, default: auto-detect or json) */
+  inputFormat?: InputFormat;
+  /** Output format (json, elo, or csv, default: json) */
+  outputFormat?: OutputFormat;
 }
 
 function parseArgs(args: string[]): Options {
@@ -36,6 +44,24 @@ function parseArgs(args: string[]): Options {
 
       case '--stdin':
         options.stdinData = true;
+        break;
+
+      case '-f':
+      case '--input-format':
+        options.inputFormat = args[++i] as InputFormat;
+        if (options.inputFormat !== 'json' && options.inputFormat !== 'csv') {
+          console.error(`Invalid input format: ${options.inputFormat}. Use 'json' or 'csv'.`);
+          process.exit(1);
+        }
+        break;
+
+      case '-o':
+      case '--output-format':
+        options.outputFormat = args[++i] as OutputFormat;
+        if (options.outputFormat !== 'json' && options.outputFormat !== 'elo' && options.outputFormat !== 'csv') {
+          console.error(`Invalid output format: ${options.outputFormat}. Use 'json', 'elo', or 'csv'.`);
+          process.exit(1);
+        }
         break;
 
       case '-h':
@@ -79,8 +105,10 @@ Usage:
 
 Options:
   -e, --expression <expr>   Expression to evaluate (like ruby -e)
-  -d, --data <json>         JSON input data for _ variable (or @file to read from file)
-  --stdin                   Read input data as JSON from stdin
+  -d, --data <data>         Input data for _ variable (or @file to read from file)
+  --stdin                   Read input data from stdin
+  -f, --input-format <fmt>  Input data format: json (default) or csv
+  -o, --output-format <fmt> Output format: json (default), elo, or csv
   -v, --version             Show version number
   -h, --help                Show this help message
 
@@ -88,10 +116,19 @@ Examples:
   # Evaluate a simple expression
   elo -e "2 + 3 * 4"
 
-  # Evaluate with input data
+  # Evaluate with JSON input data
   elo -e "_.x + _.y" -d '{"x": 1, "y": 2}'
 
-  # Evaluate with input data from file
+  # Evaluate with CSV input data
+  elo -e "map(_, fn(r ~> r.name))" -d @data.csv -f csv
+
+  # Output as Elo code
+  elo -e "{a: 1, b: 2}" -o elo
+
+  # Output as CSV
+  elo -e "[{name: 'Alice', age: 30}]" -o csv
+
+  # Evaluate with input data from file (format auto-detected from extension)
   elo -e "_.name" -d @data.json
 
   # Evaluate from .elo file
@@ -106,26 +143,46 @@ Examples:
 }
 
 /**
- * Parse input data from CLI option (JSON string or @file path)
+ * Detect input format from file extension
  */
-function parseInputData(inputData: string): unknown {
-  let jsonString = inputData;
+function detectInputFormat(filePath: string): InputFormat {
+  if (filePath.endsWith('.csv')) {
+    return 'csv';
+  }
+  return 'json';
+}
+
+/**
+ * Parse input data from CLI option (JSON/CSV string or @file path)
+ */
+function parseInputData(inputData: string, format: InputFormat | undefined, formats: FormatRegistry): unknown {
+  let dataString = inputData;
+  let detectedFormat = format;
 
   // If starts with @, read from file
   if (inputData.startsWith('@')) {
     const filePath = inputData.slice(1);
+    // Auto-detect format from extension if not specified
+    if (!detectedFormat) {
+      detectedFormat = detectInputFormat(filePath);
+    }
     try {
-      jsonString = readFileSync(filePath, 'utf-8');
+      dataString = readFileSync(filePath, 'utf-8');
     } catch (error) {
       console.error(`Error reading input file ${filePath}: ${error}`);
       process.exit(1);
     }
   }
 
+  // Default to JSON if not specified
+  if (!detectedFormat) {
+    detectedFormat = 'json';
+  }
+
   try {
-    return JSON.parse(jsonString);
+    return getFormat(formats, detectedFormat).parse(dataString);
   } catch (error) {
-    console.error(`Error parsing input JSON: ${error}`);
+    console.error(`Error parsing input ${detectedFormat.toUpperCase()}: ${error}`);
     process.exit(1);
   }
 }
@@ -155,6 +212,9 @@ function main() {
 
   const options = parseArgs(args);
 
+  // Use default formats (can be extended by users in programmatic usage)
+  const formats = defaultFormats;
+
   // Get the source expression(s)
   let sources: string[];
   if (options.expression) {
@@ -182,20 +242,23 @@ function main() {
 
   // Get input data
   let inputValue: unknown = null;
+  const inputFormat = options.inputFormat || 'json';
 
   if (options.stdinData) {
     try {
       const stdinContent = readFileSync(0, 'utf-8');
-      inputValue = JSON.parse(stdinContent);
+      inputValue = getFormat(formats, inputFormat).parse(stdinContent);
     } catch (error) {
       console.error(`Error reading/parsing stdin: ${error}`);
       process.exit(1);
     }
   } else if (options.inputData) {
-    inputValue = parseInputData(options.inputData);
+    inputValue = parseInputData(options.inputData, options.inputFormat, formats);
   }
 
   // Evaluate each expression
+  const outputFormat = options.outputFormat || 'json';
+  const outputAdapter = getFormat(formats, outputFormat);
   const outputs: string[] = [];
   for (let i = 0; i < sources.length; i++) {
     const source = sources[i];
@@ -208,7 +271,7 @@ function main() {
 
     try {
       const result = evaluate(trimmed, inputValue);
-      outputs.push(JSON.stringify(result));
+      outputs.push(outputAdapter.serialize(result));
     } catch (error) {
       console.error(`Error on line ${i + 1}: ${error}`);
       process.exit(1);

@@ -16,3 +16,12 @@ export { JS_HELPERS } from './runtime';
 export { getPrelude } from './preludes';
 export type { Target as PreludeTarget } from './preludes';
 export { toEloCode } from './serialize';
+export { parseCSV, toCSV } from './csv';
+export type { FormatAdapter, FormatRegistry } from './formats';
+export {
+  jsonAdapter,
+  csvAdapter,
+  eloAdapter,
+  defaultFormats,
+  getFormat
+} from './formats';

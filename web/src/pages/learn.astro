@@ -418,7 +418,8 @@ in
 
         <h3>Try It</h3>
         <p>
-          In the <a href={url('/try')}>playground</a>, enter input data as JSON in the bottom panel.
+          In the <a href={url('/try')}>playground</a>, enter input data in the Input Data panel.
+          You can switch between JSON and CSV formats using the dropdown.
           For example, with input <code>&#123;"price": 100, "quantity": 3&#125;</code>:
         </p>
         <div class="lesson-example" data-action="click->doc#tryExample" data-input='{"price": 100, "quantity": 3}'>
@@ -428,6 +429,10 @@ in
         <p class="lesson-tip">
           <strong>Think transformations:</strong> Every Elo expression with <code>_</code> is a reusable transformation.
           The same expression works whether it runs in your browser (JS), server (Ruby), or database (SQL).
+        </p>
+        <p class="lesson-note">
+          <strong>Learn more:</strong> See <a href={url('/reference#data-formats')}>Data Formats</a> in the Reference
+          for details on JSON/CSV conversion and CLI usage.
         </p>
         <p class="lesson-exercise">
           <a href="#ex-input">Practice: Order Total</a>

@@ -19,6 +19,7 @@ import Footer from '../components/Footer.astro';
         <a href="#tuples">Tuples</a>
         <a href="#lists">Lists</a>
         <a href="#input">Input Data</a>
+        <a href="#data-formats">Data Formats</a>
         <span class="toc-section">Functions</span>
         <a href="#lambdas">Lambdas</a>
         <span class="toc-section">Type System</span>
@@ -303,6 +304,88 @@ import Footer from '../components/Footer.astro';
           <p class="example-desc">Apply VAT to a budget value from input.</p>
         </div>
         <p class="note"><strong>Note:</strong> When using the CLI, use <code>elo</code> with JSON input: <code>elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'</code></p>
+      </section>
+
+      <section class="doc-section" id="data-formats">
+        <h2>Data Formats</h2>
+        <p>The CLI and playground support multiple input and output formats. Input data is parsed and made available as the <code>_</code> variable. Results can be formatted for different use cases.</p>
+
+        <h3>JSON Format</h3>
+        <p>JSON is the default format. Values map directly to Elo types:</p>
+        <table class="format-table">
+          <thead><tr><th>JSON</th><th>Elo Type</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>number</code></td><td>Int or Float</td><td><code>42</code>, <code>3.14</code></td></tr>
+            <tr><td><code>string</code></td><td>String</td><td><code>"hello"</code></td></tr>
+            <tr><td><code>boolean</code></td><td>Bool</td><td><code>true</code>, <code>false</code></td></tr>
+            <tr><td><code>null</code></td><td>Null</td><td><code>null</code></td></tr>
+            <tr><td><code>object</code></td><td>Tuple</td><td><code>&#123;"name": "Alice"&#125;</code></td></tr>
+            <tr><td><code>array</code></td><td>List</td><td><code>[1, 2, 3]</code></td></tr>
+          </tbody>
+        </table>
+        <div class="example" data-action="click->doc#tryExample" data-input='{"name": "Alice", "age": 30}'>
+          <div class="example-header">JSON Input</div>
+          <pre class="example-code">upper(_.name) + ' is ' + String(_.age)</pre>
+          <p class="example-desc">Access fields from a JSON object.</p>
+        </div>
+
+        <h3>CSV Format</h3>
+        <p>CSV input is parsed as a <strong>list of tuples</strong>. The first row provides field names (headers), and subsequent rows become tuple values. All values are strings.</p>
+        <div class="format-example">
+          <div class="format-input">
+            <strong>CSV Input:</strong>
+            <pre>name,age
+Alice,30
+Bob,25</pre>
+          </div>
+          <div class="format-arrow">→</div>
+          <div class="format-output">
+            <strong>Elo Value (<code>_</code>):</strong>
+            <pre>[
+  &#123;name: 'Alice', age: '30'&#125;,
+  &#123;name: 'Bob', age: '25'&#125;
+]</pre>
+          </div>
+        </div>
+        <p>Since CSV values are strings, you can convert them manually:</p>
+        <div class="example" data-action="click->doc#tryExample" data-input='[{"name": "Alice", "age": "30"}, {"name": "Bob", "age": "25"}]'>
+          <div class="example-header">Manual Conversion</div>
+          <pre class="example-code">_ |> map(r ~> &#123;name: r.name, age: Int(r.age)&#125;)</pre>
+          <p class="example-desc">Convert age strings to integers field by field.</p>
+        </div>
+        <p class="note"><strong>Better approach:</strong> Use <a href="#type-definitions">type definitions</a> to declare a schema. This validates structure and converts types in one step:</p>
+        <div class="example" data-action="click->doc#tryExample" data-input='[{"name": "Alice", "age": "30"}, {"name": "Bob", "age": "25"}]'>
+          <div class="example-header">Schema Conversion</div>
+          <pre class="example-code">let Person = &#123;name: String, age: Int&#125;
+in _ |> map(p ~> p |> Person)</pre>
+          <p class="example-desc">Define a schema once, apply it to each row.</p>
+        </div>
+        <h3>Output Formats</h3>
+        <p>Results can be formatted as:</p>
+        <ul>
+          <li><strong>JSON</strong> — Standard JSON serialization (default)</li>
+          <li><strong>Elo</strong> — Elo code syntax (readable, can be copy-pasted)</li>
+          <li><strong>CSV</strong> — For lists of tuples (spreadsheet-compatible)</li>
+        </ul>
+
+        <h3>CLI Usage</h3>
+        <pre class="cli-example"><code># JSON input (default)
+elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'
+
+# CSV input from file (format auto-detected from .csv extension)
+elo -e "map(_, r ~> r.name)" -d @data.csv
+
+# Explicit CSV format
+elo -e "map(_, r ~> r.name)" -d @data.txt -f csv
+
+# Output as CSV
+elo -e "[&#123;a: 1&#125;, &#123;a: 2&#125;]" -o csv
+
+# Output as Elo code
+elo -e "&#123;name: 'test'&#125;" -o elo</code></pre>
+
+        <h3>Custom Format Adapters</h3>
+        <p>The format system is pluggable. You can provide custom adapters for formats like XLSX using libraries such as PapaParse or SheetJS. See the <code>FormatAdapter</code> interface in <code>src/formats.ts</code>.</p>
       </section>
 
       <section class="doc-section" id="lambdas">

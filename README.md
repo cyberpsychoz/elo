@@ -129,12 +129,20 @@ The evaluator compiles to JavaScript and immediately evaluates the expression:
 ./bin/elo -e "2 + 3 * 4"
 # Outputs: 14
 
-# Evaluate with input data
+# Evaluate with input data (JSON)
 ./bin/elo -e "_.x + _.y" -d '{"x": 1, "y": 2}'
 # Outputs: 3
 
-# Evaluate with data from file
+# Evaluate with CSV input data
+./bin/elo -e "map(_, fn(r ~> r.name))" -d @data.csv -f csv
+# Outputs: ["Alice","Bob"]
+
+# Evaluate with data from file (format auto-detected from extension)
 ./bin/elo -e "_.name" -d @data.json
+
+# Output in different formats
+./bin/elo -e "{a: 1, b: 2}" -o elo    # Elo code format
+./bin/elo -e "[{name: 'Alice'}]" -o csv  # CSV format
 
 # Evaluate from .elo file
 ./bin/elo expressions.elo
@@ -146,8 +154,10 @@ echo '{"x": 10}' | ./bin/elo -e "_.x * 2" --stdin
 
 Options:
 - `-e, --expression <expr>` - Expression to evaluate
-- `-d, --data <json>` - JSON input data for `_` variable (or `@file` to read from file)
-- `--stdin` - Read input data as JSON from stdin
+- `-d, --data <data>` - Input data for `_` variable (or `@file` to read from file)
+- `--stdin` - Read input data from stdin
+- `-f, --input-format <fmt>` - Input data format: `json` (default) or `csv`
+- `-o, --output-format <fmt>` - Output format: `json` (default), `elo`, or `csv`
 - `-h, --help` - Show help message
 
 ## Using Elo in JavaScript/TypeScript
@@ -175,6 +185,10 @@ inThisWeek(DateTime.now()); // => true or false
 ```
 
 The `runtime` option injects dependencies (like `DateTime` and `Duration` from luxon) into the compiled function. This avoids global variables and keeps the compiled code portable.
+
+## Data Format Adapters
+
+The CLI and playground support multiple input/output formats (JSON, CSV). The format system is pluggable—you can provide custom adapters using libraries like PapaParse or SheetJS. See `src/formats.ts` for the `FormatAdapter` interface and built-in implementations.
 
 ## Lower-Level API
 

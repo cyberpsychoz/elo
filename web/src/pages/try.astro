@@ -16,7 +16,14 @@ import Layout from '../layouts/Layout.astro';
           <span class="flow-arrow">▶</span>
           <span class="flow-title">Input Data (<code>_</code>)</span>
         </button>
-        <span class="flow-hint">optional JSON input</span>
+        <select
+          data-playground-target="inputFormat"
+          data-action="change->playground#inputFormatChanged"
+          class="flow-select"
+        >
+          <option value="json">JSON</option>
+          <option value="csv">CSV</option>
+        </select>
       </div>
       <div class="flow-body" data-playground-target="inputBody">
         <div
@@ -49,7 +56,8 @@ import Layout from '../layouts/Layout.astro';
             <option value="tuples">Tuples</option>
             <option value="lists">Lists</option>
             <option value="nulls">Null handling</option>
-            <option value="input">Input Data (_)</option>
+            <option value="input-json">JSON Input</option>
+            <option value="input-csv">CSV Input</option>
           </optgroup>
           <optgroup label="Functions">
             <option value="lambdas">Lambdas</option>
@@ -181,6 +189,7 @@ import Layout from '../layouts/Layout.astro';
         >
           <option value="elo">Elo</option>
           <option value="json">JSON</option>
+          <option value="csv">CSV</option>
         </select>
       </div>
       <div class="flow-body flow-body-output">
