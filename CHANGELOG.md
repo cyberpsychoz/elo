@@ -2,6 +2,33 @@
 
 All notable changes to Elo are documented in this file.
 
+## [0.9.4] - 2026-01-03
+
+### Language Features
+- Add Null type selector for null checking in type definitions
+- Add String selector for converting values to strings
+- Validate type references at compile time
+
+### Tools
+- Add CSV input/output format support with pluggable adapter architecture
+
+### Playground
+- Add JSON output toggle
+- Display output as Elo code instead of raw JSON
+- Add input data support to clickable examples
+- Improve UX for examples with input data
+- Refactor layout with vertical flow
+
+### Website
+- Fix link visibility in dark mode
+- Redesign home page with "What Makes Elo Different" section
+- Refactor CSS into modular design system architecture
+
+### Documentation
+- Reorganize Reference documentation structure
+- Clarify DataPath as syntax sugar over List
+- Improve contributor documentation
+
 ## [0.9.3] - 2025-12-28
 
 - Add Get Started section and button on website
