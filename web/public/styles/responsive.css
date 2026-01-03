@@ -186,7 +186,13 @@
   }
 
   .unique-grid {
+    display: flex;
+    flex-direction: column-reverse;
     gap: var(--space-md);
+  }
+
+  .unique-grid > * {
+    width: 100%;
   }
 
   .unique-explain {
