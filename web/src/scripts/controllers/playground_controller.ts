@@ -1,5 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching } from '@codemirror/language';
@@ -89,7 +89,7 @@ const EXAMPLE_INPUTS: Record<string, string> = {
 };
 
 export default class PlaygroundController extends Controller {
-  static targets = ['editor', 'inputEditor', 'output', 'language', 'pretty', 'prelude', 'jsonOutput', 'error', 'result', 'resultPanel', 'copyButton', 'saveButton', 'runButton', 'examples'];
+  static targets = ['editor', 'inputEditor', 'output', 'language', 'pretty', 'prelude', 'outputFormat', 'error', 'result', 'resultPanel', 'copyButton', 'saveButton', 'examples', 'inputAccordion', 'inputToggle', 'inputBody', 'settingsToggle', 'settingsMenu', 'compiledAccordion', 'compiledToggle', 'compiledBody'];
 
   declare editorTarget: HTMLDivElement;
   declare inputEditorTarget: HTMLDivElement;
@@ -97,14 +97,21 @@ export default class PlaygroundController extends Controller {
   declare languageTarget: HTMLSelectElement;
   declare prettyTarget: HTMLInputElement;
   declare preludeTarget: HTMLInputElement;
-  declare jsonOutputTarget: HTMLInputElement;
+  declare outputFormatTarget: HTMLSelectElement;
   declare errorTarget: HTMLDivElement;
   declare resultTarget: HTMLPreElement;
   declare resultPanelTarget: HTMLDivElement;
   declare copyButtonTarget: HTMLButtonElement;
   declare saveButtonTarget: HTMLButtonElement;
-  declare runButtonTarget: HTMLButtonElement;
   declare examplesTarget: HTMLSelectElement;
+  declare inputAccordionTarget: HTMLDivElement;
+  declare inputToggleTarget: HTMLButtonElement;
+  declare inputBodyTarget: HTMLDivElement;
+  declare settingsToggleTarget: HTMLButtonElement;
+  declare settingsMenuTarget: HTMLDivElement;
+  declare compiledAccordionTarget: HTMLElement;
+  declare compiledToggleTarget: HTMLButtonElement;
+  declare compiledBodyTarget: HTMLDivElement;
 
   private editorView: EditorView | null = null;
   private inputEditorView: EditorView | null = null;
@@ -149,6 +156,9 @@ export default class PlaygroundController extends Controller {
     // Keyboard shortcut: Ctrl+Enter to run
     document.addEventListener('keydown', this.handleKeydown.bind(this));
 
+    // Close settings menu when clicking outside
+    document.addEventListener('click', this.handleOutsideClick.bind(this));
+
     // Compile and auto-run on initial load
     this.compile();
     this.scheduleAutoRun();
@@ -176,6 +186,7 @@ export default class PlaygroundController extends Controller {
       state: EditorState.create({
         doc: currentCode,
         extensions: [
+          lineNumbers(),
           history(),
           bracketMatching(),
           keymap.of([...defaultKeymap, ...historyKeymap]),
@@ -232,6 +243,7 @@ export default class PlaygroundController extends Controller {
 
   disconnect() {
     document.removeEventListener('keydown', this.handleKeydown.bind(this));
+    document.removeEventListener('click', this.handleOutsideClick.bind(this));
     if (this.themeObserver) {
       this.themeObserver.disconnect();
       this.themeObserver = null;
@@ -249,12 +261,41 @@ export default class PlaygroundController extends Controller {
     }
   }
 
+  toggleInput() {
+    this.inputAccordionTarget.classList.toggle('open');
+  }
+
+  toggleCompiled() {
+    this.compiledAccordionTarget.classList.toggle('open');
+  }
+
+  toggleSettings(event: Event) {
+    event.stopPropagation();
+    this.settingsMenuTarget.classList.toggle('visible');
+  }
+
+  stopPropagation(event: Event) {
+    event.stopPropagation();
+  }
+
+  private handleOutsideClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!this.settingsMenuTarget.contains(target) && !this.settingsToggleTarget.contains(target)) {
+      this.settingsMenuTarget.classList.remove('visible');
+    }
+  }
+
   loadExample() {
     const exampleId = this.examplesTarget.value;
     if (exampleId && EXAMPLES[exampleId]) {
       this.setCode(EXAMPLES[exampleId]);
       // Set input data if example has one
+      const hasInput = !!EXAMPLE_INPUTS[exampleId];
       this.setInputData(EXAMPLE_INPUTS[exampleId] || '');
+      // Auto-expand input accordion if example uses input data
+      if (hasInput) {
+        this.inputAccordionTarget.classList.add('open');
+      }
       this.examplesTarget.value = ''; // Reset dropdown
     }
   }
@@ -437,7 +478,7 @@ export default class PlaygroundController extends Controller {
   }
 
   private formatResult(value: any): string {
-    if (this.jsonOutputTarget.checked) {
+    if (this.outputFormatTarget.value === 'json') {
       return JSON.stringify(value, null, 2);
     }
     return toEloCode(value);
@@ -471,21 +512,21 @@ export default class PlaygroundController extends Controller {
 
   private showResult(message: string) {
     this.resultTarget.textContent = message;
-    this.resultPanelTarget.classList.add('visible');
   }
 
   private hideResult() {
     this.resultTarget.textContent = '';
-    this.resultPanelTarget.classList.remove('visible');
   }
 
   private showError(message: string) {
     this.errorTarget.textContent = message;
     this.errorTarget.classList.add('visible');
+    this.errorTarget.closest('.flow-output')?.classList.add('has-error');
   }
 
   private hideError() {
     this.errorTarget.textContent = '';
     this.errorTarget.classList.remove('visible');
+    this.errorTarget.closest('.flow-output')?.classList.remove('has-error');
   }
 }
