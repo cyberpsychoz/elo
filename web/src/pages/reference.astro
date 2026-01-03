@@ -12,19 +12,19 @@ import Footer from '../components/Footer.astro';
         <a href="#literals">Literals</a>
         <a href="#type-selectors">Type Selectors</a>
         <a href="#operators">Operators</a>
+        <a href="#tuples">Tuples</a>
+        <a href="#lists">Lists</a>
+        <a href="#lambdas">Lambdas</a>
         <span class="toc-section">Expressions</span>
         <a href="#variables">Variables</a>
         <a href="#conditionals">Conditionals</a>
         <a href="#ranges">Range Membership</a>
         <span class="toc-section">Data</span>
-        <a href="#tuples">Tuples</a>
-        <a href="#lists">Lists</a>
-        <a href="#data-paths">Data Paths</a>
+        <a href="#data-selector">Data Selector</a>
         <a href="#input">Input Data</a>
-        <a href="#data-formats">Data Formats</a>
+        <a href="#data-paths">Data Paths</a>
         <a href="#data-schemas">Data Schemas</a>
-        <span class="toc-section">Functions</span>
-        <a href="#lambdas">Lambdas</a>
+        <a href="#data-formats">Data Formats</a>
         <span class="toc-section">Runtime</span>
         <a href="#assertions">Assertions</a>
         <span class="toc-section">Get Started</span>
@@ -208,6 +208,79 @@ import Footer from '../components/Footer.astro';
         </div>
       </section>
 
+      <section class="doc-section" id="tuples">
+        <h2>Tuples</h2>
+        <p>Elo tuples are collections of named values. They use JSON-like syntax with key-value pairs and compile to native structures in each target language.</p>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Tuple</div>
+          <pre class="example-code">&#123;name: 'Alice', age: 30&#125;</pre>
+          <p class="example-desc">Create a tuple with named attributes.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Attribute Access</div>
+          <pre class="example-code">&#123;budget: 1500&#125;.budget</pre>
+          <p class="example-desc">Access attributes with dot notation.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Tuple with Let</div>
+          <pre class="example-code">let t = &#123;x: 10, y: 20&#125; in t.x + t.y</pre>
+          <p class="example-desc">Bind a tuple to a variable and access its attributes.</p>
+        </div>
+        <p class="note"><strong>Note:</strong> Tuples look like JavaScript objects but Elo uses relational terminology. In SQL, they compile to PostgreSQL JSONB using <code>jsonb_build_object()</code>.</p>
+      </section>
+
+      <section class="doc-section" id="lists">
+        <h2>Lists</h2>
+        <p>Elo lists are ordered sequences using JSON-like array syntax. Lists are heterogeneous and compile to native arrays.</p>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple List</div>
+          <pre class="example-code">[1, 2, 3]</pre>
+          <p class="example-desc">Create a list with integer elements.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Mixed Types</div>
+          <pre class="example-code">[1, 'two', true, null]</pre>
+          <p class="example-desc">Lists can mix different types including null.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Nested Lists</div>
+          <pre class="example-code">[[1, 2], [3, 4]]</pre>
+          <p class="example-desc">Lists can contain other lists.</p>
+        </div>
+        <p class="note"><strong>Note:</strong> Lists look like JavaScript arrays but Elo uses relational terminology. In SQL, they compile to PostgreSQL <code>ARRAY[...]</code> syntax.</p>
+      </section>
+
+      <section class="doc-section" id="lambdas">
+        <h2>Lambdas</h2>
+        <p>Elo provides anonymous functions using lambdas:</p>
+        <ul>
+          <li><strong>Lambdas</strong>: <code>fn( params ~> body )</code> or <code>x ~> body</code> (sugar)</li>
+        </ul>
+        <h3>Lambda Expressions</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Simple Lambda</div>
+          <pre class="example-code">fn( x ~> x * 2 )</pre>
+          <p class="example-desc">A function that doubles its input.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Multiple Parameters</div>
+          <pre class="example-code">fn( x, y ~> x + y )</pre>
+          <p class="example-desc">Lambdas can take multiple parameters.</p>
+        </div>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Sugar Syntax</div>
+          <pre class="example-code">[1, 2, 3] |> map(x ~> x * 2)</pre>
+          <p class="example-desc">Single-param lambdas can omit <code>fn()</code>. Returns [2, 4, 6].</p>
+        </div>
+        <h3>Invoking Lambdas</h3>
+        <div class="example" data-action="click->doc#tryExample">
+          <div class="example-header">Call a Lambda</div>
+          <pre class="example-code">let double = fn( x ~> x * 2 ) in double(5)</pre>
+          <p class="example-desc">Bind a lambda to a name, then call it. Returns 10.</p>
+        </div>
+        <p class="note"><strong>Note:</strong> Lambdas compile to JavaScript and Ruby only. SQL does not support function expressions.</p>
+      </section>
+
       <section class="doc-section" id="variables">
         <h2>Local Variables</h2>
         <p>Use <code>let ... in</code> expressions to bind local variables.</p>
@@ -258,46 +331,47 @@ import Footer from '../components/Footer.astro';
         </div>
       </section>
 
-      <section class="doc-section" id="tuples">
-        <h2>Tuples</h2>
-        <p>Elo tuples are collections of named values. They use JSON-like syntax with key-value pairs and compile to native structures in each target language.</p>
+      <section class="doc-section" id="data-selector">
+        <h2>Data Selector</h2>
+        <p>The <code>Data()</code> selector parses JSON strings into Elo values. This is useful when receiving data as text from external sources.</p>
         <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Simple Tuple</div>
-          <pre class="example-code">&#123;name: 'Alice', age: 30&#125;</pre>
-          <p class="example-desc">Create a tuple with named attributes.</p>
+          <div class="example-header">Parse JSON Object</div>
+          <pre class="example-code">Data('&#123;"name": "Alice", "age": 30&#125;')</pre>
+          <p class="example-desc">Parses a JSON string into a tuple with <code>name</code> and <code>age</code> attributes.</p>
         </div>
         <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Attribute Access</div>
-          <pre class="example-code">&#123;budget: 1500&#125;.budget</pre>
-          <p class="example-desc">Access attributes with dot notation.</p>
+          <div class="example-header">Parse JSON Array</div>
+          <pre class="example-code">Data('[1, 2, 3]')</pre>
+          <p class="example-desc">Parses a JSON string into a list.</p>
         </div>
         <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Tuple with Let</div>
-          <pre class="example-code">let t = &#123;x: 10, y: 20&#125; in t.x + t.y</pre>
-          <p class="example-desc">Bind a tuple to a variable and access its attributes.</p>
+          <div class="example-header">Access Parsed Data</div>
+          <pre class="example-code">Data('&#123;"user": &#123;"name": "Bob"&#125;&#125;').user.name</pre>
+          <p class="example-desc">Parse and immediately access nested properties.</p>
         </div>
-        <p class="note"><strong>Note:</strong> Tuples look like JavaScript objects but Elo uses relational terminology. In SQL, they compile to PostgreSQL JSONB using <code>jsonb_build_object()</code>.</p>
+        <p class="note"><strong>Note:</strong> See <a href="#type-selectors">Type Selectors</a> for all available selectors. For validating and transforming complex JSON structures, see <a href="#data-schemas">Data Schemas</a>.</p>
       </section>
 
-      <section class="doc-section" id="lists">
-        <h2>Lists</h2>
-        <p>Elo lists are ordered sequences using JSON-like array syntax. Lists are heterogeneous and compile to native arrays.</p>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Simple List</div>
-          <pre class="example-code">[1, 2, 3]</pre>
-          <p class="example-desc">Create a list with integer elements.</p>
+      <section class="doc-section" id="input">
+        <h2>Input Data</h2>
+        <p>Every Elo program has access to external input via the special <code>_</code> variable.
+           When an expression uses <code>_</code>, the compiled output becomes a function that takes input data as a parameter.</p>
+        <div class="example" data-action="click->doc#tryExample" data-input="21">
+          <div class="example-header">Simple Input</div>
+          <pre class="example-code">_ * 2</pre>
+          <p class="example-desc">Doubles the input value.</p>
         </div>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Mixed Types</div>
-          <pre class="example-code">[1, 'two', true, null]</pre>
-          <p class="example-desc">Lists can mix different types including null.</p>
+        <div class="example" data-action="click->doc#tryExample" data-input='{"price": 100, "quantity": 3}'>
+          <div class="example-header">Tuple Input</div>
+          <pre class="example-code">_.price * _.quantity</pre>
+          <p class="example-desc">Access attributes of an input tuple.</p>
         </div>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Nested Lists</div>
-          <pre class="example-code">[[1, 2], [3, 4]]</pre>
-          <p class="example-desc">Lists can contain other lists.</p>
+        <div class="example" data-action="click->doc#tryExample" data-input='{"budget": 100}'>
+          <div class="example-header">Input with Transformation</div>
+          <pre class="example-code">_.budget * 1.21</pre>
+          <p class="example-desc">Apply VAT to a budget value from input.</p>
         </div>
-        <p class="note"><strong>Note:</strong> Lists look like JavaScript arrays but Elo uses relational terminology. In SQL, they compile to PostgreSQL <code>ARRAY[...]</code> syntax.</p>
+        <p class="note"><strong>Note:</strong> When using the CLI, use <code>elo</code> with JSON input: <code>elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'</code></p>
       </section>
 
       <section class="doc-section" id="data-paths">
@@ -331,110 +405,6 @@ import Footer from '../components/Footer.astro';
           <p class="example-desc">Returns a new tuple with the value updated at the path.</p>
         </div>
         <p class="note"><strong>Note:</strong> Since data paths are lists, <code>typeOf(.name)</code> returns <code>'List'</code>. The stdlib uses "DataPath" as a conceptual name in function signatures.</p>
-      </section>
-
-      <section class="doc-section" id="input">
-        <h2>Input Data</h2>
-        <p>Every Elo program has access to external input via the special <code>_</code> variable.
-           When an expression uses <code>_</code>, the compiled output becomes a function that takes input data as a parameter.</p>
-        <div class="example" data-action="click->doc#tryExample" data-input="21">
-          <div class="example-header">Simple Input</div>
-          <pre class="example-code">_ * 2</pre>
-          <p class="example-desc">Doubles the input value.</p>
-        </div>
-        <div class="example" data-action="click->doc#tryExample" data-input='{"price": 100, "quantity": 3}'>
-          <div class="example-header">Tuple Input</div>
-          <pre class="example-code">_.price * _.quantity</pre>
-          <p class="example-desc">Access attributes of an input tuple.</p>
-        </div>
-        <div class="example" data-action="click->doc#tryExample" data-input='{"budget": 100}'>
-          <div class="example-header">Input with Transformation</div>
-          <pre class="example-code">_.budget * 1.21</pre>
-          <p class="example-desc">Apply VAT to a budget value from input.</p>
-        </div>
-        <p class="note"><strong>Note:</strong> When using the CLI, use <code>elo</code> with JSON input: <code>elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'</code></p>
-      </section>
-
-      <section class="doc-section" id="data-formats">
-        <h2>Data Formats</h2>
-        <p>The CLI and playground support multiple input and output formats. Input data is parsed and made available as the <code>_</code> variable. Results can be formatted for different use cases.</p>
-
-        <h3>JSON Format</h3>
-        <p>JSON is the default format. Values map directly to Elo types:</p>
-        <table class="format-table">
-          <thead><tr><th>JSON</th><th>Elo Type</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>number</code></td><td>Int or Float</td><td><code>42</code>, <code>3.14</code></td></tr>
-            <tr><td><code>string</code></td><td>String</td><td><code>"hello"</code></td></tr>
-            <tr><td><code>boolean</code></td><td>Bool</td><td><code>true</code>, <code>false</code></td></tr>
-            <tr><td><code>null</code></td><td>Null</td><td><code>null</code></td></tr>
-            <tr><td><code>object</code></td><td>Tuple</td><td><code>&#123;"name": "Alice"&#125;</code></td></tr>
-            <tr><td><code>array</code></td><td>List</td><td><code>[1, 2, 3]</code></td></tr>
-          </tbody>
-        </table>
-        <div class="example" data-action="click->doc#tryExample" data-input='{"name": "Alice", "age": 30}'>
-          <div class="example-header">JSON Input</div>
-          <pre class="example-code">upper(_.name) + ' is ' + String(_.age)</pre>
-          <p class="example-desc">Access fields from a JSON object.</p>
-        </div>
-
-        <h3>CSV Format</h3>
-        <p>CSV input is parsed as a <strong>list of tuples</strong>. The first row provides field names (headers), and subsequent rows become tuple values. All values are strings.</p>
-        <div class="format-example">
-          <div class="format-input">
-            <strong>CSV Input:</strong>
-            <pre>name,age
-Alice,30
-Bob,25</pre>
-          </div>
-          <div class="format-arrow">→</div>
-          <div class="format-output">
-            <strong>Elo Value (<code>_</code>):</strong>
-            <pre>[
-  &#123;name: 'Alice', age: '30'&#125;,
-  &#123;name: 'Bob', age: '25'&#125;
-]</pre>
-          </div>
-        </div>
-        <p>Since CSV values are strings, you can convert them manually:</p>
-        <div class="example" data-action="click->doc#tryExample" data-input='[{"name": "Alice", "age": "30"}, {"name": "Bob", "age": "25"}]'>
-          <div class="example-header">Manual Conversion</div>
-          <pre class="example-code">_ |> map(r ~> &#123;name: r.name, age: Int(r.age)&#125;)</pre>
-          <p class="example-desc">Convert age strings to integers field by field.</p>
-        </div>
-        <p class="note"><strong>Better approach:</strong> Use <a href="#data-schemas">data schemas</a> to declare a schema. This validates structure and converts types in one step:</p>
-        <div class="example" data-action="click->doc#tryExample" data-input='[{"name": "Alice", "age": "30"}, {"name": "Bob", "age": "25"}]'>
-          <div class="example-header">Schema Conversion</div>
-          <pre class="example-code">let Person = &#123;name: String, age: Int&#125;
-in _ |> map(p ~> p |> Person)</pre>
-          <p class="example-desc">Define a schema once, apply it to each row.</p>
-        </div>
-        <h3>Output Formats</h3>
-        <p>Results can be formatted as:</p>
-        <ul>
-          <li><strong>JSON</strong> — Standard JSON serialization (default)</li>
-          <li><strong>Elo</strong> — Elo code syntax (readable, can be copy-pasted)</li>
-          <li><strong>CSV</strong> — For lists of tuples (spreadsheet-compatible)</li>
-        </ul>
-
-        <h3>CLI Usage</h3>
-        <pre class="cli-example"><code># JSON input (default)
-elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'
-
-# CSV input from file (format auto-detected from .csv extension)
-elo -e "map(_, r ~> r.name)" -d @data.csv
-
-# Explicit CSV format
-elo -e "map(_, r ~> r.name)" -d @data.txt -f csv
-
-# Output as CSV
-elo -e "[&#123;a: 1&#125;, &#123;a: 2&#125;]" -o csv
-
-# Output as Elo code
-elo -e "&#123;name: 'test'&#125;" -o elo</code></pre>
-
-        <h3>Custom Format Adapters</h3>
-        <p>The format system is pluggable. You can provide custom adapters for formats like XLSX using libraries such as PapaParse or SheetJS. See the <code>FormatAdapter</code> interface in <code>src/formats.ts</code>.</p>
       </section>
 
       <section class="doc-section" id="data-schemas">
@@ -524,35 +494,86 @@ in &#123; name: 'Alice', age: '30' &#125; |> Person</pre>
         </div>
       </section>
 
-      <section class="doc-section" id="lambdas">
-        <h2>Lambdas</h2>
-        <p>Elo provides anonymous functions using lambdas:</p>
+      <section class="doc-section" id="data-formats">
+        <h2>Data Formats</h2>
+        <p>The CLI and playground support multiple input and output formats. Input data is parsed and made available as the <code>_</code> variable. Results can be formatted for different use cases.</p>
+
+        <h3>JSON Format</h3>
+        <p>JSON is the default format. Values map directly to Elo types:</p>
+        <table class="format-table">
+          <thead><tr><th>JSON</th><th>Elo Type</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>number</code></td><td>Int or Float</td><td><code>42</code>, <code>3.14</code></td></tr>
+            <tr><td><code>string</code></td><td>String</td><td><code>"hello"</code></td></tr>
+            <tr><td><code>boolean</code></td><td>Bool</td><td><code>true</code>, <code>false</code></td></tr>
+            <tr><td><code>null</code></td><td>Null</td><td><code>null</code></td></tr>
+            <tr><td><code>object</code></td><td>Tuple</td><td><code>&#123;"name": "Alice"&#125;</code></td></tr>
+            <tr><td><code>array</code></td><td>List</td><td><code>[1, 2, 3]</code></td></tr>
+          </tbody>
+        </table>
+        <div class="example" data-action="click->doc#tryExample" data-input='{"name": "Alice", "age": 30}'>
+          <div class="example-header">JSON Input</div>
+          <pre class="example-code">upper(_.name) + ' is ' + String(_.age)</pre>
+          <p class="example-desc">Access fields from a JSON object.</p>
+        </div>
+
+        <h3>CSV Format</h3>
+        <p>CSV input is parsed as a <strong>list of tuples</strong>. The first row provides field names (headers), and subsequent rows become tuple values. All values are strings.</p>
+        <div class="format-example">
+          <div class="format-input">
+            <strong>CSV Input:</strong>
+            <pre>name,age
+Alice,30
+Bob,25</pre>
+          </div>
+          <div class="format-arrow">→</div>
+          <div class="format-output">
+            <strong>Elo Value (<code>_</code>):</strong>
+            <pre>[
+  &#123;name: 'Alice', age: '30'&#125;,
+  &#123;name: 'Bob', age: '25'&#125;
+]</pre>
+          </div>
+        </div>
+        <p>Since CSV values are strings, you can convert them manually:</p>
+        <div class="example" data-action="click->doc#tryExample" data-input='[{"name": "Alice", "age": "30"}, {"name": "Bob", "age": "25"}]'>
+          <div class="example-header">Manual Conversion</div>
+          <pre class="example-code">_ |> map(r ~> &#123;name: r.name, age: Int(r.age)&#125;)</pre>
+          <p class="example-desc">Convert age strings to integers field by field.</p>
+        </div>
+        <p class="note"><strong>Better approach:</strong> Use <a href="#data-schemas">data schemas</a> to declare a schema. This validates structure and converts types in one step:</p>
+        <div class="example" data-action="click->doc#tryExample" data-input='[{"name": "Alice", "age": "30"}, {"name": "Bob", "age": "25"}]'>
+          <div class="example-header">Schema Conversion</div>
+          <pre class="example-code">let Person = &#123;name: String, age: Int&#125;
+in _ |> map(p ~> p |> Person)</pre>
+          <p class="example-desc">Define a schema once, apply it to each row.</p>
+        </div>
+        <h3>Output Formats</h3>
+        <p>Results can be formatted as:</p>
         <ul>
-          <li><strong>Lambdas</strong>: <code>fn( params ~> body )</code> or <code>x ~> body</code> (sugar)</li>
+          <li><strong>JSON</strong> — Standard JSON serialization (default)</li>
+          <li><strong>Elo</strong> — Elo code syntax (readable, can be copy-pasted)</li>
+          <li><strong>CSV</strong> — For lists of tuples (spreadsheet-compatible)</li>
         </ul>
-        <h3>Lambda Expressions</h3>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Simple Lambda</div>
-          <pre class="example-code">fn( x ~> x * 2 )</pre>
-          <p class="example-desc">A function that doubles its input.</p>
-        </div>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Multiple Parameters</div>
-          <pre class="example-code">fn( x, y ~> x + y )</pre>
-          <p class="example-desc">Lambdas can take multiple parameters.</p>
-        </div>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Sugar Syntax</div>
-          <pre class="example-code">[1, 2, 3] |> map(x ~> x * 2)</pre>
-          <p class="example-desc">Single-param lambdas can omit <code>fn()</code>. Returns [2, 4, 6].</p>
-        </div>
-        <h3>Invoking Lambdas</h3>
-        <div class="example" data-action="click->doc#tryExample">
-          <div class="example-header">Call a Lambda</div>
-          <pre class="example-code">let double = fn( x ~> x * 2 ) in double(5)</pre>
-          <p class="example-desc">Bind a lambda to a name, then call it. Returns 10.</p>
-        </div>
-        <p class="note"><strong>Note:</strong> Lambdas compile to JavaScript and Ruby only. SQL does not support function expressions.</p>
+
+        <h3>CLI Usage</h3>
+        <pre class="cli-example"><code># JSON input (default)
+elo -e "_.x + _.y" -d '&#123;"x": 1, "y": 2&#125;'
+
+# CSV input from file (format auto-detected from .csv extension)
+elo -e "map(_, r ~> r.name)" -d @data.csv
+
+# Explicit CSV format
+elo -e "map(_, r ~> r.name)" -d @data.txt -f csv
+
+# Output as CSV
+elo -e "[&#123;a: 1&#125;, &#123;a: 2&#125;]" -o csv
+
+# Output as Elo code
+elo -e "&#123;name: 'test'&#125;" -o elo</code></pre>
+
+        <h3>Custom Format Adapters</h3>
+        <p>The format system is pluggable. You can provide custom adapters for formats like XLSX using libraries such as PapaParse or SheetJS. See the <code>FormatAdapter</code> interface in <code>src/formats.ts</code>.</p>
       </section>
 
       <section class="doc-section" id="assertions">
@@ -587,7 +608,7 @@ in &#123; name: 'Alice', age: '30' &#125; |> Person</pre>
         </ul>
 
         <h3>Quick Examples</h3>
-        <pre># Evaluate an expression
+        <pre class="code-js"># Evaluate an expression
 elo -e "2 + 3 * 4"          # => 14
 
 # Evaluate from a file

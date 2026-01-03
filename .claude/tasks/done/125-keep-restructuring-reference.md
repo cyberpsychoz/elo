@@ -10,5 +10,11 @@ once again.
 2. the DATA chapter should have
    - Data Selector (a reminder that Data(string) allows parsing json)
    - Input data
+   - Data paths (+ fetch/patch)
    - Data schemas
    - Data formats
+
+## Post implementation comments
+
+* `Note: See Type Selectors for all available selectors ...`, good. Also add
+  a note towards `Data schemas` then.
