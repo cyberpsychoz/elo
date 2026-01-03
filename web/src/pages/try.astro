@@ -45,22 +45,17 @@ import Layout from '../layouts/Layout.astro';
         <span class="flow-title">Elo Program</span>
         <select data-playground-target="examples" data-action="change->playground#loadExample">
           <option value="">Examples...</option>
-          <optgroup label="Basics">
+          <optgroup label="Core">
             <option value="arithmetic">Arithmetic</option>
             <option value="strings">Strings</option>
             <option value="booleans">Booleans</option>
-            <option value="conditionals">Conditionals</option>
-            <option value="variables">Variables</option>
-          </optgroup>
-          <optgroup label="Data">
             <option value="tuples">Tuples</option>
             <option value="lists">Lists</option>
-            <option value="nulls">Null handling</option>
-            <option value="input-json">JSON Input</option>
-            <option value="input-csv">CSV Input</option>
-          </optgroup>
-          <optgroup label="Functions">
             <option value="lambdas">Lambdas</option>
+          </optgroup>
+          <optgroup label="Expressions">
+            <option value="variables">Variables</option>
+            <option value="conditionals">Conditionals</option>
             <option value="map-filter">Map & Filter</option>
             <option value="pipes">Pipes</option>
           </optgroup>
@@ -68,12 +63,17 @@ import Layout from '../layouts/Layout.astro';
             <option value="dates">Dates</option>
             <option value="durations">Durations</option>
           </optgroup>
-          <optgroup label="Type Definitions">
+          <optgroup label="Data">
+            <option value="nulls">Null Handling</option>
+            <option value="input-json">JSON Input</option>
+            <option value="input-csv">CSV Input</option>
+          </optgroup>
+          <optgroup label="Data Schemas">
             <option value="type-simple">Struct Schema</option>
             <option value="type-validation">Input Validation</option>
             <option value="type-constraints">Constraints</option>
           </optgroup>
-          <optgroup label="Guards">
+          <optgroup label="Runtime">
             <option value="guard-basic">Basic Guard</option>
             <option value="guard-labeled">Labeled Guards</option>
             <option value="guard-pipe">Pipe-Style Guard</option>
