@@ -44,6 +44,25 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
     <Footer className="blog-footer" />
   </main>
+
+  <script define:vars={{ base }}>
+    // Make Elo code blocks in blog posts clickable (load in Try)
+    document.querySelectorAll('.post-content pre').forEach(pre => {
+      const code = pre.querySelector('code.language-elo');
+      if (code) {
+        pre.classList.add('clickable');
+        pre.addEventListener('click', () => {
+          const text = code.textContent.trim();
+          let url = `${base}/try?code=${encodeURIComponent(text)}&run=1`;
+          // Add sample input if code uses _
+          if (/\b_\b/.test(text)) {
+            url += `&input=${encodeURIComponent('{"name":"Alice","age":25,"email":"alice@example.com","data":[1,2,3]}')}`;
+          }
+          window.location.href = url;
+        });
+      }
+    });
+  </script>
 </Layout>
 
 <style>
@@ -191,5 +210,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     border: none;
     border-top: 1px solid var(--border);
     margin: 2rem 0;
+  }
+
+  .post-content :global(pre.clickable) {
+    cursor: pointer;
+  }
+
+  .post-content :global(pre.clickable:hover) {
+    border: 1px solid var(--accent);
   }
 </style>

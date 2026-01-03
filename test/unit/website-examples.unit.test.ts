@@ -8,12 +8,44 @@ import { parse } from '../../src/parser';
  * This test ensures that all code examples on the website actually compile.
  * It extracts example-code blocks from .astro pages and tries to parse them.
  * It also validates the EXAMPLES constant in the playground controller.
+ * It also validates fenced code blocks in blog posts.
  */
 
 const webDir = path.join(process.cwd(), 'web/src');
+const blogDir = path.join(webDir, 'content/blog');
 
 function readFile(relativePath: string): string {
   return fs.readFileSync(path.join(webDir, relativePath), 'utf-8');
+}
+
+function readBlogFile(filename: string): string {
+  return fs.readFileSync(path.join(blogDir, filename), 'utf-8');
+}
+
+function getBlogFiles(): string[] {
+  return fs.readdirSync(blogDir).filter(f => f.endsWith('.md'));
+}
+
+/**
+ * Extract fenced code blocks with elo language from markdown content.
+ * Matches ```elo ... ``` blocks.
+ */
+function extractBlogExamples(content: string): { code: string; line: number }[] {
+  const examples: { code: string; line: number }[] = [];
+
+  // Match fenced code blocks with elo language: ```elo ... ```
+  const regex = /```elo\n([\s\S]*?)```/g;
+  let match;
+
+  while ((match = regex.exec(content)) !== null) {
+    const code = match[1].trim();
+    // Calculate line number by counting newlines before this match
+    const beforeMatch = content.slice(0, match.index);
+    const line = (beforeMatch.match(/\n/g) || []).length + 1;
+    examples.push({ code, line });
+  }
+
+  return examples;
 }
 
 /**
@@ -201,6 +233,44 @@ describe('Website Example Validation', () => {
             `Code: ${code}\n` +
             `Error: ${error.message}`
           );
+        }
+      });
+    }
+  });
+
+  describe('blog post examples', () => {
+    const blogFiles = getBlogFiles();
+
+    for (const filename of blogFiles) {
+      const content = readBlogFile(filename);
+      const examples = extractBlogExamples(content);
+
+      // Skip blog posts with no Elo examples
+      if (examples.length === 0) continue;
+
+      describe(filename, () => {
+        for (const { code, line } of examples) {
+          if (shouldSkip(code)) continue;
+
+          it(`line ${line}: ${code.slice(0, 50).replace(/\n/g, ' ')}...`, () => {
+            // Strip comment lines for parsing (comments start with #)
+            const codeWithoutComments = code
+              .split('\n')
+              .filter(line => !line.trim().startsWith('#'))
+              .join('\n')
+              .trim();
+
+            try {
+              parse(codeWithoutComments);
+            } catch (e) {
+              const error = e as Error;
+              assert.fail(
+                `Blog example at ${filename}:${line} failed to parse:\n` +
+                `Code: ${code}\n` +
+                `Error: ${error.message}`
+              );
+            }
+          });
         }
       });
     }

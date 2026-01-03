@@ -47,19 +47,15 @@ _.data
 The `guard(x | condition)` form binds the piped value to `x` for the condition check,
 then passes it through unchanged. It's validation as a pipeline step.
 
-### Full Sugar
+### Combining Guards, Lets, and Checks
 
-Guards, lets, and checks can stack before a single `in`:
+You can nest guards and checks within let expressions:
 
 ```elo
-guard
-  'valid input': _.data != null
-let
-  result = transform(_.data)
-check
-  non_empty: size(result) > 0
-in
-  result
+guard 'valid input': _.data != null in
+let result = transform(_.data) in
+  check non_empty: size(result) > 0 in
+    result
 ```
 
 This reads almost like a specification: validate input, compute, validate output, return.
@@ -130,10 +126,10 @@ data contracts:
 let
   Email = String(s | 'invalid email': contains(s, '@')),
   Age = Int(a | positive: a > 0, reasonable: a < 150),
-  Person = { email: Email, age: Age }
+  Person = { email: Email, age: Age },
+  person = Person(_)
 in
-  guard valid_person: _ |> Person in
-    'Hello, ' + _.email
+  'Hello, ' + person.email
 ```
 
 The vision is coming together: a simple, safe, portable expression language for data

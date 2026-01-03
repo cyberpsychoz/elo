@@ -22,22 +22,22 @@ Day seven introduced something powerful: user-defined types. Inspired by [Finiti
 
 **Subtype constraints:**
 ```elo
-type Positive = Int(x ~> x > 0)
+let Positive = Int(x | x > 0) in 42 |> Positive
 ```
 
 **Union types:**
 ```elo
-type StringOrNull = String | Null
+let StringOrNull = String | Null in null |> StringOrNull
 ```
 
 **Structured types:**
 ```elo
-type Person = { name: String, age?: Int }
+let Person = { name: String, age :? Int } in { name: 'Alice' } |> Person
 ```
 
 **Array types:**
 ```elo
-type Numbers = [Int]
+let Numbers = [Int] in [1, 2, 3] |> Numbers
 ```
 
 The type definitions compile to runtime validation code. A `Positive` selector will throw if given zero or negative numbers. A `Person` selector validates the structure of input data.
@@ -47,10 +47,8 @@ The type definitions compile to runtime validation code. A `Positive` selector w
 Real-world data is messy. Not every field is always present. Elo now handles this gracefully:
 
 ```elo
-type Config = {
-  required: String,
-  optional?: Int
-}
+let Config = { required: String, optional :? Int }
+in { required: 'hello' } |> Config
 ```
 
 The `?` marks attributes that can be missing. When missing, they're simply absent from the result—no null values inserted.
@@ -60,7 +58,8 @@ The `?` marks attributes that can be missing. When missing, they're simply absen
 Sometimes you want to validate known fields but preserve unknown ones:
 
 ```elo
-type Flexible = { known: String, ... }
+let Flexible = { known: String, ... }
+in { known: 'hi', extra: 42 } |> Flexible
 ```
 
 The `...` allows additional attributes to pass through unchanged.
