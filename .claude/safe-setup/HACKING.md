@@ -37,7 +37,7 @@ make shell
 
 ## Inside the Container
 
-You're now user `elo` in `/workspace` (the Elo project root).
+You're now user `claude` in `/workspace` (the Elo project root).
 
 ```bash
 # Install project dependencies
@@ -63,5 +63,6 @@ PostgreSQL is pre-configured via environment variables. Just run `psql` to conne
 | `make shell` | Enter dev container |
 | `make restart` | Restart everything |
 | `make logs` | Follow container logs |
-| `make status` | Show container status |
+| `make ps` | Show container status |
 | `make clean` | Remove containers and images |
+| `make claude` | Directly launch claude |

@@ -1,19 +1,17 @@
 services:
+
   dev:
     build:
       context: .
       dockerfile: Dockerfile.claude
-    container_name: claude
+    image: enspirit/elo-claude
+    container_name: elo-claude
     volumes:
       - ../..:/workspace
-      - claude-history:/home/elo/.claude
-    environment:
-      - PGHOST=postgres
-      - PGUSER=elo
-      - PGPASSWORD=elo
-      - PGDATABASE=elo
-      - GIT_USER_NAME=${GIT_USER_NAME:-}
-      - GIT_USER_EMAIL=${GIT_USER_EMAIL:-}
+      - ./claude-data:/home/claude/.claude
+      - ./claude-data/.claude.json:/home/claude/.claude.json
+    env_file:
+      - .env
     depends_on:
       - postgres
     stdin_open: true
@@ -21,13 +19,8 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: claude-postgres
-    environment:
-      - POSTGRES_USER=elo
-      - POSTGRES_PASSWORD=elo
-      - POSTGRES_DB=elo
+    container_name: elo-claude-postgres
+    env_file:
+      - .env
     ports:
       - "5433:5432"
-
-volumes:
-  claude-history:

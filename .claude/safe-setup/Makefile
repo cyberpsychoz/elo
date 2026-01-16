@@ -1,14 +1,21 @@
-.PHONY: up down shell restart clean logs status
+.PHONY: up down shell claude restart clean logs status
 
-up:
+claude-data/.claude.json:
+	mkdir -p claude-data
+	echo '{}' > claude-data/.claude.json
+
+up: claude-data/.claude.json
 	docker compose up -d --build
-	@echo "Containers started. Use 'make shell' to access dev environment"
+	@echo "Containers started. Use 'make shell' or 'make claude' to access dev environment"
 
 down:
 	docker compose down
 
 shell:
 	docker compose exec dev bash
+
+claude:
+	docker compose exec dev c
 
 restart: down up
 
@@ -18,5 +25,5 @@ clean: down
 logs:
 	docker compose logs -f
 
-status:
-	@docker compose ps
+ps:
+	docker compose ps

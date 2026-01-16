@@ -17,12 +17,17 @@ RUN apk update && apk add --no-cache \
     sudo
 
 # Create non-root user with sudo access
-RUN addgroup -S elo && adduser -S elo -G elo \
-    && echo "elo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN addgroup -S claude && adduser -S claude -G claude \
+    && echo "claude ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Install Claude Code CLI globally
-RUN npm install -g @anthropic-ai/claude-code
+RUN npm i -g @anthropic-ai/claude-code
 RUN gem install activesupport
+
+# Create wrapper script 'c' that adds dangerous permissions flag
+RUN echo '#!/bin/bash' > /usr/local/bin/c && \
+    echo 'exec claude --dangerously-skip-permissions "$@"' >> /usr/local/bin/c && \
+    chmod +x /usr/local/bin/c
 
 # Set up working directory
 WORKDIR /workspace
@@ -31,12 +36,8 @@ WORKDIR /workspace
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Create .claude directory for history persistence
-RUN mkdir -p /home/elo/.claude && chown -R elo:elo /home/elo/.claude
-
 # Switch to non-root user
-USER elo
+USER claude
 
-# Use entrypoint to configure git and run command
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]
