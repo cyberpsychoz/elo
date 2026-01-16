@@ -69,6 +69,8 @@ while IFS= read -r -d '' file; do
     else
         echo "  ✗ $relpath"
         ((FAILED++)) || true
+        echo "$sql" | psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -t || true
+
     fi
 done < <(find "$TEST_DIR" -type f -name "*.expected.sql" -print0 | sort -z)
 

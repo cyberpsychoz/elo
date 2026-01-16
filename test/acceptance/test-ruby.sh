@@ -46,6 +46,7 @@ while IFS= read -r -d '' file; do
     else
         echo "  ✗ $relpath"
         ((FAILED++)) || true
+        { echo "$PRELUDE"; cat "$file"; } | ruby || true
     fi
 done < <(find "$TEST_DIR" -type f \( -name "*.expected.ruby" -o -name "*.expected.rb" \) -print0 | sort -z)
 

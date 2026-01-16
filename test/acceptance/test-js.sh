@@ -45,6 +45,7 @@ while IFS= read -r -d '' file; do
         ((PASSED++)) || true
     else
         echo "  ✗ $relpath"
+        { echo "$PRELUDE"; cat "$file"; } | node || true
         ((FAILED++)) || true
     fi
 done < <(find "$TEST_DIR" -type f -name "*.expected.js" -print0 | sort -z)
