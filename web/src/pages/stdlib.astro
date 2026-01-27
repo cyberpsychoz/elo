@@ -199,6 +199,54 @@ import Footer from '../components/Footer.astro';
             <p class="fn-desc">Divides a duration by a factor.</p>
             <div class="fn-example"><code class="language-elo">P10D / 2</code><span class="fn-result">→ P5D</span></div>
           </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inYears</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its approximate total number of years (1y = 365.25d).</p>
+            <div class="fn-example"><code class="language-elo">P365D |> inYears |> round</code><span class="fn-result">→ 1</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inQuarters</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its approximate total number of quarters (1q = 91.3125d).</p>
+            <div class="fn-example"><code class="language-elo">P90D |> inQuarters |> round</code><span class="fn-result">→ 1</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inMonths</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its approximate total number of months (1m = 30.4375d).</p>
+            <div class="fn-example"><code class="language-elo">P365D |> inMonths |> round</code><span class="fn-result">→ 12</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inWeeks</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its total number of weeks.</p>
+            <div class="fn-example"><code class="language-elo">P14D |> inWeeks</code><span class="fn-result">→ 2.0</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inDays</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its total number of days.</p>
+            <div class="fn-example"><code class="language-elo">P7D |> inDays</code><span class="fn-result">→ 7.0</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inHours</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its total number of hours.</p>
+            <div class="fn-example"><code class="language-elo">P1D |> inHours</code><span class="fn-result">→ 24.0</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inMinutes</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its total number of minutes.</p>
+            <div class="fn-example"><code class="language-elo">PT1H |> inMinutes</code><span class="fn-result">→ 60.0</span></div>
+          </div>
+          <div class="stdlib-fn" data-action="click->doc#tryExample">
+            <div class="fn-name">inSeconds</div>
+            <div class="fn-sig">(Duration) → Float</div>
+            <p class="fn-desc">Converts a duration to its total number of seconds.</p>
+            <div class="fn-example"><code class="language-elo">P1D |> inSeconds</code><span class="fn-result">→ 86400.0</span></div>
+          </div>
         </div>
       </section>
 

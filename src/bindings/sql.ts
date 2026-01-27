@@ -239,6 +239,25 @@ export function createSQLBinding(): StdLib<string> {
   sqlLib.register('ceil', [Types.int], (args, ctx) => ctx.emit(args[0]));
   sqlLib.register('ceil', [Types.float], (args, ctx) => `CEIL(${ctx.emit(args[0])})`);
 
+  // Duration unit conversion functions
+  // Approximate units use standard conversions: 1y=365.25d, 1m=30.4375d, 1q=91.3125d
+  sqlLib.register('inYears', [Types.duration], (args, ctx) =>
+    `(EXTRACT(EPOCH FROM ${ctx.emit(args[0])}) / 31557600.0)`);
+  sqlLib.register('inQuarters', [Types.duration], (args, ctx) =>
+    `(EXTRACT(EPOCH FROM ${ctx.emit(args[0])}) / 7889400.0)`);
+  sqlLib.register('inMonths', [Types.duration], (args, ctx) =>
+    `(EXTRACT(EPOCH FROM ${ctx.emit(args[0])}) / 2629800.0)`);
+  sqlLib.register('inWeeks', [Types.duration], (args, ctx) =>
+    `(EXTRACT(EPOCH FROM ${ctx.emit(args[0])}) / 604800.0)`);
+  sqlLib.register('inDays', [Types.duration], (args, ctx) =>
+    `(EXTRACT(EPOCH FROM ${ctx.emit(args[0])}) / 86400.0)`);
+  sqlLib.register('inHours', [Types.duration], (args, ctx) =>
+    `(EXTRACT(EPOCH FROM ${ctx.emit(args[0])}) / 3600.0)`);
+  sqlLib.register('inMinutes', [Types.duration], (args, ctx) =>
+    `(EXTRACT(EPOCH FROM ${ctx.emit(args[0])}) / 60.0)`);
+  sqlLib.register('inSeconds', [Types.duration], (args, ctx) =>
+    `EXTRACT(EPOCH FROM ${ctx.emit(args[0])})`);
+
   // Temporal extraction functions
   sqlLib.register('year', [Types.date], (args, ctx) => `EXTRACT(YEAR FROM ${ctx.emit(args[0])})`);
   sqlLib.register('year', [Types.datetime], (args, ctx) => `EXTRACT(YEAR FROM ${ctx.emit(args[0])})`);

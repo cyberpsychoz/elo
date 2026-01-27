@@ -213,6 +213,18 @@ export function createTypeDefs(): TypeDefs {
   defs.register('ceil', [Types.float], Types.int);
 
   // ============================================
+  // Duration unit conversion (-> float)
+  // ============================================
+  defs.register('inYears', [Types.duration], Types.float);
+  defs.register('inQuarters', [Types.duration], Types.float);
+  defs.register('inMonths', [Types.duration], Types.float);
+  defs.register('inWeeks', [Types.duration], Types.float);
+  defs.register('inDays', [Types.duration], Types.float);
+  defs.register('inHours', [Types.duration], Types.float);
+  defs.register('inMinutes', [Types.duration], Types.float);
+  defs.register('inSeconds', [Types.duration], Types.float);
+
+  // ============================================
   // Temporal component extraction (-> int)
   // ============================================
   defs.register('year', [Types.date], Types.int);

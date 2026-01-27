@@ -314,6 +314,25 @@ export function createJavaScriptBinding(): StdLib<string> {
   jsLib.register('ceil', [Types.float], fnCall('Math.ceil'));
   jsLib.register('ceil', [Types.any], fnCall('Math.ceil')); // Safe for any numeric type
 
+  // Duration unit conversion functions
+  // Approximate units use standard conversions: 1y=365.25d, 1m=30.4375d, 1q=91.3125d
+  jsLib.register('inYears', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 31557600000)`);
+  jsLib.register('inQuarters', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 7889400000)`);
+  jsLib.register('inMonths', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 2629800000)`);
+  jsLib.register('inWeeks', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 604800000)`);
+  jsLib.register('inDays', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 86400000)`);
+  jsLib.register('inHours', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 3600000)`);
+  jsLib.register('inMinutes', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 60000)`);
+  jsLib.register('inSeconds', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.toMillis() / 1000)`);
+
   // Temporal extraction functions
   jsLib.register('year', [Types.date], (args, ctx) => `${ctx.emit(args[0])}.year`);
   jsLib.register('year', [Types.datetime], (args, ctx) => `${ctx.emit(args[0])}.year`);

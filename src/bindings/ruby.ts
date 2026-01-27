@@ -262,6 +262,25 @@ export function createRubyBinding(): StdLib<string> {
   rubyLib.register('ceil', [Types.float], rubyMethod('ceil'));
   rubyLib.register('ceil', [Types.any], rubyMethod('ceil')); // Safe for any numeric type
 
+  // Duration unit conversion functions
+  // Approximate units use standard conversions: 1y=365.25d, 1m=30.4375d, 1q=91.3125d
+  rubyLib.register('inYears', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.to_i / 31557600.0)`);
+  rubyLib.register('inQuarters', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.to_i / 7889400.0)`);
+  rubyLib.register('inMonths', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.to_i / 2629800.0)`);
+  rubyLib.register('inWeeks', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.to_i / 604800.0)`);
+  rubyLib.register('inDays', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.to_i / 86400.0)`);
+  rubyLib.register('inHours', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.to_i / 3600.0)`);
+  rubyLib.register('inMinutes', [Types.duration], (args, ctx) =>
+    `(${ctx.emit(args[0])}.to_i / 60.0)`);
+  rubyLib.register('inSeconds', [Types.duration], (args, ctx) =>
+    `${ctx.emit(args[0])}.to_i.to_f`);
+
   // Temporal extraction functions
   rubyLib.register('year', [Types.date], (args, ctx) => `${ctx.emit(args[0])}.year`);
   rubyLib.register('year', [Types.datetime], (args, ctx) => `${ctx.emit(args[0])}.year`);
