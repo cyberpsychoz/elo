@@ -11,6 +11,7 @@ import {
   compileToJavaScript,
   compileToJavaScriptWithMeta,
   compileToSQL,
+  compileToPython,
   getPrelude,
   defaultFormats,
   getFormat
@@ -18,14 +19,14 @@ import {
 import type { PreludeTarget } from '@enspirit/elo';
 import { elo } from '../codemirror/elo-language';
 import { eloDarkTheme, eloLightTheme } from '../codemirror/elo-theme';
-import { highlightJS, highlightRuby, highlightSQL } from '../highlighter';
+import { highlightJS, highlightRuby, highlightSQL, highlightPython } from '../highlighter';
 import { formatCode } from '../formatters';
 
 // Make luxon DateTime and Duration available globally for eval (used by compiled IIFE helpers)
 (window as any).DateTime = DateTime;
 (window as any).Duration = Duration;
 
-type TargetLanguage = 'ruby' | 'javascript' | 'sql';
+type TargetLanguage = 'ruby' | 'javascript' | 'sql' | 'python';
 
 const STORAGE_KEY = 'elo-playground-code';
 
@@ -453,7 +454,7 @@ export default class PlaygroundController extends Controller {
       // Build final output with optional prelude
       let finalOutput = formattedOutput;
       if (includePrelude) {
-        const preludeTarget: PreludeTarget = language === 'javascript' ? 'javascript' : language as PreludeTarget;
+        const preludeTarget: PreludeTarget = language as PreludeTarget;
         const prelude = getPrelude(preludeTarget);
         if (prelude) {
           finalOutput = `${prelude}\n\n${formattedOutput}`;
@@ -540,7 +541,8 @@ export default class PlaygroundController extends Controller {
     const extensions: Record<TargetLanguage, string> = {
       javascript: 'js',
       ruby: 'rb',
-      sql: 'sql'
+      sql: 'sql',
+      python: 'py'
     };
 
     const blob = new Blob([this.currentOutput], { type: 'text/plain' });
@@ -571,6 +573,8 @@ export default class PlaygroundController extends Controller {
         return compileToJavaScript(ast);
       case 'sql':
         return compileToSQL(ast);
+      case 'python':
+        return compileToPython(ast);
       default:
         return '';
     }
@@ -584,6 +588,8 @@ export default class PlaygroundController extends Controller {
         return highlightRuby(code);
       case 'sql':
         return highlightSQL(code);
+      case 'python':
+        return highlightPython(code);
       default:
         return code;
     }

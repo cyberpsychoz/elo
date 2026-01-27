@@ -115,7 +115,7 @@ export function formatRuby(code: string): string {
 /**
  * Format code based on language
  */
-export async function formatCode(code: string, language: 'javascript' | 'ruby' | 'sql'): Promise<string> {
+export async function formatCode(code: string, language: 'javascript' | 'ruby' | 'sql' | 'python'): Promise<string> {
   switch (language) {
     case 'javascript':
       return formatJS(code);
@@ -123,6 +123,8 @@ export async function formatCode(code: string, language: 'javascript' | 'ruby' |
       return formatSQL(code);
     case 'ruby':
       return formatRuby(code);
+    case 'python':
+      return code;
     default:
       return code;
   }

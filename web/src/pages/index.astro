@@ -20,7 +20,7 @@ const url = (path: string) => `${base}${path}`;
         </div>
         <h1>The Elo Language</h1>
         <p class="tagline">A simple, well-designed, portable, and safe data expression language</p>
-        <p class="subtitle">Elo compiles to JavaScript, Ruby, and SQL. Built for No-Code tools where non-technical users need to manipulate data easily and safely.</p>
+        <p class="subtitle">Elo compiles to JavaScript, Ruby, Python, and SQL. Built for No-Code tools where non-technical users need to manipulate data easily and safely.</p>
         <div class="cta-buttons">
           <a href={url('/try')} class="cta-button">Try it now</a>
           <a href={url('/reference#get-started')} class="cta-button cta-secondary">Get started</a>
@@ -34,9 +34,9 @@ const url = (path: string) => `${base}${path}`;
           <p>A pure data language: everything is a value, no reference semantics, no <code>new</code>. One equality operator that just works. Designed to be safe for non-technical users.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">3x</div>
+          <div class="feature-icon">4x</div>
           <h3>Truly Portable</h3>
-          <p>One expression compiles to semantically equivalent JavaScript, Ruby, and SQL. Frontend, backend, and database all speak the same data language.</p>
+          <p>One expression compiles to semantically equivalent JavaScript, Ruby, Python, and SQL. Frontend, backend, and database all speak the same data language.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">{`{}`}</div>
@@ -85,7 +85,7 @@ in
           </div>
           <div class="unique-explain">
             <h4>Functional &amp; Portable</h4>
-            <p>Pipeline operators, lambdas, and a comprehensive <a href={url('/stdlib')}>standard library</a>. Write once, compile to JavaScript, Ruby, and SQL—same semantics everywhere.</p>
+            <p>Pipeline operators, lambdas, and a comprehensive <a href={url('/stdlib')}>standard library</a>. Write once, compile to JavaScript, Ruby, Python, and SQL—same semantics everywhere.</p>
           </div>
         </div>
 
@@ -122,7 +122,7 @@ in
       </section>
 
       <section class="targets-section">
-        <h2>One Expression, Three Targets</h2>
+        <h2>One Expression, Four Targets</h2>
         <p class="targets-intro">Elo compiles to idiomatic code in each target language</p>
 
         <div class="targets-demo">
@@ -138,6 +138,10 @@ in
             <div class="target-card">
               <span class="lang-badge ruby-badge">Ruby</span>
               <pre>2 ** 10 > 1000 && Date.today >= Date.today.beginning_of_year</pre>
+            </div>
+            <div class="target-card">
+              <span class="lang-badge python-badge">Python</span>
+              <pre>2 ** 10 > 1000 and date.today() >= _elo_start_of_year(datetime.now())</pre>
             </div>
             <div class="target-card">
               <span class="lang-badge sql-badge">SQL</span>

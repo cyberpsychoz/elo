@@ -773,6 +773,178 @@ export function highlightSQL(source: string): string {
 }
 
 // =============================================================================
+// Python Highlighter
+// =============================================================================
+
+type PythonCategory =
+  | 'keyword'
+  | 'boolean'
+  | 'number'
+  | 'string'
+  | 'comment'
+  | 'operator'
+  | 'punctuation'
+  | 'function'
+  | 'variable'
+  | 'builtin';
+
+interface PythonToken {
+  category: PythonCategory;
+  text: string;
+}
+
+const PYTHON_KEYWORDS = new Set([
+  'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue',
+  'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from',
+  'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not',
+  'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield'
+]);
+
+const PYTHON_BUILTINS = new Set([
+  'True', 'False', 'None', 'int', 'float', 'str', 'bool', 'list', 'dict',
+  'tuple', 'set', 'len', 'range', 'print', 'type', 'isinstance', 'abs',
+  'round', 'min', 'max', 'sum', 'map', 'filter', 'sorted', 'reversed',
+  'enumerate', 'zip', 'any', 'all', 'datetime', 'timedelta', 'date'
+]);
+
+function tokenizePython(source: string): PythonToken[] {
+  const tokens: PythonToken[] = [];
+  let pos = 0;
+
+  const peek = (offset = 0) => source[pos + offset] || '';
+  const advance = () => source[pos++] || '';
+  const match = (pattern: RegExp) => {
+    const rest = source.slice(pos);
+    const m = rest.match(pattern);
+    return m && m.index === 0 ? m[0] : null;
+  };
+
+  while (pos < source.length) {
+    const ch = peek();
+
+    // Whitespace
+    const ws = match(/^\s+/);
+    if (ws) {
+      tokens.push({ category: 'variable', text: ws });
+      pos += ws.length;
+      continue;
+    }
+
+    // Comments
+    if (ch === '#') {
+      let comment = '';
+      while (pos < source.length && peek() !== '\n') {
+        comment += advance();
+      }
+      tokens.push({ category: 'comment', text: comment });
+      continue;
+    }
+
+    // String literals (single, double, triple-quoted)
+    if ((ch === "'" || ch === '"') ) {
+      const quote = ch;
+      const triple = peek(1) === quote && peek(2) === quote;
+      let str = '';
+      if (triple) {
+        str = advance() + advance() + advance();
+        while (pos < source.length && !(peek() === quote && peek(1) === quote && peek(2) === quote)) {
+          if (peek() === '\\') str += advance();
+          str += advance();
+        }
+        if (pos < source.length) str += advance() + advance() + advance();
+      } else {
+        str = advance();
+        while (pos < source.length && peek() !== quote && peek() !== '\n') {
+          if (peek() === '\\') str += advance();
+          str += advance();
+        }
+        if (peek() === quote) str += advance();
+      }
+      tokens.push({ category: 'string', text: str });
+      continue;
+    }
+
+    // Numbers
+    const numMatch = match(/^\d+(\.\d+)?([eE][+-]?\d+)?/);
+    if (numMatch) {
+      tokens.push({ category: 'number', text: numMatch });
+      pos += numMatch.length;
+      continue;
+    }
+
+    // Identifiers and keywords
+    const idMatch = match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
+    if (idMatch) {
+      let category: PythonCategory = 'variable';
+      if (PYTHON_KEYWORDS.has(idMatch)) {
+        category = 'keyword';
+      } else if (PYTHON_BUILTINS.has(idMatch)) {
+        category = 'builtin';
+      } else if (peek() === '(') {
+        category = 'function';
+      }
+      tokens.push({ category, text: idMatch });
+      pos += idMatch.length;
+      continue;
+    }
+
+    // Multi-character operators
+    const ops = ['**', '==', '!=', '<=', '>=', '//', '->', '+=', '-=', '*=', '/='];
+    let foundOp = false;
+    for (const op of ops) {
+      if (source.slice(pos, pos + op.length) === op) {
+        tokens.push({ category: 'operator', text: op });
+        pos += op.length;
+        foundOp = true;
+        break;
+      }
+    }
+    if (foundOp) continue;
+
+    // Single-character operators
+    if ('+-*/%<>=!&|^~@'.includes(ch)) {
+      tokens.push({ category: 'operator', text: advance() });
+      continue;
+    }
+
+    // Punctuation
+    if ('(){}[],.;:'.includes(ch)) {
+      tokens.push({ category: 'punctuation', text: advance() });
+      continue;
+    }
+
+    // Dot for attribute access
+    if (ch === '.') {
+      tokens.push({ category: 'punctuation', text: advance() });
+      const propMatch = match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
+      if (propMatch) {
+        tokens.push({ category: 'variable', text: propMatch });
+        pos += propMatch.length;
+      }
+      continue;
+    }
+
+    tokens.push({ category: 'variable', text: advance() });
+  }
+
+  return tokens;
+}
+
+export function highlightPython(source: string): string {
+  const tokens = tokenizePython(source);
+  return tokens.map(token => {
+    const escaped = escapeHtml(token.text);
+    if (token.category === 'variable' && /^\s*$/.test(token.text)) {
+      return escaped;
+    }
+    if (token.category === 'variable') {
+      return `<span class="hl-py-var">${escaped}</span>`;
+    }
+    return `<span class="hl-py-${token.category}">${escaped}</span>`;
+  }).join('');
+}
+
+// =============================================================================
 // Unified Highlighter
 // =============================================================================
 
@@ -804,6 +976,9 @@ function getHighlighter(lang: string): ((code: string) => string) | null {
       return highlightRuby;
     case 'sql':
       return highlightSQL;
+    case 'python':
+    case 'py':
+      return highlightPython;
     default:
       return null;
   }
