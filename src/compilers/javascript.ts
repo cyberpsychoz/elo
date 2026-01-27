@@ -181,13 +181,13 @@ function emitJS(ir: IRExpr, requiredHelpers?: Set<string>, options?: EmitOptions
       return JSON.stringify(ir.value);
 
     case 'date_literal':
-      return `DateTime.fromISO('${ir.value}')`;
+      return `DateTime.fromISO(${JSON.stringify(ir.value)})`;
 
     case 'datetime_literal':
-      return `DateTime.fromISO('${ir.value}')`;
+      return `DateTime.fromISO(${JSON.stringify(ir.value)})`;
 
     case 'duration_literal':
-      return `Duration.fromISO('${ir.value}')`;
+      return `Duration.fromISO(${JSON.stringify(ir.value)})`;
 
     case 'object_literal': {
       const props = ir.properties.map(p => `${p.key}: ${ctx.emit(p.value)}`).join(', ');

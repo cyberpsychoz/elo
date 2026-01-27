@@ -60,8 +60,8 @@ export function createJavaScriptBinding(): StdLib<string> {
   // Temporal nullary functions
   jsLib.register('today', [], nullary("DateTime.now().startOf('day')"));
   jsLib.register('now', [], nullary('DateTime.now()'));
-  jsLib.register('bot', [], nullary("DateTime.fromISO('0001-01-01T00:00:00.000Z')"));
-  jsLib.register('eot', [], nullary("DateTime.fromISO('9999-12-31T23:59:59.999Z')"));
+  jsLib.register('bot', [], nullary('DateTime.fromISO("0001-01-01T00:00:00.000Z")'));
+  jsLib.register('eot', [], nullary('DateTime.fromISO("9999-12-31T23:59:59.999Z")'));
 
   // Period boundary functions
   const periodBoundaryMap: Record<string, string> = {

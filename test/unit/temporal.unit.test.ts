@@ -28,12 +28,12 @@ describe('Temporal - Date Literals', () => {
 
   it('should compile date to Ruby', () => {
     const ast = dateLiteral('2024-01-15');
-    assert.strictEqual(compileToRuby(ast), wrapRuby("Date.parse('2024-01-15')"));
+    assert.strictEqual(compileToRuby(ast), wrapRuby("Date.parse(\"2024-01-15\")"));
   });
 
   it('should compile date to JavaScript', () => {
     const ast = dateLiteral('2024-01-15');
-    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.fromISO('2024-01-15')"));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.fromISO(\"2024-01-15\")"));
   });
 
   it('should compile date to SQL', () => {
@@ -53,12 +53,12 @@ describe('Temporal - DateTime Literals', () => {
 
   it('should compile datetime to Ruby', () => {
     const ast = dateTimeLiteral('2024-01-15T10:30:00Z');
-    assert.strictEqual(compileToRuby(ast), wrapRuby("DateTime.parse('2024-01-15T10:30:00Z')"));
+    assert.strictEqual(compileToRuby(ast), wrapRuby("DateTime.parse(\"2024-01-15T10:30:00Z\")"));
   });
 
   it('should compile datetime to JavaScript', () => {
     const ast = dateTimeLiteral('2024-01-15T10:30:00Z');
-    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.fromISO('2024-01-15T10:30:00Z')"));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.fromISO(\"2024-01-15T10:30:00Z\")"));
   });
 
   it('should compile datetime to SQL', () => {
@@ -102,12 +102,12 @@ describe('Temporal - Duration Literals', () => {
 
   it('should compile duration to Ruby', () => {
     const ast = durationLiteral('P1D');
-    assert.strictEqual(compileToRuby(ast), wrapRuby("ActiveSupport::Duration.parse('P1D')"));
+    assert.strictEqual(compileToRuby(ast), wrapRuby("ActiveSupport::Duration.parse(\"P1D\")"));
   });
 
   it('should compile duration to JavaScript', () => {
     const ast = durationLiteral('P1D');
-    assert.strictEqual(compileToJavaScript(ast), wrapJS("Duration.fromISO('P1D')"));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS("Duration.fromISO(\"P1D\")"));
   });
 
   it('should compile duration to SQL', () => {
@@ -131,12 +131,12 @@ describe('Temporal - Date Arithmetic', () => {
     const ast = parse('D2024-01-15 + P1D');
     assert.strictEqual(
       compileToRuby(ast),
-      wrapRuby("Date.parse('2024-01-15') + ActiveSupport::Duration.parse('P1D')")
+      wrapRuby("Date.parse(\"2024-01-15\") + ActiveSupport::Duration.parse(\"P1D\")")
     );
     // JavaScript uses type-aware DateTime.plus() method
     assert.strictEqual(
       compileToJavaScript(ast),
-      wrapJS("DateTime.fromISO('2024-01-15').plus(Duration.fromISO('P1D'))")
+      wrapJS("DateTime.fromISO(\"2024-01-15\").plus(Duration.fromISO(\"P1D\"))")
     );
     assert.strictEqual(
       compileToSQL(ast),
@@ -158,11 +158,11 @@ describe('Temporal - Date Arithmetic', () => {
     const ast = parse('2 * P1D');
     assert.strictEqual(
       compileToJavaScript(ast),
-      wrapJS("Duration.fromMillis(Duration.fromISO('P1D').toMillis() * 2)")
+      wrapJS("Duration.fromMillis(Duration.fromISO(\"P1D\").toMillis() * 2)")
     );
     assert.strictEqual(
       compileToRuby(ast),
-      wrapRuby("2 * ActiveSupport::Duration.parse('P1D')")
+      wrapRuby("2 * ActiveSupport::Duration.parse(\"P1D\")")
     );
     assert.strictEqual(
       compileToSQL(ast),
@@ -174,11 +174,11 @@ describe('Temporal - Date Arithmetic', () => {
     const ast = parse('P1D * 2');
     assert.strictEqual(
       compileToJavaScript(ast),
-      wrapJS("Duration.fromMillis(Duration.fromISO('P1D').toMillis() * 2)")
+      wrapJS("Duration.fromMillis(Duration.fromISO(\"P1D\").toMillis() * 2)")
     );
     assert.strictEqual(
       compileToRuby(ast),
-      wrapRuby("ActiveSupport::Duration.parse('P1D') * 2")
+      wrapRuby("ActiveSupport::Duration.parse(\"P1D\") * 2")
     );
     assert.strictEqual(
       compileToSQL(ast),
@@ -190,11 +190,11 @@ describe('Temporal - Date Arithmetic', () => {
     const ast = parse('P2D / 2');
     assert.strictEqual(
       compileToJavaScript(ast),
-      wrapJS("Duration.fromMillis(Duration.fromISO('P2D').toMillis() / 2)")
+      wrapJS("Duration.fromMillis(Duration.fromISO(\"P2D\").toMillis() / 2)")
     );
     assert.strictEqual(
       compileToRuby(ast),
-      wrapRuby("ActiveSupport::Duration.parse('P2D') / 2")
+      wrapRuby("ActiveSupport::Duration.parse(\"P2D\") / 2")
     );
     assert.strictEqual(
       compileToSQL(ast),
@@ -216,11 +216,11 @@ describe('Temporal - Date Comparisons', () => {
     const ast = parse('D2024-01-15 < D2024-12-31');
     assert.strictEqual(
       compileToRuby(ast),
-      wrapRuby("Date.parse('2024-01-15') < Date.parse('2024-12-31')")
+      wrapRuby("Date.parse(\"2024-01-15\") < Date.parse(\"2024-12-31\")")
     );
     assert.strictEqual(
       compileToJavaScript(ast),
-      wrapJS("DateTime.fromISO('2024-01-15') < DateTime.fromISO('2024-12-31')")
+      wrapJS("DateTime.fromISO(\"2024-01-15\") < DateTime.fromISO(\"2024-12-31\")")
     );
     assert.strictEqual(
       compileToSQL(ast),
@@ -307,13 +307,13 @@ describe('Temporal - Temporal Keywords', () => {
   it('should compile TOMORROW to JavaScript', () => {
     const ast = parse('TOMORROW');
     // IR transforms TOMORROW to today() + P1D, emitted as luxon method chain
-    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.now().startOf('day').plus(Duration.fromISO('P1D'))"));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.now().startOf('day').plus(Duration.fromISO(\"P1D\"))"));
   });
 
   it('should compile YESTERDAY to JavaScript', () => {
     const ast = parse('YESTERDAY');
     // IR transforms YESTERDAY to today() - P1D, emitted as luxon method chain
-    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.now().startOf('day').minus(Duration.fromISO('P1D'))"));
+    assert.strictEqual(compileToJavaScript(ast), wrapJS("DateTime.now().startOf('day').minus(Duration.fromISO(\"P1D\"))"));
   });
 
   it('should compile NOW to Ruby', () => {

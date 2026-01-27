@@ -122,17 +122,22 @@ function emitSQL(ir: IRExpr): string {
       return `'${escaped}'`;
     }
 
-    case 'date_literal':
-      return `DATE '${ir.value}'`;
+    case 'date_literal': {
+      const escaped = ir.value.replace(/'/g, "''");
+      return `DATE '${escaped}'`;
+    }
 
     case 'datetime_literal': {
       // Convert ISO8601 to PostgreSQL TIMESTAMP format
       const formatted = ir.value.replace('T', ' ').replace('Z', '').split('.')[0];
-      return `TIMESTAMP '${formatted}'`;
+      const escaped = formatted.replace(/'/g, "''");
+      return `TIMESTAMP '${escaped}'`;
     }
 
-    case 'duration_literal':
-      return `INTERVAL '${ir.value}'`;
+    case 'duration_literal': {
+      const escaped = ir.value.replace(/'/g, "''");
+      return `INTERVAL '${escaped}'`;
+    }
 
     case 'object_literal': {
       if (ir.properties.length === 0) {

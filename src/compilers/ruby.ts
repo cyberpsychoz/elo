@@ -184,13 +184,13 @@ function emitRuby(ir: IRExpr, requiredHelpers?: Set<string>, options?: EmitOptio
     }
 
     case 'date_literal':
-      return `Date.parse('${ir.value}')`;
+      return `Date.parse(${JSON.stringify(ir.value)})`;
 
     case 'datetime_literal':
-      return `DateTime.parse('${ir.value}')`;
+      return `DateTime.parse(${JSON.stringify(ir.value)})`;
 
     case 'duration_literal':
-      return `ActiveSupport::Duration.parse('${ir.value}')`;
+      return `ActiveSupport::Duration.parse(${JSON.stringify(ir.value)})`;
 
     case 'object_literal': {
       const props = ir.properties.map(p => `${p.key}: ${ctx.emit(p.value)}`).join(', ');
