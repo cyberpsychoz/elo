@@ -257,9 +257,12 @@ function emitPy(ir: IRExpr, requiredHelpers?: Set<string>, options?: EmitOptions
     }
 
     case 'typedef': {
-      // TODO: type definitions
+      // Generate parser function for the type and bind it
+      const parserCode = emitTypeExprParser(ir.typeExpr, ctx);
+      ctx.requireHelper?.('pUnwrap');
       const body = ctx.emit(ir.body);
-      return body;
+      // Use walrus pattern: (_p_Name := parser, Name := lambda v: pUnwrap(_p_Name(v, '')), body)[-1]
+      return `(_p_${ir.name} := ${parserCode}, ${ir.name} := lambda v: pUnwrap(_p_${ir.name}(v, '')), ${body})[-1]`;
     }
 
     case 'guard': {
@@ -278,6 +281,91 @@ function emitPy(ir: IRExpr, requiredHelpers?: Set<string>, options?: EmitOptions
       });
       // Chain with tuple: (check1, check2, body)[-1]
       return `(${[...guardChecks, body].join(', ')})[-1]`;
+    }
+  }
+}
+
+/**
+ * Emit a parser expression for a type expression in Python.
+ * Uses combinator helpers (pSchema, pArray, pUnion, pSubtype) so that
+ * each result is a single expression compatible with walrus-operator chains.
+ */
+function emitTypeExprParser(
+  typeExpr: import('../ir').IRTypeExpr,
+  ctx: EmitContext<string>
+): string {
+  switch (typeExpr.kind) {
+    case 'type_ref': {
+      const parserMap: Record<string, string> = {
+        'Any': 'pAny',
+        'Null': 'pNull',
+        'String': 'pString',
+        'Int': 'pInt',
+        'Float': 'pFloat',
+        'Bool': 'pBool',
+        'Boolean': 'pBool',
+        'Datetime': 'pDatetime',
+      };
+      const parserName = parserMap[typeExpr.name];
+      if (parserName) {
+        ctx.requireHelper?.(parserName);
+        return parserName;
+      }
+      // User-defined type reference
+      const firstChar = typeExpr.name.charAt(0);
+      if (firstChar === firstChar.toUpperCase() && firstChar !== firstChar.toLowerCase()) {
+        return `_p_${typeExpr.name}`;
+      }
+      throw new Error(`Unknown type in type definition: ${typeExpr.name}`);
+    }
+
+    case 'type_schema': {
+      ctx.requireHelper?.('pSchema');
+      const propEntries = typeExpr.properties.map(prop => {
+        const propParser = emitTypeExprParser(prop.typeExpr, ctx);
+        return `(${JSON.stringify(prop.key)}, ${propParser}, ${prop.optional ? 'True' : 'False'})`;
+      });
+
+      let extrasMode: string;
+      let extrasParser = 'None';
+      if (typeExpr.extras === undefined || typeExpr.extras === 'closed') {
+        extrasMode = '"closed"';
+      } else if (typeExpr.extras === 'ignored') {
+        extrasMode = '"ignored"';
+      } else {
+        extrasMode = '"typed"';
+        extrasParser = emitTypeExprParser(typeExpr.extras, ctx);
+      }
+
+      return `pSchema([${propEntries.join(', ')}], ${extrasMode}, ${extrasParser})`;
+    }
+
+    case 'subtype_constraint': {
+      ctx.requireHelper?.('pSubtype');
+      const baseParser = emitTypeExprParser(typeExpr.baseType, ctx);
+      const varName = typeExpr.variable;
+
+      const checks = typeExpr.constraints.map(c => {
+        const conditionCode = ctx.emit(c.condition);
+        const errorMsg = c.label
+          ? (c.label.includes(' ') ? c.label : `constraint '${c.label}' failed`)
+          : 'constraint failed';
+        return `(${JSON.stringify(errorMsg)}, lambda ${varName}: ${conditionCode})`;
+      });
+
+      return `pSubtype(${baseParser}, [${checks.join(', ')}])`;
+    }
+
+    case 'array_type': {
+      ctx.requireHelper?.('pArray');
+      const elemParser = emitTypeExprParser(typeExpr.elementType, ctx);
+      return `pArray(${elemParser})`;
+    }
+
+    case 'union_type': {
+      ctx.requireHelper?.('pUnion');
+      const parsers = typeExpr.types.map(t => emitTypeExprParser(t, ctx));
+      return `pUnion([${parsers.join(', ')}])`;
     }
   }
 }

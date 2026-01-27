@@ -403,6 +403,18 @@ export const PY_HELPER_DEPS: Record<string, string[]> = {
   kParseDatetime: ['_elo_dt_helpers'],
   _elo_dt_helpers: ['_import_datetime', '_elo_duration'],
   _elo_duration: ['_import_re'],
+  // Parser helpers
+  pAny: ['pOk'],
+  pNull: ['pOk', 'pFail'],
+  pString: ['pOk', 'pFail'],
+  pInt: ['pOk', 'pFail'],
+  pFloat: ['pOk', 'pFail'],
+  pBool: ['pOk', 'pFail'],
+  pDatetime: ['pOk', 'pFail', 'kParseDatetime'],
+  pSchema: ['pOk', 'pFail'],
+  pArray: ['pOk', 'pFail'],
+  pUnion: ['pFail'],
+  pSubtype: ['pOk', 'pFail'],
 };
 
 export const PY_HELPERS: Record<string, string> = {
@@ -666,4 +678,101 @@ def _elo_end_of_year(dt):
         parts = v2.split('-')
         if len(parts) == 3: return _elo_dt(int(parts[0]), int(parts[1]), int(parts[2]))
     raise Exception('Cannot parse datetime: ' + repr(v))`,
+  // Parser helpers - return Result: { "success": bool, "path": str, "message": str, "value": any, "cause": list }
+  pOk: `def pOk(v, p):
+    return {"success": True, "path": p, "message": "", "value": v, "cause": []}`,
+  pFail: `def pFail(p, m=None, c=None):
+    return {"success": False, "path": p, "message": m or "", "value": None, "cause": c or []}`,
+  pUnwrap: `def pUnwrap(r):
+    if r["success"]: return r["value"]
+    def find_error(e):
+        if e.get("message"): return e
+        if e.get("cause") and len(e["cause"]) > 0: return find_error(e["cause"][0])
+        return e
+    err = find_error(r)
+    raise Exception((err.get("path") or ".") + ": " + (err.get("message") or "type error"))`,
+  pAny: `def pAny(v, p):
+    return pOk(v, p)`,
+  pNull: `def pNull(v, p):
+    if v is None: return pOk(None, p)
+    return pFail(p, "expected Null, got " + type(v).__name__)`,
+  pString: `def pString(v, p):
+    if isinstance(v, str): return pOk(v, p)
+    return pFail(p, "expected String, got " + ("Null" if v is None else type(v).__name__))`,
+  pInt: `def pInt(v, p):
+    if isinstance(v, bool): return pFail(p, "expected Int, got Bool")
+    if isinstance(v, int): return pOk(v, p)
+    if isinstance(v, str):
+        try: return pOk(int(v), p)
+        except: pass
+    return pFail(p, "expected Int, got " + ("Null" if v is None else repr(v) if isinstance(v, str) else type(v).__name__))`,
+  pFloat: `def pFloat(v, p):
+    if isinstance(v, bool): return pFail(p, "expected Float, got Bool")
+    if isinstance(v, (int, float)): return pOk(float(v), p)
+    if isinstance(v, str):
+        try: return pOk(float(v), p)
+        except: pass
+    return pFail(p, "expected Float, got " + ("Null" if v is None else repr(v) if isinstance(v, str) else type(v).__name__))`,
+  pBool: `def pBool(v, p):
+    if isinstance(v, bool): return pOk(v, p)
+    if v == "true": return pOk(True, p)
+    if v == "false": return pOk(False, p)
+    return pFail(p, "expected Bool, got " + ("Null" if v is None else repr(v) if isinstance(v, str) else type(v).__name__))`,
+  pDatetime: `def pDatetime(v, p):
+    if isinstance(v, _dt.datetime): return pOk(v, p)
+    if isinstance(v, str):
+        try: return pOk(kParseDatetime(v), p)
+        except: pass
+    return pFail(p, "expected Datetime, got " + ("Null" if v is None else "invalid datetime " + repr(v) if isinstance(v, str) else type(v).__name__))`,
+  pSchema: `def pSchema(props, extras_mode, extras_parser=None):
+    known_keys = [p[0] for p in props]
+    def parser(v, p):
+        if not isinstance(v, dict): return pFail(p, "expected object, got " + ("Null" if v is None else type(v).__name__))
+        o = {}
+        for key, prop_parser, optional in props:
+            val = v.get(key)
+            if optional and val is None:
+                continue
+            r = prop_parser(val, p + "." + key)
+            if not r["success"]: return pFail(p, None, [r])
+            o[key] = r["value"]
+        if extras_mode == "closed":
+            for k in v:
+                if k not in known_keys: return pFail(p + "." + k, "unexpected attribute")
+        elif extras_mode == "typed" and extras_parser is not None:
+            for k in v:
+                if k not in known_keys:
+                    re = extras_parser(v[k], p + "." + k)
+                    if not re["success"]: return pFail(p, None, [re])
+                    o[k] = re["value"]
+        return pOk(o, p)
+    return parser`,
+  pArray: `def pArray(elem_parser):
+    def parser(v, p):
+        if not isinstance(v, list): return pFail(p, "expected array, got " + ("Null" if v is None else type(v).__name__))
+        a = []
+        for i, e in enumerate(v):
+            r = elem_parser(e, p + "." + str(i))
+            if not r["success"]: return pFail(p, None, [r])
+            a.append(r["value"])
+        return pOk(a, p)
+    return parser`,
+  pUnion: `def pUnion(parsers):
+    def parser(v, p):
+        causes = []
+        for up in parsers:
+            r = up(v, p)
+            if r["success"]: return r
+            causes.append(r)
+        return pFail(p, "no union alternative matched", causes)
+    return parser`,
+  pSubtype: `def pSubtype(base_parser, checks):
+    def parser(v, p):
+        r = base_parser(v, p)
+        if not r["success"]: return r
+        val = r["value"]
+        for label, check in checks:
+            if not check(val): return pFail(p, label)
+        return r
+    return parser`,
 };
